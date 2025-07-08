@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Notification from "@/components/common/notification";
 import UserDropdown from "@/components/common/user-dropdown";
 import UserDropdownMobile from "@/components/common/user-dropdown-mobile";
 import { Search, Menu, BookOpen } from "lucide-react";
@@ -58,12 +59,14 @@ const Header = () => {
                   <Button variant="outline" size="sm">Đăng nhập</Button>
                 </Link>
                 <Link href="/register">
-                  <Button size="sm" className="bg-blue-600 text-white">Đăng ký</Button>
+                  <Button size="sm" className=" bg-blue-600 hover:bg-blue-500">Đăng ký</Button>
                 </Link>
               </>
             ) : (
-              <UserDropdown />
-
+              <>
+                <Notification />
+                <UserDropdown />
+              </>
             )}
           </div>
 
@@ -92,11 +95,14 @@ const Header = () => {
                         <Button variant="outline" className="w-full">Đăng nhập</Button>
                       </Link>
                       <Link href="/register" className="block">
-                        <Button className="w-full">Đăng ký</Button>
+                        <Button className="w-full  bg-blue-600 hover:bg-blue-500">Đăng ký</Button>
                       </Link>
                     </div>
                   ) : (
-                    <UserDropdownMobile />
+                    <>
+                      <Notification />
+                      <UserDropdownMobile />
+                    </>
                   )}
                 </div>
               </nav>

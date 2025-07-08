@@ -27,7 +27,7 @@ const NotFound = () => {
 
 
                 <div className="space-y-4 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center">
-                    <Button asChild className="w-full sm:w-auto">
+                    <Button asChild className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500">
                         <Link href="/" className="inline-flex items-center">
                             <Home className="w-4 h-4 mr-2" />
                             Về trang chủ

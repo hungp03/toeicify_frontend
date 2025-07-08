@@ -1,23 +1,15 @@
 "use client";
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import ProfileCard from '@/components/account/profile';
 import { Switch } from '@/components/ui/switch';
-import { User, Mail, Lock, Bell, Calendar, Award, BookOpen } from 'lucide-react';
+import { Bell, Calendar, Award, BookOpen } from 'lucide-react';
+import withAuth from '@/hoc/with-auth';
 
 const AccountPage = () => {
-  const [profileData, setProfileData] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@email.com",
-    currentLevel: "intermediate",
-    targetScore: "800",
-  });
 
   const [preferences, setPreferences] = useState({
     emailNotifications: true,
@@ -47,30 +39,6 @@ const AccountPage = () => {
     },
   ];
 
-  const achievements = [
-    {
-      title: "Hoàn thành bài đầu tiên",
-      description: "Bạn đã hoàn thành bài luyện đầu tiên",
-      date: "2024-01-05",
-      icon: "🎯",
-    },
-    {
-      title: "Tăng điểm đáng kể",
-      description: "Bạn đã cải thiện 40 điểm so với lần trước",
-      date: "2024-01-10",
-      icon: "📈",
-    },
-  ];
-
-  const handleProfileUpdate = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Cập nhật hồ sơ:", profileData);
-  };
-
-  const handlePasswordChange = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Yêu cầu đổi mật khẩu");
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -82,123 +50,15 @@ const AccountPage = () => {
           </div>
 
           <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="profile">Hồ sơ</TabsTrigger>
               <TabsTrigger value="history">Lịch sử</TabsTrigger>
-              <TabsTrigger value="achievements">Thành tích</TabsTrigger>
               <TabsTrigger value="preferences">Thông báo</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="profile" className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <User className="h-5 w-5" />
-                      Hồ sơ cá nhân
-                    </CardTitle>
-                    <CardDescription>
-                      Cập nhật thông tin cá nhân và mục tiêu học tập
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={handleProfileUpdate} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="firstName" className='mb-2'>Họ</Label>
-                          <Input
-                            id="firstName"
-                            value={profileData.firstName}
-                            onChange={(e) => setProfileData((p) => ({ ...p, firstName: e.target.value }))}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="lastName" className='mb-2'>Tên</Label>
-                          <Input
-                            id="lastName"
-                            value={profileData.lastName}
-                            onChange={(e) => setProfileData((p) => ({ ...p, lastName: e.target.value }))}
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <Label htmlFor="email" className='mb-2'>Email</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={profileData.email}
-                          onChange={(e) => setProfileData((p) => ({ ...p, email: e.target.value }))}
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label className='mb-2'>Trình độ hiện tại</Label>
-                          <Select
-                            value={profileData.currentLevel}
-                            onValueChange={(val) => setProfileData((p) => ({ ...p, currentLevel: val }))}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="beginner">Mới bắt đầu (300-500)</SelectItem>
-                              <SelectItem value="intermediate">Trung cấp (500-700)</SelectItem>
-                              <SelectItem value="advanced">Nâng cao (700-900)</SelectItem>
-                              <SelectItem value="expert">Chuyên sâu (900+)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label className='mb-2'>Mục tiêu điểm số</Label>
-                          <Select
-                            value={profileData.targetScore}
-                            onValueChange={(val) => setProfileData((p) => ({ ...p, targetScore: val }))}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="600">600+</SelectItem>
-                              <SelectItem value="700">700+</SelectItem>
-                              <SelectItem value="800">800+</SelectItem>
-                              <SelectItem value="900">900+</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-500">Cập nhật hồ sơ</Button>
-                    </form>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Lock className="h-5 w-5" />
-                      Đổi mật khẩu
-                    </CardTitle>
-                    <CardDescription>
-                      Đặt lại mật khẩu để đảm bảo an toàn
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={handlePasswordChange} className="space-y-4">
-                      <div>
-                        <Label className='mb-2'>Mật khẩu hiện tại</Label>
-                        <Input type="password" />
-                      </div>
-                      <div>
-                        <Label className='mb-2'>Mật khẩu mới</Label>
-                        <Input type="password" />
-                      </div>
-                      <div>
-                        <Label className='mb-2'>Xác nhận mật khẩu</Label>
-                        <Input type="password" />
-                      </div>
-                      <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-500">Xác nhận đổi mật khẩu</Button>
-                    </form>
-                  </CardContent>
-                </Card>
+            <TabsContent value="profile">
+              <div className="grid md:grid-cols-1 gap-6">
+                <ProfileCard />
               </div>
             </TabsContent>
 
@@ -237,38 +97,6 @@ const AccountPage = () => {
                 </CardContent>
               </Card>
             </TabsContent>
-
-            {/* Thành tích */}
-            <TabsContent value="achievements" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Award className="h-5 w-5" />
-                    Thành tích học tập
-                  </CardTitle>
-                  <CardDescription>
-                    Cột mốc bạn đã đạt được trong quá trình học
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {achievements.map((a, i) => (
-                      <div key={i} className="border rounded-lg p-4 hover:bg-gray-50">
-                        <div className="flex gap-3 items-start">
-                          <div className="text-2xl">{a.icon}</div>
-                          <div>
-                            <h3 className="font-semibold">{a.title}</h3>
-                            <p className="text-sm text-gray-600">{a.description}</p>
-                            <p className="text-xs text-gray-500">Đạt ngày {new Date(a.date).toLocaleDateString()}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
             {/* Cài đặt thông báo */}
             <TabsContent value="preferences" className="space-y-6">
               <Card>
@@ -324,4 +152,4 @@ const AccountPage = () => {
   );
 };
 
-export default AccountPage;
+export default withAuth(AccountPage);

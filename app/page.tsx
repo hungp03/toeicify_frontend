@@ -69,22 +69,6 @@ const HomePage = () => {
                 </Button>
               </Link>
             </div>
-            <div className="mt-8 flex justify-center items-center space-x-6 text-blue-200">
-              <div className="text-center">
-                <div className="text-2xl font-bold">10.000+</div>
-                <div className="text-sm">Câu hỏi luyện tập</div>
-              </div>
-              <div className="w-px h-8 bg-blue-400"></div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">50.000+</div>
-                <div className="text-sm">Học viên</div>
-              </div>
-              <div className="w-px h-8 bg-blue-400"></div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">95%</div>
-                <div className="text-sm">Tỷ lệ thành công</div>
-              </div>
-            </div>
           </div>
         </div>
       </section>

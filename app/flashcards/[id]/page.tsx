@@ -12,13 +12,18 @@ import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, BookPlus, FlipHorizontal } from 'lucide-react';
+import { ArrowLeft, BookPlus, FlipHorizontal, X } from 'lucide-react';
 
 interface Flashcard {
   id: number;
   front: string;
   back: string;
   createdAt: string;
+}
+
+interface BulkCard {
+  front: string;
+  back: string;
 }
 
 const FlashcardSetPage = ({ params }: { params: { setId: string } }) => {
@@ -44,7 +49,13 @@ const FlashcardSetPage = ({ params }: { params: { setId: string } }) => {
   const [isBulkAddDialogOpen, setIsBulkAddDialogOpen] = useState(false);
   const [newCardFront, setNewCardFront] = useState('');
   const [newCardBack, setNewCardBack] = useState('');
-  const [bulkCardsText, setBulkCardsText] = useState('');
+  
+  // Bulk cards state với 3 dòng mặc định
+  const [bulkCards, setBulkCards] = useState<BulkCard[]>([
+    { front: '', back: '' },
+    { front: '', back: '' },
+    { front: '', back: '' }
+  ]);
 
   const handleAddSingleCard = () => {
     if (newCardFront.trim() && newCardBack.trim()) {
@@ -61,38 +72,52 @@ const FlashcardSetPage = ({ params }: { params: { setId: string } }) => {
     }
   };
 
+  const handleBulkCardChange = (index: number, field: 'front' | 'back', value: string) => {
+    const newBulkCards = [...bulkCards];
+    newBulkCards[index][field] = value;
+    setBulkCards(newBulkCards);
+
+    // Tự động thêm dòng mới khi người dùng nhập vào dòng cuối và chưa đạt giới hạn
+    if (index === bulkCards.length - 1 && value.trim() && bulkCards.length < 10) {
+      setBulkCards([...newBulkCards, { front: '', back: '' }]);
+    }
+  };
+
+  const handleRemoveBulkCard = (index: number) => {
+    if (bulkCards.length > 1) {
+      const newBulkCards = bulkCards.filter((_, i) => i !== index);
+      setBulkCards(newBulkCards);
+    }
+  };
+
   const handleBulkAdd = () => {
-    if (bulkCardsText.trim()) {
-      const lines = bulkCardsText.trim().split('\n');
-      const newCards: Flashcard[] = [];
+    const validCards = bulkCards.filter(card => card.front.trim() && card.back.trim());
+    
+    if (validCards.length > 0) {
+      const newCards: Flashcard[] = validCards.map((card, index) => ({
+        id: Date.now() + index,
+        front: card.front.trim(),
+        back: card.back.trim(),
+        createdAt: new Date().toISOString().split('T')[0]
+      }));
 
-      lines.forEach((line, index) => {
-        const parts = line.split(' - ');
-        if (parts.length >= 2) {
-          const front = parts[0].trim();
-          const back = parts.slice(1).join(' - ').trim();
-          if (front && back) {
-            newCards.push({
-              id: Date.now() + index,
-              front,
-              back,
-              createdAt: new Date().toISOString().split('T')[0]
-            });
-          }
-        }
-      });
-
-      if (newCards.length > 0) {
-        setFlashcards([...flashcards, ...newCards]);
-        setBulkCardsText('');
-        setIsBulkAddDialogOpen(false);
-      }
+      setFlashcards([...flashcards, ...newCards]);
+      
+      // Reset về 3 dòng mặc định
+      setBulkCards([
+        { front: '', back: '' },
+        { front: '', back: '' },
+        { front: '', back: '' }
+      ]);
+      setIsBulkAddDialogOpen(false);
     }
   };
 
   const handleDeleteCard = (id: number) => {
     setFlashcards(flashcards.filter(card => card.id !== id));
   };
+
+  const validBulkCards = bulkCards.filter(card => card.front.trim() && card.back.trim()).length;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -130,7 +155,7 @@ const FlashcardSetPage = ({ params }: { params: { setId: string } }) => {
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="front">Mặt trước</Label>
+                    <Label htmlFor="front" className='mb-4'>Mặt trước</Label>
                     <Input
                       id="front"
                       placeholder="Ví dụ: Budget"
@@ -139,7 +164,7 @@ const FlashcardSetPage = ({ params }: { params: { setId: string } }) => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="back">Mặt sau</Label>
+                    <Label htmlFor="back" className='mb-4'>Mặt sau</Label>
                     <Textarea
                       id="back"
                       placeholder="Định nghĩa hoặc giải nghĩa"
@@ -163,25 +188,73 @@ const FlashcardSetPage = ({ params }: { params: { setId: string } }) => {
                   Thêm nhiều
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Thêm nhiều thẻ</DialogTitle>
                   <DialogDescription>
-                    Nhập theo định dạng: `Front - Back` (mỗi dòng một thẻ)
+                    Nhập mặt trước và mặt sau cho mỗi thẻ. Tối đa 10 thẻ một lần.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
-                  <Label htmlFor="bulk">Danh sách thẻ</Label>
-                  <Textarea
-                    id="bulk"
-                    placeholder={`Ví dụ:\nBudget - A plan for spending money\nRevenue - Total income`}
-                    rows={8}
-                    value={bulkCardsText}
-                    onChange={(e) => setBulkCardsText(e.target.value)}
-                  />
-                  <div className="flex justify-end space-x-2">
-                    <Button variant="outline" onClick={() => setIsBulkAddDialogOpen(false)}>Huỷ</Button>
-                    <Button onClick={handleBulkAdd} disabled={!bulkCardsText.trim()}>Thêm</Button>
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <Label className="font-medium">Mặt trước</Label>
+                    <Label className="font-medium">Mặt sau</Label>
+                  </div>
+                  
+                  <div className="space-y-3 max-h-96">
+                    {bulkCards.map((card, index) => (
+                      <div key={index} className="grid grid-cols-2 gap-4 items-center group">
+                        <div className="relative">
+                          <Input
+                            placeholder={`Thẻ ${index + 1} - Mặt trước`}
+                            value={card.front}
+                            onChange={(e) => handleBulkCardChange(index, 'front', e.target.value)}
+                            className="pr-8"
+                          />
+                          {bulkCards.length > 1 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-1 top-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => handleRemoveBulkCard(index)}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                        <Input
+                          placeholder={`Thẻ ${index + 1} - Mặt sau`}
+                          value={card.back}
+                          onChange={(e) => handleBulkCardChange(index, 'back', e.target.value)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex justify-between items-center pt-4 border-t">
+                    <div className="text-sm text-gray-500">
+                      {validBulkCards > 0 && (
+                        <span>
+                          {validBulkCards} thẻ hợp lệ • {bulkCards.length}/10 dòng
+                        </span>
+                      )}
+                      {validBulkCards === 0 && (
+                        <span className="text-gray-400">
+                          Chưa có thẻ nào hợp lệ • {bulkCards.length}/10 dòng
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button variant="outline" onClick={() => setIsBulkAddDialogOpen(false)}>
+                        Huỷ
+                      </Button>
+                      <Button 
+                        onClick={handleBulkAdd} 
+                        disabled={validBulkCards === 0}
+                      >
+                        Thêm {validBulkCards} thẻ
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </DialogContent>
