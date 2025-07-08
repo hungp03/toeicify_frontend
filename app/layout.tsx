@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient} from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
 import Providers from "@/providers/page";
 import Header from "@/components/common/header";
 import Footer from "@/components/common/footer";
@@ -21,8 +21,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TOEIC Master",
-  description: "Làm chủ kỳ thi TOEIC với TOEIC Master",
+  title: "Toeicify",
+  description: "Làm chủ kỳ thi TOEIC với Toeicify",
 };
 
 export default function RootLayout({
@@ -30,12 +30,12 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-   return (
+  return (
     <html lang="en">
       <body className="min-h-screen bg-gray-50">
         <Providers>
           <TooltipProvider>
-            <Sonner />
+            <Toaster />
             <Header />
             {children}
             <Footer />

@@ -115,7 +115,7 @@ const getCategoryColor = (category: string) => {
   return colors[category] || 'bg-gray-100 text-gray-800';
 };
 
-export default function BlogPage() {
+const BlogPage = () => {
   const featuredPosts = blogPosts.filter(p => p.featured);
   const regularPosts = blogPosts.filter(p => !p.featured);
   const [search, setSearch] = useState('');
@@ -123,7 +123,6 @@ export default function BlogPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Tiêu đề trang */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Blog luyện thi TOEIC</h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
@@ -131,7 +130,6 @@ export default function BlogPage() {
           </p>
         </div>
 
-        {/* Tìm kiếm & lọc */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
@@ -154,7 +152,6 @@ export default function BlogPage() {
           </div>
         </div>
 
-        {/* Bài viết nổi bật */}
         <section className="mb-12">
           <div className="flex items-center gap-2 mb-6">
             <TrendingUp className="h-5 w-5 text-blue-600" />
@@ -196,8 +193,6 @@ export default function BlogPage() {
             ))}
           </div>
         </section>
-
-        {/* Bài viết khác */}
         <section>
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Bài viết mới nhất</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -234,7 +229,6 @@ export default function BlogPage() {
           </div>
         </section>
 
-        {/* Đăng ký nhận bản tin */}
         <section className="mt-16 bg-blue-600 rounded-lg p-8 text-white text-center">
           <h3 className="text-2xl font-bold mb-4">Nhận tin mới nhất</h3>
           <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
@@ -249,3 +243,5 @@ export default function BlogPage() {
     </div>
   );
 }
+
+export default BlogPage;  

@@ -43,7 +43,7 @@ const HomePage = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              Làm chủ kỳ thi TOEIC với TOEIC Master
+              Làm chủ kỳ thi TOEIC với Toeicify
             </h1>
             <p className="text-xl md:text-2xl mb-8 text-blue-100">
               Luyện tập với đề thi sát thực tế, theo dõi tiến trình và đạt mục tiêu điểm số
@@ -93,7 +93,7 @@ const HomePage = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Vì sao chọn TOEIC Master?
+              Vì sao chọn Toeicify?
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Tất cả những gì bạn cần để chinh phục kỳ thi TOEIC, với nội dung và phương pháp đã được chứng minh.

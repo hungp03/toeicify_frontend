@@ -46,10 +46,9 @@ const relatedPosts = [
   { id: 4, title: 'Business Vocabulary for TOEIC Success', category: 'Vocabulary', readTime: '6 min read' },
 ];
 
-export default function BlogPostPage({ params }: Props) {
+const BlogPostPage = ({ params }: Props) => {
   const { id } = params;
 
-  // Giả lập lấy bài viết theo ID
   if (id !== mockData.id) return notFound();
   const post = mockData;
 
@@ -58,7 +57,6 @@ export default function BlogPostPage({ params }: Props) {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
 
-          {/* Quay lại blog */}
           <Link href="/blog">
             <Button variant="ghost" className="mb-6">
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -66,7 +64,6 @@ export default function BlogPostPage({ params }: Props) {
             </Button>
           </Link>
 
-          {/* Header bài viết */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
             <div className="h-64 bg-gradient-to-r from-blue-500 to-blue-600"></div>
             <div className="p-8">
@@ -88,9 +85,7 @@ export default function BlogPostPage({ params }: Props) {
             </div>
           </div>
 
-          {/* Nội dung và Sidebar */}
           <div className="grid lg:grid-cols-3 gap-8">
-            {/* Nội dung bài viết */}
             <div className="lg:col-span-2">
               <Card>
                 <CardContent className="p-8">
@@ -99,9 +94,7 @@ export default function BlogPostPage({ params }: Props) {
               </Card>
             </div>
 
-            {/* Sidebar */}
             <div className="space-y-6">
-              {/* Mục lục */}
               <Card>
                 <CardHeader><CardTitle className="text-lg">Mục lục</CardTitle></CardHeader>
                 <CardContent>
@@ -112,7 +105,6 @@ export default function BlogPostPage({ params }: Props) {
                 </CardContent>
               </Card>
 
-              {/* Bài viết liên quan */}
               <Card>
                 <CardHeader><CardTitle className="text-lg flex items-center gap-2"><BookOpen className="h-5 w-5" /> Bài liên quan</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
@@ -130,7 +122,6 @@ export default function BlogPostPage({ params }: Props) {
                 </CardContent>
               </Card>
 
-              {/* CTA */}
               <Card className="bg-blue-50 border-blue-200">
                 <CardHeader><CardTitle className="text-lg text-blue-900">Sẵn sàng luyện tập?</CardTitle></CardHeader>
                 <CardContent>
@@ -147,3 +138,5 @@ export default function BlogPostPage({ params }: Props) {
     </div>
   );
 }
+
+export default BlogPostPage;

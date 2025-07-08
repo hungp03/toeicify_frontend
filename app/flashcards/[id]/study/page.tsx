@@ -12,7 +12,7 @@ interface Flashcard {
     back: string;
 }
 
-export default function FlashcardStudyPage({ params }: { params: { id: string } }) {
+const FlashcardStudyPage = ({ params }: { params: { id: string } }) => {
     const { id } = params;
     const router = useRouter();
 
@@ -144,3 +144,5 @@ export default function FlashcardStudyPage({ params }: { params: { id: string } 
         </div>
     );
 }
+
+export default FlashcardStudyPage;

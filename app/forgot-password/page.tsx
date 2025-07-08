@@ -25,6 +25,7 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
+import withGuestOnly from "@/hoc/with-guest-only";
 
 type Step = "email" | "otp" | "reset";
 
@@ -267,7 +268,7 @@ const ForgotPassword = () => {
         <div className="text-center">
           <Link href="/" className="flex items-center justify-center space-x-2 mb-6">
             <BookOpen className="h-8 w-8 text-blue-600" />
-            <span className="text-2xl font-bold text-gray-900">TOEIC Master</span>
+            <span className="text-2xl font-bold text-gray-900">Toeicify</span>
           </Link>
         </div>
 
@@ -276,7 +277,8 @@ const ForgotPassword = () => {
         {currentStep === "reset" && renderResetStep()}
       </div>
     </div>
+
   );
 };
 
-export default ForgotPassword;
+export default withGuestOnly(ForgotPassword);

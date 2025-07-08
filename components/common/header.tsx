@@ -5,20 +5,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Menu, User, BookOpen } from "lucide-react";
+import UserDropdown from "@/components/common/user-dropdown";
+import UserDropdownMobile from "@/components/common/user-dropdown-mobile";
+import { Search, Menu, BookOpen } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-
+import { navItems } from "@/lib/constants";
+import { useAuthStore } from "@/store/auth";
 const Header = () => {
   const pathname = usePathname();
+  const user = useAuthStore((state) => state.user);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-
-  const navItems = [
-    { name: "Trang chủ", path: "/" },
-    { name: "Luyện tập", path: "/practice-tests" },
-    { name: "Blog", path: "/blog" },
-    {name: "Flashcards", path: "/flashcards"},
-    { name: "Tiến độ", path: "/progress" },
-  ];
 
   const isActive = (path: string) => pathname === path;
 
@@ -28,7 +24,7 @@ const Header = () => {
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center space-x-2">
             <BookOpen className="h-8 w-8 text-blue-600" />
-            <span className="text-xl font-bold text-gray-900">TOEIC Master</span>
+            <span className="text-xl font-bold text-gray-900">Toeicify</span>
           </Link>
 
           <nav className="hidden md:flex items-center space-x-8">
@@ -36,9 +32,8 @@ const Header = () => {
               <Link
                 key={item.name}
                 href={item.path}
-                className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                  isActive(item.path) ? "text-blue-600" : "text-gray-700"
-                }`}
+                className={`text-sm font-medium transition-colors hover:text-blue-600 ${isActive(item.path) ? "text-blue-600" : "text-gray-700"
+                  }`}
               >
                 {item.name}
               </Link>
@@ -57,19 +52,19 @@ const Header = () => {
           </div>
 
           <div className="hidden md:flex items-center space-x-3">
-            <Link href="/login">
-              <Button variant="outline" size="sm">
-                Đăng nhập
-              </Button>
-            </Link>
-            <Link href="/register">
-              <Button size="sm" className="bg-blue-600 text-white">Đăng ký</Button>
-            </Link>
-            <Link href="/account">
-              <Button variant="ghost" size="sm" title="Tài khoản">
-                <User className="h-4 w-4" />
-              </Button>
-            </Link>
+            {!user ? (
+              <>
+                <Link href="/login">
+                  <Button variant="outline" size="sm">Đăng nhập</Button>
+                </Link>
+                <Link href="/register">
+                  <Button size="sm" className="bg-blue-600 text-white">Đăng ký</Button>
+                </Link>
+              </>
+            ) : (
+              <UserDropdown />
+
+            )}
           </div>
 
           <Sheet>
@@ -84,24 +79,25 @@ const Header = () => {
                   <Link
                     key={item.name}
                     href={item.path}
-                    className={`text-lg font-medium transition-colors hover:text-blue-600 ${
-                      isActive(item.path) ? "text-blue-600" : "text-gray-700"
-                    }`}
+                    className={`text-lg font-medium transition-colors hover:text-blue-600 ${isActive(item.path) ? "text-blue-600" : "text-gray-700"
+                      }`}
                   >
                     {item.name}
                   </Link>
                 ))}
                 <div className="pt-4 border-t">
-                  <div className="space-y-3">
-                    <Link href="/login" className="block">
-                      <Button variant="outline" className="w-full">
-                        Đăng nhập
-                      </Button>
-                    </Link>
-                    <Link href="/register" className="block">
-                      <Button className="w-full">Đăng ký</Button>
-                    </Link>
-                  </div>
+                  {!user ? (
+                    <div className="space-y-3">
+                      <Link href="/login" className="block">
+                        <Button variant="outline" className="w-full">Đăng nhập</Button>
+                      </Link>
+                      <Link href="/register" className="block">
+                        <Button className="w-full">Đăng ký</Button>
+                      </Link>
+                    </div>
+                  ) : (
+                    <UserDropdownMobile />
+                  )}
                 </div>
               </nav>
             </SheetContent>

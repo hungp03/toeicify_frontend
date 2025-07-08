@@ -20,7 +20,7 @@ const Footer = () => {
           <div className="space-y-5">
             <Link href="/" className="flex items-center space-x-2">
               <BookOpen className="h-8 w-8 text-blue-400" />
-              <span className="text-xl font-bold">TOEIC Master</span>
+              <span className="text-xl font-bold">Toeicify</span>
             </Link>
             <p className="text-gray-300 text-sm">
               Làm chủ kỳ thi TOEIC với các bài luyện tập toàn diện và tài liệu học chất lượng cao. Đạt được điểm số mơ ước một cách tự tin.
@@ -72,7 +72,7 @@ const Footer = () => {
             <div className="space-y-3 text-sm">
               <div className="flex items-center space-x-2">
                 <Mail className="h-4 w-4 text-blue-400" />
-                <span className="text-gray-300">support@toeicmaster.com</span>
+                <span className="text-gray-300">support@toeicify.com</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Phone className="h-4 w-4 text-blue-400" />
@@ -92,7 +92,7 @@ const Footer = () => {
         <div className="border-t border-gray-700 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-sm text-gray-400">
-              © 2025 TOEIC Master.
+              © 2025 Toeicify.
             </div>
             <div className="flex space-x-6 text-sm">
               <a href="#" className="text-gray-400 hover:text-white transition-colors">

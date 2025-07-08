@@ -15,7 +15,7 @@ import {
   Clock, Users, Star, Filter, Search,
 } from 'lucide-react';
 
-export default function PracticeTestsPage() {
+const PracticeTestsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('all');
 
@@ -130,7 +130,7 @@ export default function PracticeTestsPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Tiêu đề */}
+   
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Bộ đề luyện TOEIC
@@ -140,7 +140,7 @@ export default function PracticeTestsPage() {
           </p>
         </div>
 
-        {/* Bộ lọc */}
+
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <div className="flex flex-col md:flex-row gap-4 items-center">
             <div className="flex-1 relative">
@@ -173,7 +173,6 @@ export default function PracticeTestsPage() {
           </div>
         </div>
 
-        {/* Danh sách đề */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredTests.map((test) => (
             <Card key={test.id} className="hover:shadow-lg transition-shadow duration-300">
@@ -241,3 +240,5 @@ export default function PracticeTestsPage() {
     </div>
   );
 }
+
+export default PracticeTestsPage;

@@ -10,7 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Volume2, FileText, Image, AlertTriangle } from 'lucide-react';
 
-export default function TestInterfacePage() {
+const TestInterfacePage = () => {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -272,3 +272,5 @@ export default function TestInterfacePage() {
     </div>
   );
 }
+
+export default TestInterfacePage;

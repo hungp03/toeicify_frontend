@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState} from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,18 +8,10 @@ import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   BookOpen,
   Mail,
@@ -28,8 +20,13 @@ import {
   EyeOff,
   User,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/auth";
+import withGuestOnly from "@/hoc/with-guest-only";
 
 const Register = () => {
+  const router = useRouter();
+  const user = useAuthStore((state) => state.user);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -65,7 +62,7 @@ const Register = () => {
         <div className="text-center">
           <Link href="/" className="flex items-center justify-center space-x-2 mb-6">
             <BookOpen className="h-8 w-8 text-blue-600" />
-            <span className="text-2xl font-bold text-gray-900">TOEIC Master</span>
+            <span className="text-2xl font-bold text-gray-900">Toeicify</span>
           </Link>
           <h2 className="text-3xl font-bold text-gray-900">Tạo tài khoản</h2>
           <p className="mt-2 text-gray-600">Bắt đầu hành trình luyện thi TOEIC của bạn hôm nay</p>
@@ -245,4 +242,4 @@ const Register = () => {
   );
 };
 
-export default Register;
+export default withGuestOnly(Register);
