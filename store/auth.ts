@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import api from '@/lib/axios';
-import { InternalAuthState, User } from '@/types';
+import { InternalAuthState, User, UpdateUserRequest } from '@/types';
 
 
 export const useAuthStore = create<InternalAuthState>()(
@@ -37,7 +37,6 @@ export const useAuthStore = create<InternalAuthState>()(
         try {
           const res = await api.post('/auth/login', { identifier, password });
           const token = res.data.data.accessToken;
-
           if (token) {
             set({ accessToken: token });
             await get().fetchUser();
@@ -64,8 +63,8 @@ export const useAuthStore = create<InternalAuthState>()(
             email: data.email,
             roleId: data.roleId,
             roleName: data.roleName,
-            targetScore: data.targetScore,
-            lastLogin: data.lastLogin,
+            targetScore: data.targetScore || undefined,
+            examDate: data.examDate || undefined,
             registrationDate: data.registrationDate,
           };
 
@@ -75,10 +74,25 @@ export const useAuthStore = create<InternalAuthState>()(
           get().logout();
         }
       },
+      updateUser: async (updatedFields: UpdateUserRequest) => {
+        try {
+          const res = await api.put('/users/me', updatedFields);
+          const updatedData = res.data.data;
+          const currentUser = get().user;
+          if (!currentUser) return;
+          const newUser = {
+            ...currentUser,
+            ...updatedData,
+          };
+          set({ user: newUser });
+        } catch (error) {
+          console.error('Update user error:', error);
+          throw error;
+        }
+      },
       oauthLogin: async (token: string) => {
         try {
           set({ accessToken: token });
-          localStorage.setItem('access_token', token);
           await get().fetchUser();
         } catch (err) {
           console.error('OAuth login error:', err);

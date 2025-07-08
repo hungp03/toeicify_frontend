@@ -5,8 +5,8 @@ export type User = {
   email: string;
   roleId: string;
   roleName: string;
+  examDate?: string; 
   targetScore?: number;
-  lastLogin?: string;
   registrationDate?: string;
 };
 
@@ -27,6 +27,7 @@ export type AuthState = {
   logout: () => void;
   setAccessToken: (token: string) => void;
   fetchUser: () => Promise<void>;
+  updateUser: (updatedFields: UpdateUserRequest) => Promise<void>;
   oauthLogin: (token: string) => Promise<void>;
 };
 

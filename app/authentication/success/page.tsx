@@ -5,7 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 import {toast} from 'sonner';
 import { useAuthStore } from '@/store/auth';
-const OAuthSuccess = () => {
+import { withAuthRedirectProtection } from '@/hoc/with-auth-redirect';
+
+const AuthSuccess = () => {
     const searchParams = useSearchParams();
     const router = useRouter();
     const oauthLogin = useAuthStore((state) => state.oauthLogin);
@@ -25,4 +27,4 @@ const OAuthSuccess = () => {
     );
 }
 
-export default OAuthSuccess;
+export default withAuthRedirectProtection(AuthSuccess);
