@@ -19,6 +19,8 @@ import { profileSchema, changePasswordSchema, ProfileFormData, ChangePasswordFor
 import dayjs from 'dayjs';
 import api from '@/lib/axios';
 import { toast } from 'sonner';
+import { ErrorCode } from '@/lib/constants';
+import { updateUserPassword } from '@/lib/api/user';
 
 const ProfileCard = () => {
     const user = useAuthStore((s) => s.user);
@@ -73,22 +75,34 @@ const ProfileCard = () => {
         try {
             await updateUser(payload);
             toast.success('Cập nhật hồ sơ thành công');
-        } catch {
-            toast.error('Cập nhật thất bại');
+        } catch (error: any) {
+            if (error.code === ErrorCode.RESOURCE_ALREADY_EXISTS) {
+                if (error.message.includes("Username is already in use")) {
+                    toast.error("Username đã tồn tại. Vui lòng chọn username khác.")
+                }
+                if (error.message.includes("Email is already in use")) {
+                    toast.error("Email đã được sử dụng. Vui lòng sử dụng email khác.")
+                }
+            }
+            else {
+                toast.error('Cập nhật hồ sơ thất bại. Vui lòng thử lại sau.', {
+                    duration: 3000,
+                });
+            }
         }
     };
 
     const onSubmitPassword = async (data: ChangePasswordFormData) => {
         try {
-            await api.put('/auth/change-password', {
-                currentPassword: data.currentPassword,
-                newPassword: data.newPassword,
-            });
+            await updateUserPassword(data.currentPassword, data.newPassword, data.confirmPassword);
             toast.success('Đổi mật khẩu thành công');
             resetPasswordForm();
-        } catch (err) {
-            toast.error('Đổi mật khẩu thất bại');
-            console.error(err);
+        } catch (error: any) {
+            if (error.code === ErrorCode.BAD_CREDENTIALS) {
+                toast.error('Mật khẩu hiện tại không chính xác');
+            } else if (error.code === ErrorCode.RESOURCE_INVALID) {
+                toast.error("Tài khoản chưa thiết lập mật khẩu, vui lòng sử dụng tính năng quên mật khẩu để thiết lập mật khẩu mới.");
+            }
         }
     };
 
@@ -148,12 +162,12 @@ const ProfileCard = () => {
                                     defaultValue={
                                         user?.examDate ? dayjs(user.examDate).format('YYYY-MM-DD') : ''
                                     }
+                                    min={dayjs().add(1, 'day').format('YYYY-MM-DD')}
                                 />
                                 {profileErrors.examDate && (
                                     <p className="text-sm text-red-500 mt-1">{profileErrors.examDate.message}</p>
                                 )}
                             </div>
-
                         </div>
                         <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-500" disabled={isSubmitting}>
                             {isSubmitting ? 'Đang cập nhật...' : 'Cập nhật hồ sơ'}
