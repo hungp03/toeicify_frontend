@@ -1,142 +1,119 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/components/ui/input-otp";
-import {
-  BookOpen,
-  Mail,
-  Lock,
-  ArrowLeft,
-  Eye,
-  EyeOff,
-} from "lucide-react";
-import withGuestOnly from "@/hoc/with-guest-only";
-import { forgotPassword, verifyOtp, resetPassword } from "@/lib/api/auth";
-import FullPageLoader from "@/components/common/full-page-loader";
-import { toast } from "sonner";
-import { ErrorCode } from "@/lib/constants";
-import { ca, fi } from "zod/v4/locales";
+import type React from "react"
 
-type Step = "email" | "otp" | "reset";
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { InputOTP, InputOTPGroup, InputOTPSlot, REGEXP_ONLY_DIGITS_AND_CHARS } from "@/components/ui/input-otp"
+import { BookOpen, Mail, Lock, ArrowLeft, Eye, EyeOff, Shield } from "lucide-react"
+import withGuestOnly from "@/hoc/with-guest-only"
+import { forgotPassword, verifyOtp, resetPassword } from "@/lib/api/auth"
+import FullPageLoader from "@/components/common/full-page-loader"
+import { toast } from "sonner"
+import { ErrorCode } from "@/lib/constants"
+
+type Step = "email" | "otp" | "reset"
 
 const ForgotPassword = () => {
-  const router = useRouter();
-  const [currentStep, setCurrentStep] = useState<Step>("email");
-  const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [identifyCode, setIdentifyCode] = useState("");
+  const router = useRouter()
+  const [currentStep, setCurrentStep] = useState<Step>("email")
+  const [email, setEmail] = useState("")
+  const [otp, setOtp] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [identifyCode, setIdentifyCode] = useState("")
   const [formData, setFormData] = useState({
     email: "",
     identifyCode: "",
     newPassword: "",
     confirmPassword: "",
-  });
+  })
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     try {
-      setLoading(true);
-      await forgotPassword(email);
-      toast.success("Mã xác thực đã được gửi đến email của bạn.");
-      setCurrentStep("otp");
-    }
-    catch (error: any) {
+      setLoading(true)
+      await forgotPassword(email)
+      toast.success("Mã xác thực đã được gửi đến email của bạn.")
+      setCurrentStep("otp")
+    } catch (error: any) {
       if (error.code === ErrorCode.RESOURCE_NOT_FOUND) {
-        toast.error("Email không tồn tại. Vui lòng kiểm tra lại.");
+        toast.error("Email không tồn tại. Vui lòng kiểm tra lại.")
+      } else {
+        toast.error("Đã xảy ra lỗi. Vui lòng thử lại sau.")
       }
-      else {
-        toast.error("Đã xảy ra lỗi. Vui lòng thử lại sau.");
-      }
+    } finally {
+      setLoading(false)
     }
-    finally {
-      setLoading(false);
-    }
-
-  };
+  }
 
   const handleOtpSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (otp.length === 6) {
       try {
-        setLoading(true);
-        const res = await verifyOtp(email, otp);
-        setIdentifyCode(res.data?.identifyCode);
-        toast.success("Xác thực thành công. Vui lòng đặt lại mật khẩu.");
-        setCurrentStep("reset");
-      }
-      catch (error: any) {
+        setLoading(true)
+        const res = await verifyOtp(email, otp)
+        setIdentifyCode(res.data?.identifyCode)
+        toast.success("Xác thực thành công. Vui lòng đặt lại mật khẩu.")
+        setCurrentStep("reset")
+      } catch (error: any) {
         if (error.code === ErrorCode.RESOURCE_INVALID) {
-          toast.error("Mã xác thực không hợp lệ. Vui lòng kiểm tra lại.");
+          toast.error("Mã xác thực không hợp lệ. Vui lòng kiểm tra lại.")
+        } else {
+          toast.error("Đã xảy ra lỗi. Vui lòng thử lại sau.")
         }
-        else {
-          toast.error("Đã xảy ra lỗi. Vui lòng thử lại sau.");
-        }
-      }
-      finally {
-        setLoading(false);
+      } finally {
+        setLoading(false)
       }
     }
-  };
+  }
 
   const handleResetSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (formData.newPassword === formData.confirmPassword) {
       try {
-        setLoading(true);
-        await resetPassword(
-          email, formData.newPassword, formData.confirmPassword, identifyCode
-        );
-        toast.success("Mật khẩu đã được đặt lại thành công.");
-        router.push("/login");
-      }
-      catch (error: any) {
+        setLoading(true)
+        await resetPassword(email, formData.newPassword, formData.confirmPassword, identifyCode)
+        toast.success("Mật khẩu đã được đặt lại thành công.")
+        router.push("/login")
+      } catch (error: any) {
         if (error.code === ErrorCode.RESOURCE_INVALID) {
-          toast.error("Mã xác thực không hợp lệ hoặc đã hết hạn.");
+          toast.error("Mã xác thực không hợp lệ hoặc đã hết hạn.")
+        } else {
+          toast.error("Đã xảy ra lỗi. Vui lòng thử lại sau.")
         }
-        else {
-          toast.error("Đã xảy ra lỗi. Vui lòng thử lại sau.");
-        }
-      }
-      finally {
-        setLoading(false);
+      } finally {
+        setLoading(false)
       }
     }
-  };
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+    const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }));
-  };
+    }))
+  }
+
+  // Handle OTP change with validation
+  const handleOtpChange = (value: string) => {
+    // Only allow alphanumeric characters
+    const filteredValue = value.replace(/[^A-Za-z0-9]/g, "")
+    setOtp(filteredValue)
+  }
 
   const renderEmailStep = () => (
     <Card className="shadow-lg">
       <CardHeader>
         <CardTitle className="text-2xl text-center">Quên mật khẩu?</CardTitle>
-        <CardDescription className="text-center">
-          Nhập email của bạn để nhận mã xác thực
-        </CardDescription>
+        <CardDescription className="text-center">Nhập email của bạn để nhận mã xác thực</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleEmailSubmit} className="space-y-6">
@@ -172,31 +149,48 @@ const ForgotPassword = () => {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 
   const renderOtpStep = () => (
     <Card className="shadow-lg">
       <CardHeader>
         <CardTitle className="text-2xl text-center">Xác minh mã</CardTitle>
-        <CardDescription className="text-center">
-          Chúng tôi đã gửi mã gồm 6 chữ số tới {email}
-        </CardDescription>
+        <CardDescription className="text-center">Chúng tôi đã gửi mã gồm 6 ký tự tới {email}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleOtpSubmit} className="space-y-6">
-          <div className="flex justify-center">
-            <InputOTP maxLength={6} value={otp} onChange={(value) => setOtp(value)}>
-              <InputOTPGroup>
-                {[0, 1, 2, 3, 4, 5].map((i) => (
-                  <InputOTPSlot key={i} index={i} />
-                ))}
-              </InputOTPGroup>
-            </InputOTP>
+          <div className="space-y-4">
+            <div className="flex justify-center">
+              <InputOTP maxLength={6} value={otp} onChange={handleOtpChange} pattern={REGEXP_ONLY_DIGITS_AND_CHARS.source}>
+                <InputOTPGroup>
+                  {[0, 1, 2, 3, 4, 5].map((i) => (
+                    <InputOTPSlot key={i} index={i} />
+                  ))}
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
+
+            {/* Helper text */}
+            <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
+              <Shield className="h-4 w-4" />
+              <span>Chỉ chấp nhận chữ cái và số (A-Z, 0-9)</span>
+            </div>
+
+            {/* Show current input */}
+            {otp && (
+              <div className="text-center">
+                <p className="text-sm text-gray-600">
+                  Đã nhập: <span className="font-mono font-semibold">{otp}</span> ({otp.length}/6)
+                </p>
+              </div>
+            )}
           </div>
+
           <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-500" disabled={otp.length !== 6}>
             Xác nhận mã
           </Button>
         </form>
+
         <div className="mt-6 text-center space-y-2">
           <button
             type="button"
@@ -218,15 +212,13 @@ const ForgotPassword = () => {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 
   const renderResetStep = () => (
     <Card className="shadow-lg">
       <CardHeader>
         <CardTitle className="text-2xl text-center">Đặt lại mật khẩu</CardTitle>
-        <CardDescription className="text-center">
-          Nhập mật khẩu mới bên dưới
-        </CardDescription>
+        <CardDescription className="text-center">Nhập mật khẩu mới bên dưới</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleResetSubmit} className="space-y-6">
@@ -259,7 +251,6 @@ const ForgotPassword = () => {
               </Button>
             </div>
           </div>
-
           <div>
             <Label htmlFor="confirmPassword">Xác nhận mật khẩu</Label>
             <div className="relative mt-2">
@@ -289,20 +280,14 @@ const ForgotPassword = () => {
               </Button>
             </div>
           </div>
-
-          {formData.newPassword &&
-            formData.confirmPassword &&
-            formData.newPassword !== formData.confirmPassword && (
-              <p className="text-sm text-red-600">Mật khẩu không khớp</p>
-            )}
-
+          {formData.newPassword && formData.confirmPassword && formData.newPassword !== formData.confirmPassword && (
+            <p className="text-sm text-red-600">Mật khẩu không khớp</p>
+          )}
           <Button
             type="submit"
             className="w-full bg-blue-600 text-white hover:bg-blue-500"
             disabled={
-              !formData.newPassword ||
-              !formData.confirmPassword ||
-              formData.newPassword !== formData.confirmPassword
+              !formData.newPassword || !formData.confirmPassword || formData.newPassword !== formData.confirmPassword
             }
           >
             Xác nhận đặt lại mật khẩu
@@ -319,28 +304,26 @@ const ForgotPassword = () => {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 
   return (
     <>
       {loading && <FullPageLoader />}
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-xl space-y-8">
-
           <div className="text-center">
             <Link href="/" className="flex items-center justify-center space-x-2 mb-6">
               <BookOpen className="h-8 w-8 text-blue-600" />
               <span className="text-2xl font-bold text-gray-900">Toeicify</span>
             </Link>
           </div>
-
           {currentStep === "email" && renderEmailStep()}
           {currentStep === "otp" && renderOtpStep()}
           {currentStep === "reset" && renderResetStep()}
         </div>
       </div>
     </>
-  );
-};
+  )
+}
 
-export default withGuestOnly(ForgotPassword);
+export default withGuestOnly(ForgotPassword)
