@@ -9,7 +9,6 @@ const api = axios.create({
   },
 });
 
-
 let isRefreshing = false;
 let failedQueue: any[] = [];
 
@@ -35,13 +34,13 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-  res => res,
+  res => res.data,
   async error => {
     const originalRequest = error.config;
-
+    
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-
+      
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -50,27 +49,26 @@ api.interceptors.response.use(
           return api(originalRequest);
         });
       }
-
+      
       isRefreshing = true;
-
+      
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/refresh`, {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
         });
-
+        
         const json = await res.json();
         const newToken = json.data?.accessToken;
-
+        
         if (!newToken) throw new Error('No access token in refresh response');
-
+        
         useAuthStore.getState().setAccessToken(newToken);
-
         api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
         processQueue(null, newToken);
-
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        
         return api(originalRequest);
       } catch (err) {
         processQueue(err, null);
@@ -81,7 +79,15 @@ api.interceptors.response.use(
       }
     }
 
-    return Promise.reject(error);
+    const errorData: any = error.response?.data || { 
+      success: false, 
+      message: 'Unknown error',
+      code: 0,
+      data: null,
+      error: 'Unknown Exception'
+    };
+    
+    return Promise.reject(errorData);
   }
 );
 

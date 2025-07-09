@@ -11,14 +11,6 @@ const AuthFailed = () => {
   const searchParams = useSearchParams()
   const [isAnimated, setIsAnimated] = useState(false)
 
-  useEffect(() => {
-    const started = sessionStorage.getItem('auth_flow_started');
-    if (started !== 'true') {
-      router.replace('/login'); 
-    } else {
-      sessionStorage.removeItem('auth_flow_started');
-    }
-  }, []);
   const reason = searchParams.get("reason") || "unknown"
 
   useEffect(() => {

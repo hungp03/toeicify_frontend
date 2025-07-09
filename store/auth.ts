@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import api from '@/lib/axios';
 import { InternalAuthState, User, UpdateUserRequest } from '@/types';
+import { apiLogin, getUserInfo } from '@/lib/api/auth';
+import { updateUserInfo } from '@/lib/api/user';
 
 
 export const useAuthStore = create<InternalAuthState>()(
@@ -35,8 +36,8 @@ export const useAuthStore = create<InternalAuthState>()(
       },
       login: async (identifier, password) => {
         try {
-          const res = await api.post('/auth/login', { identifier, password });
-          const token = res.data.data.accessToken;
+          const res = await apiLogin(identifier, password);
+          const token = res.data.accessToken;
           if (token) {
             set({ accessToken: token });
             await get().fetchUser();
@@ -51,11 +52,9 @@ export const useAuthStore = create<InternalAuthState>()(
       fetchUser: async () => {
         const token = get().accessToken;
         if (!token) return;
-
         try {
-          const res = await api.get('/auth/me');
-          const data = res.data.data;
-
+          const res = await getUserInfo();
+          const data = res.data;
           const user: User = {
             userId: data.userId,
             username: data.username,
@@ -67,7 +66,6 @@ export const useAuthStore = create<InternalAuthState>()(
             examDate: data.examDate || undefined,
             registrationDate: data.registrationDate,
           };
-
           set({ user });
         } catch (err) {
           console.error('Fetch user error:', err);
@@ -76,8 +74,8 @@ export const useAuthStore = create<InternalAuthState>()(
       },
       updateUser: async (updatedFields: UpdateUserRequest) => {
         try {
-          const res = await api.put('/users/me', updatedFields);
-          const updatedData = res.data.data;
+          const res = await updateUserInfo(updatedFields);
+          const updatedData = res.data;
           const currentUser = get().user;
           if (!currentUser) return;
           const newUser = {

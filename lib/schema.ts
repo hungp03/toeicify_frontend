@@ -7,11 +7,12 @@ export const profileSchema = z.object({
 
   username: z.string()
     .min(1, 'Tên đăng nhập không được để trống')
-    .regex(/^\S+$/, 'Không được chứa khoảng trắng'),
+    .regex(/^[a-zA-Z0-9._+@-]+$/, 'Không được chứa khoảng trắng và ký tự đặc biệt trừ -, +, _, ., @'),
 
   email: z.string()
     .min(1, 'Email không được để trống')
-    .email('Email không hợp lệ'),
+    .email('Email không hợp lệ')
+    .regex(/^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, 'Email không hợp lệ'),
 
   targetScore: z
     .union([
@@ -85,6 +86,31 @@ export const loginSchema = z.object({
     .regex(/^\S+$/, { message: "Mật khẩu không được chứa khoảng trắng" }),
 });
 
+export const registerSchema = z.object({
+  fullName: z.string()
+    .min(1, 'Họ tên không được để trống')
+    .regex(/^[\p{L}\s]+$/u, 'Chỉ được chứa chữ và khoảng trắng'),
+
+  username: z.string()
+    .min(1, 'Tên đăng nhập không được để trống')
+    .regex(/^[a-zA-Z0-9._+@-]+$/, 'Không được chứa khoảng trắng và ký tự đặc biệt trừ -, +, _, ., @'),
+
+  email: z.string()
+    .min(1, 'Email không được để trống')
+    .email('Email không hợp lệ')
+    .regex(/^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, 'Email không hợp lệ'),
+
+  password: z.string()
+    .min(8, 'Tối thiểu 8 ký tự')
+    .regex(/^\S{8,}$/, 'Không được chứa khoảng trắng'),
+
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Xác nhận mật khẩu không khớp',
+  path: ['confirmPassword'],
+});
+
 export type ProfileFormData = z.infer<typeof profileSchema>;
 export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 export type LoginFormData = z.infer<typeof loginSchema>;
+export type RegisterFormData = z.infer<typeof registerSchema>;

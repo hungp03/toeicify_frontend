@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,39 +27,98 @@ import {
   EyeOff,
 } from "lucide-react";
 import withGuestOnly from "@/hoc/with-guest-only";
+import { forgotPassword, verifyOtp, resetPassword } from "@/lib/api/auth";
+import FullPageLoader from "@/components/common/full-page-loader";
+import { toast } from "sonner";
+import { ErrorCode } from "@/lib/constants";
+import { ca, fi } from "zod/v4/locales";
 
 type Step = "email" | "otp" | "reset";
 
 const ForgotPassword = () => {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [identifyCode, setIdentifyCode] = useState("");
   const [formData, setFormData] = useState({
+    email: "",
+    identifyCode: "",
     newPassword: "",
     confirmPassword: "",
   });
 
-  const handleEmailSubmit = (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Gửi mã xác thực tới:", email);
-    setCurrentStep("otp");
+    try {
+      setLoading(true);
+      await forgotPassword(email);
+      toast.success("Mã xác thực đã được gửi đến email của bạn.");
+      setCurrentStep("otp");
+    }
+    catch (error: any) {
+      if (error.code === ErrorCode.RESOURCE_NOT_FOUND) {
+        toast.error("Email không tồn tại. Vui lòng kiểm tra lại.");
+      }
+      else {
+        toast.error("Đã xảy ra lỗi. Vui lòng thử lại sau.");
+      }
+    }
+    finally {
+      setLoading(false);
+    }
+
   };
 
-  const handleOtpSubmit = (e: React.FormEvent) => {
+  const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (otp.length === 6) {
-      console.log("Xác minh mã OTP:", otp);
-      setCurrentStep("reset");
+      try {
+        setLoading(true);
+        const res = await verifyOtp(email, otp);
+        setIdentifyCode(res.data?.identifyCode);
+        toast.success("Xác thực thành công. Vui lòng đặt lại mật khẩu.");
+        setCurrentStep("reset");
+      }
+      catch (error: any) {
+        if (error.code === ErrorCode.RESOURCE_INVALID) {
+          toast.error("Mã xác thực không hợp lệ. Vui lòng kiểm tra lại.");
+        }
+        else {
+          toast.error("Đã xảy ra lỗi. Vui lòng thử lại sau.");
+        }
+      }
+      finally {
+        setLoading(false);
+      }
     }
   };
 
-  const handleResetSubmit = (e: React.FormEvent) => {
+  const handleResetSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.newPassword === formData.confirmPassword) {
-      console.log("Đặt lại mật khẩu cho:", email);
-      // Thực hiện gọi API đặt lại mật khẩu tại đây
+      try {
+        setLoading(true);
+        await resetPassword(
+          email, formData.newPassword, formData.confirmPassword, identifyCode
+        );
+        toast.success("Mật khẩu đã được đặt lại thành công.");
+        router.push("/login");
+      }
+      catch (error: any) {
+        if (error.code === ErrorCode.RESOURCE_INVALID) {
+          toast.error("Mã xác thực không hợp lệ hoặc đã hết hạn.");
+        }
+        else {
+          toast.error("Đã xảy ra lỗi. Vui lòng thử lại sau.");
+        }
+      }
+      finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -262,22 +322,24 @@ const ForgotPassword = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-xl space-y-8">
+    <>
+      {loading && <FullPageLoader />}
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-xl space-y-8">
 
-        <div className="text-center">
-          <Link href="/" className="flex items-center justify-center space-x-2 mb-6">
-            <BookOpen className="h-8 w-8 text-blue-600" />
-            <span className="text-2xl font-bold text-gray-900">Toeicify</span>
-          </Link>
+          <div className="text-center">
+            <Link href="/" className="flex items-center justify-center space-x-2 mb-6">
+              <BookOpen className="h-8 w-8 text-blue-600" />
+              <span className="text-2xl font-bold text-gray-900">Toeicify</span>
+            </Link>
+          </div>
+
+          {currentStep === "email" && renderEmailStep()}
+          {currentStep === "otp" && renderOtpStep()}
+          {currentStep === "reset" && renderResetStep()}
         </div>
-
-        {currentStep === "email" && renderEmailStep()}
-        {currentStep === "otp" && renderOtpStep()}
-        {currentStep === "reset" && renderResetStep()}
       </div>
-    </div>
-
+    </>
   );
 };
 

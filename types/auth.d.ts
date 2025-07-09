@@ -35,3 +35,11 @@ export type InternalAuthState = AuthState & {
   hasHydrated: boolean;
   setHasHydrated: (value: boolean) => void;
 };
+
+export type RegisterRequest = {
+  fullName: string;
+  username: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+};
