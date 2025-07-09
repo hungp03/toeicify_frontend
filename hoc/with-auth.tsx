@@ -8,7 +8,7 @@ import { useAuthStore } from "@/store/auth"
 import FullPageLoader from "@/components/common/full-page-loader"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Lock, User, ArrowRight, Shield, Eye } from "lucide-react"
+import { Lock, User, ArrowRight, Eye } from "lucide-react"
 
 export default function withAuth<P extends Record<string, any>>(WrappedComponent: React.ComponentType<P>) {
   return function AuthWrapper(props: P) {
