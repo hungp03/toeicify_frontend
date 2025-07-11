@@ -4,12 +4,12 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { LayoutDashboard, Users, FilePlus, BookOpen, BarChart, FileText } from 'lucide-react';
-import Overview from '@/components/admin/Overview';
-import Students from '@/components/admin/Students';
-import AddExam from '@/components/admin/AddExams';
-import Blogs from '@/components/admin/Blogs';
-import AllExams from '@/components/admin/AllExams';
+import { LayoutDashboard, Users, FilePlus, BookOpen } from 'lucide-react';
+import Overview from '@/components/admin/overview';
+import Students from '@/components/admin/user';
+import AddExam from '@/components/admin/add-exam';
+import Blogs from '@/components/admin/blog';
+import AllExams from '@/components/admin/all-exams';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -33,7 +33,6 @@ export default function AdminPage() {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
       <div className="w-64 bg-white shadow-md">
         <div className="p-4">
           <h1 className="text-xl font-bold">Quản trị TOEIC</h1>
@@ -87,7 +86,6 @@ export default function AdminPage() {
         </ScrollArea>
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 p-8 overflow-auto">
         {renderContent()}
       </div>
