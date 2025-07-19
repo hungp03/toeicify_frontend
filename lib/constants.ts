@@ -1,9 +1,26 @@
+import {
+  BarChart3,
+  Users,
+  FolderTree,
+  Database,
+  FileText,
+  Settings,
+} from 'lucide-react';
+
 export const navItems = [
     { name: "Trang chủ", path: "/" },
     { name: "Luyện tập", path: "/practice-tests" },
-    { name: "Blog", path: "/blog" },
     { name: "Flashcards", path: "/flashcards" },
     { name: "Tiến độ", path: "/progress" },
+];
+
+export const adminMenuItems = [
+  { name: 'Tổng quan', path: '/admin', icon: BarChart3 },
+  { name: 'Quản lý người dùng', path: '/admin/users', icon: Users },
+  { name: 'Phân loại đề thi', path: '/admin/categories', icon: FolderTree },
+  { name: 'Ngân hàng câu hỏi', path: '/admin/questions', icon: Database },
+  { name: 'Quản lý đề thi', path: '/admin/tests', icon: FileText },
+  { name: 'Tạo đề thi', path: '/test-creator', icon: Settings },
 ];
 
 export enum ErrorCode {
