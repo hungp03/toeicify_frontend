@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -32,14 +33,14 @@ const FlashcardsPage = () => {
       title: 'TOEIC Vocabulary - Business',
       description: 'Essential business vocabulary for TOEIC',
       cardCount: 50,
-      createdAt: '2024/01/15'
+      createdAt: '2024-01-15',
     },
     {
       id: 2,
       title: 'Common Phrases',
       description: 'Frequently used phrases in TOEIC tests',
       cardCount: 30,
-      createdAt: '2024/01/10'
+      createdAt: '2024-02-01',
     }
   ]);
 
@@ -50,13 +51,14 @@ const FlashcardsPage = () => {
   const handleCreateSet = () => {
     if (newSetTitle.trim()) {
       const newSet: FlashcardSet = {
-        id: Date.now(),
+        id: Math.floor(Math.random() * 1000000), // Stable random ID
         title: newSetTitle.trim(),
         description: newSetDescription.trim(),
         cardCount: 0,
-        createdAt: new Date().toISOString().split('T')[0]
+        createdAt: new Date().toISOString().split('T')[0], // ISO date for consistent parsing
       };
       setFlashcardSets(prev => [...prev, newSet]);
+      toast.success('Đã tạo bộ flashcard mới!');
       setNewSetTitle('');
       setNewSetDescription('');
       setIsCreateDialogOpen(false);
@@ -67,7 +69,6 @@ const FlashcardsPage = () => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* Tiêu đề */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Flashcards</h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
@@ -75,7 +76,6 @@ const FlashcardsPage = () => {
           </p>
         </div>
 
-        {/* Thanh tiêu đề và nút tạo mới */}
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-2xl font-semibold">Danh sách của bạn</h2>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
@@ -124,7 +124,6 @@ const FlashcardsPage = () => {
           </Dialog>
         </div>
 
-        {/* Danh sách bộ thẻ */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {flashcardSets.map((set) => (
             <Card key={set.id} className="hover:shadow-lg transition-shadow">
@@ -138,7 +137,7 @@ const FlashcardsPage = () => {
                 <div className="space-y-4">
                   <div className="text-sm text-gray-600">
                     <p>{set.cardCount} thẻ</p>
-                    <p>Ngày tạo: {new Date(set.createdAt).toLocaleDateString()}</p>
+                    <p>Ngày tạo: {new Date(set.createdAt).toLocaleDateString('vi-VN')}</p>
                   </div>
                   <div className="flex space-x-2">
                     <Link href={`/flashcards/${set.id}`} className="flex-1">
@@ -160,7 +159,6 @@ const FlashcardsPage = () => {
           ))}
         </div>
 
-        {/* Không có bộ thẻ */}
         {flashcardSets.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg mb-4">Chưa có bộ flashcard nào.</p>
@@ -177,6 +175,6 @@ const FlashcardsPage = () => {
       </div>
     </div>
   );
-}
+};
 
 export default FlashcardsPage;
