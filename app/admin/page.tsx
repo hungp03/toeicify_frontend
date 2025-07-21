@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { LayoutDashboard, Users, FilePlus, BookOpen } from 'lucide-react';
-import Overview from '@/components/admin/overview';
+import Overview from '@/components/admin/Overview';
 import Students from '@/components/admin/user';
 import AddExam from '@/components/admin/add-exam';
 import Blogs from '@/components/admin/blog';
