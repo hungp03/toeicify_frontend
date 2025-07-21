@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import Notification from "@/components/common/notification";
+// import Notification from "@/components/common/notification";
 import UserDropdown from "@/components/common/user-dropdown";
 import UserDropdownMobile from "@/components/common/user-dropdown-mobile";
 import { Search, Menu, BookOpen } from "lucide-react";
@@ -64,7 +64,7 @@ const Header = () => {
               </>
             ) : (
               <>
-                <Notification />
+                {/* <Notification /> */}
                 <UserDropdown />
               </>
             )}
@@ -100,7 +100,7 @@ const Header = () => {
                     </div>
                   ) : (
                     <>
-                      <Notification />
+                      {/* <Notification /> */}
                       <UserDropdownMobile />
                     </>
                   )}

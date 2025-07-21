@@ -1,9 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, FlipHorizontal } from 'lucide-react';
 
 interface Flashcard {
@@ -12,8 +11,9 @@ interface Flashcard {
     back: string;
 }
 
-const FlashcardStudyPage = ({ params }: { params: { id: string } }) => {
-    const { id } = params;
+const FlashcardStudyPage = () => {
+    const params = useParams();
+    const id = params?.id as string;
     const router = useRouter();
 
     const [flashcards] = useState<Flashcard[]>([

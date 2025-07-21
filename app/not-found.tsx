@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Home, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
-
+import '@/app/globals.css'
 const NotFound = () => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4 sm:px-6 lg:px-8">
