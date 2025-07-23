@@ -1,180 +1,175 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { useAuthStore } from '@/store/auth';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
+import { Book, Eye } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger
+  DialogFooter,
 } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { BookPlus, Book, FlipHorizontal } from 'lucide-react';
+import { getFlashcardLists, createFlashcardList } from '@/lib/api/flashcard';
 
-interface FlashcardSet {
-  id: number;
-  title: string;
-  description: string;
+type FlashcardList = {
+  listId: number;
+  listName: string;
+  description?: string;
   cardCount: number;
   createdAt: string;
-}
+  isPublic: boolean;
+  ownerName?: string;
+};
 
-const FlashcardsPage = () => {
-  const [flashcardSets, setFlashcardSets] = useState<FlashcardSet[]>([
-    {
-      id: 1,
-      title: 'TOEIC Vocabulary - Business',
-      description: 'Essential business vocabulary for TOEIC',
-      cardCount: 50,
-      createdAt: '2024-01-15',
-    },
-    {
-      id: 2,
-      title: 'Common Phrases',
-      description: 'Frequently used phrases in TOEIC tests',
-      cardCount: 30,
-      createdAt: '2024-02-01',
-    }
-  ]);
+export default function FlashcardsPage() {
+  const [tab, setTab] = useState<'mine' | 'learning' | 'explore'>('mine');
+  const [lists, setLists] = useState<FlashcardList[]>([]);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [formData, setFormData] = useState({ listName: '', description: '' });
+  const user = useAuthStore((s) => s.user);
+  const hasHydrated = useAuthStore((s) => s.hasHydrated);
 
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [newSetTitle, setNewSetTitle] = useState('');
-  const [newSetDescription, setNewSetDescription] = useState('');
-
-  const handleCreateSet = () => {
-    if (newSetTitle.trim()) {
-      const newSet: FlashcardSet = {
-        id: Math.floor(Math.random() * 1000000), // Stable random ID
-        title: newSetTitle.trim(),
-        description: newSetDescription.trim(),
-        cardCount: 0,
-        createdAt: new Date().toISOString().split('T')[0], // ISO date for consistent parsing
-      };
-      setFlashcardSets(prev => [...prev, newSet]);
-      toast.success('Đã tạo bộ flashcard mới!');
-      setNewSetTitle('');
-      setNewSetDescription('');
-      setIsCreateDialogOpen(false);
+  const handleCreate = async () => {
+    try {
+      await createFlashcardList(formData);
+      setIsCreateOpen(false);
+      setFormData({ listName: '', description: '' });
+      getFlashcardLists(tab).then(setLists);
+    } catch (e) {
+      console.error('Tạo thất bại:', e);
     }
   };
 
+  useEffect(() => {
+    if (hasHydrated && user) {
+      getFlashcardLists(tab).then(setLists);
+    }
+  }, [tab, hasHydrated]);
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen px-4 py-8 bg-white">
+      <h1 className="text-4xl font-bold mb-6 flex items-center gap-2">
+        <Book className="h-6 w-6" /> Flashcards
+      </h1>
 
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Flashcards</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Tạo và ôn tập bộ thẻ ghi nhớ để nâng cao vốn từ vựng.
-          </p>
-        </div>
-
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl font-semibold">Danh sách của bạn</h2>
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-blue-600 text-white hover:bg-blue-500">
-                <BookPlus className="h-4 w-4 mr-2" />
-                Tạo bộ thẻ mới
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Tạo bộ flashcard mới</DialogTitle>
-                <DialogDescription>
-                  Nhập tiêu đề và mô tả để bắt đầu.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="title">Tiêu đề</Label>
-                  <Input
-                    id="title"
-                    placeholder="Nhập tiêu đề"
-                    value={newSetTitle}
-                    onChange={(e) => setNewSetTitle(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="description">Mô tả (tuỳ chọn)</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Nhập mô tả"
-                    value={newSetDescription}
-                    onChange={(e) => setNewSetDescription(e.target.value)}
-                  />
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                    Huỷ
-                  </Button>
-                  <Button onClick={handleCreateSet} disabled={!newSetTitle.trim()}>
-                    Tạo
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {flashcardSets.map((set) => (
-            <Card key={set.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Book className="h-5 w-5" /> {set.title}
-                </CardTitle>
-                <CardDescription>{set.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="text-sm text-gray-600">
-                    <p>{set.cardCount} thẻ</p>
-                    <p>Ngày tạo: {new Date(set.createdAt).toLocaleDateString('vi-VN')}</p>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Link href={`/flashcards/${set.id}`} className="flex-1">
-                      <Button variant="outline" className="w-full">
-                        <Book className="h-4 w-4 mr-2" />
-                        Quản lý
-                      </Button>
-                    </Link>
-                    <Link href={`/flashcards/${set.id}/study`} className="flex-1">
-                      <Button className="w-full bg-blue-600 text-white hover:bg-blue-500">
-                        <FlipHorizontal className="h-4 w-4 mr-2" />
-                        Ôn tập
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {flashcardSets.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg mb-4">Chưa có bộ flashcard nào.</p>
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <BookPlus className="h-4 w-4 mr-2" />
-                  Tạo bộ đầu tiên
-                </Button>
-              </DialogTrigger>
-            </Dialog>
-          </div>
-        )}
+      <div className="flex gap-3 mb-8">
+        <Button variant={tab === 'mine' ? 'default' : 'outline'} onClick={() => setTab('mine')}>Danh sách của tôi</Button>
+        <Button variant={tab === 'learning' ? 'default' : 'outline'} onClick={() => setTab('learning')}>Đang học</Button>
+        <Button variant={tab === 'explore' ? 'default' : 'outline'} onClick={() => setTab('explore')}>Khám phá</Button>
       </div>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+      {tab === 'mine' && user && (
+        <Card
+          onClick={() => setIsCreateOpen(true)}
+          className="flex items-center justify-center h-full w-full cursor-pointer border border-dashed border-blue-400 hover:bg-blue-50 transition-all shadow-sm"
+        >
+          <CardContent className="p-0 m-0 text-blue-600 font-medium text-sm flex items-center justify-center h-[160px]">
+            <span className="inline-flex items-center gap-1">
+              <span className="text-lg">+</span> Tạo list từ
+            </span>
+          </CardContent>
+        </Card>
+      )}
+
+      {lists.map((list, index) => (
+        <Card key={`${list.listId}-${index}`} className="hover:shadow-md h-full flex flex-col justify-between">
+          <CardHeader>
+            <CardTitle>{list.listName}</CardTitle>
+            <CardDescription>{list.description}</CardDescription>
+          </CardHeader>
+          <CardContent className="text-sm text-gray-600 space-y-2 flex flex-col justify-between flex-1">
+            {tab === 'explore' && (
+              <p>
+                <Eye className="inline h-4 w-4 mr-1" /> Tác giả: {list.ownerName}
+              </p>
+            )}
+            <div className="flex justify-between text-sm text-gray-500">
+              <p>{list.cardCount} thẻ</p>
+              <p className="ml-auto">Ngày tạo: {new Date(list.createdAt).toLocaleDateString('vi-VN')}</p>
+            </div>
+            <div className="flex justify-between gap-3 pt-4">
+              <Link href={`/flashcards/${list.listId}`} className="w-28">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full px-4 shadow-sm hover:border-blue-500"
+                >
+                  Quản lý
+                </Button>
+              </Link>
+              <Link href={`/flashcards/${list.listId}/study`} className="w-28">
+                <Button
+                  size="sm"
+                  className="w-full bg-blue-600 text-white px-4 hover:bg-blue-700 shadow"
+                >
+                  Ôn tập
+                </Button>
+              </Link>
+            </div>
+
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+
+
+
+      {lists.length === 0 && user &&  (
+        <div className="text-center py-12 text-gray-500">
+          Không có danh sách nào trong mục này.
+        </div>
+      )}
+
+    {!user && (
+      <div className="text-center text-gray-500 text-sm mt-8">
+        Vui lòng <Link href="/login" className="text-blue-600 underline">đăng nhập</Link> để sử dụng danh sách flashcard và tạo list từ.
+      </div>
+    )}
+
+
+      {/* Dialog tạo mới */}
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Tạo list từ</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 mt-2">
+            <div>
+              <label className="block mb-1 text-sm font-medium">Tiêu đề*</label>
+              <Input
+                value={formData.listName}
+                onChange={(e) => setFormData({ ...formData, listName: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <label className="block mb-1 text-sm font-medium">Mô tả</label>
+              <Textarea
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="mt-4">
+            <Button onClick={handleCreate}>Lưu</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
-};
-
-export default FlashcardsPage;
+}
