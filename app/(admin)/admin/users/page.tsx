@@ -1,151 +1,251 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow
-} from '@/components/ui/table';
-import { Search, UserCheck, UserX, MoreHorizontal } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Search, UserCheck, UserX, MoreHorizontal } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { getUsers, toggleUserStatus } from "@/lib/api/user";
+import { Pagination } from "@/components/common/pagination";
+
+interface User {
+  userId: number;
+  username: string;
+  email: string;
+  fullName: string;
+  isActive: boolean;
+  registrationDate: string;
+  targetScore?: number;
+  examDate?: string;
+  roleId?: string;
+  roleName?: string;
+}
+
+interface PaginationResponse {
+  meta: {
+    page: number;
+    pageSize: number;
+    pages: number;
+    total: number;
+  };
+  result: User[];
+}
 
 const AdminUsers = () => {
-    const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [users, setUsers] = useState<User[]>([]);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-    const users = [
-        { id: 1, name: 'Nguyễn Văn A', email: 'a@example.com', status: 'active', joinDate: '2024-01-15', testsCompleted: 12 },
-        { id: 2, name: 'Trần Thị B', email: 'b@example.com', status: 'inactive', joinDate: '2024-02-10', testsCompleted: 8 },
-        { id: 3, name: 'Lê Văn C', email: 'c@example.com', status: 'active', joinDate: '2024-03-05', testsCompleted: 15 },
-        { id: 4, name: 'Phạm Thị D', email: 'd@example.com', status: 'banned', joinDate: '2024-01-20', testsCompleted: 3 },
-        { id: 5, name: 'Hoàng Văn E', email: 'e@example.com', status: 'active', joinDate: '2024-02-28', testsCompleted: 20 },
-    ];
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const response = await getUsers(page, 20, searchTerm);
 
-    const filteredUsers = users.filter(user =>
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+      // Kiểm tra lại cấu trúc
+      console.log("API Response:", response.data);
 
-    const getStatusBadge = (status: string) => {
-        const statusConfig = {
-            active: { label: 'Hoạt động', variant: 'default' as const },
-            inactive: { label: 'Không hoạt động', variant: 'secondary' as const },
-            banned: { label: 'Bị khóa', variant: 'destructive' as const },
-        };
-        return statusConfig[status as keyof typeof statusConfig] || statusConfig.active;
-    };
+      // Lấy dữ liệu chính xác từ response.data
+      const { result, meta } = response.data;
 
-    const handleToggleStatus = (userId: number, currentStatus: string) => {
-        toast.info(`Chuyển trạng thái người dùng ${userId} từ ${currentStatus}`);
-        // TODO: Gọi API toggle hoặc update state
-    };
+      if (!Array.isArray(result) || !meta) {
+        throw new Error("Invalid API response structure");
+      }
 
-    return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold text-gray-900">Quản lý người dùng</h1>
-                <p className="text-gray-600 mt-2">Quản lý tài khoản và trạng thái người dùng</p>
-            </div>
+      setUsers(result);
+      setTotalUsers(meta.total);
+      setTotalPages(meta.pages);
+      setError(null);
+    } catch (err: any) {
+      console.error("Fetch Users Error:", err);
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Không thể tải danh sách người dùng";
+      setError(errorMessage);
+      toast.error(`Lỗi khi tải danh sách người dùng: ${errorMessage}`);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            {/* Search + Stats */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                <div className="lg:col-span-3">
-                    <Card>
-                        <CardContent className="p-6">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                <Input
-                                    placeholder="Tìm kiếm theo tên hoặc email..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="pl-10"
-                                />
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-                <Card>
-                    <CardContent className="p-6">
-                        <div className="text-center">
-                            <p className="text-2xl font-bold text-blue-600">{users.length}</p>
-                            <p className="text-sm text-gray-600">Tổng người dùng</p>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+  useEffect(() => {
+    fetchUsers();
+  }, [page, searchTerm]);
 
-            {/* Users Table */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Danh sách người dùng</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className='text-center'>Tên</TableHead>
-                                <TableHead className='text-center'>Email</TableHead>
-                                <TableHead className='text-center'>Trạng thái</TableHead>
-                                <TableHead className='text-center'>Ngày tham gia</TableHead>
-                                <TableHead className='text-center'>Bài thi hoàn thành</TableHead>
-                                <TableHead>Hành động</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filteredUsers.map((user) => {
-                                const statusConfig = getStatusBadge(user.status);
-                                return (
-                                    <TableRow key={user.id}>
-                                        <TableCell className="font-medium">{user.name}</TableCell>
-                                        <TableCell >{user.email}</TableCell>
-                                        <TableCell className="text-center">
-                                            <Badge variant={statusConfig.variant}>
-                                                {statusConfig.label}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className='text-center'>{user.joinDate}</TableCell>
-                                        <TableCell className='text-center'>{user.testsCompleted}</TableCell>
-                                        <TableCell>
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="w-[70%]"
-                                                    onClick={() => handleToggleStatus(user.id, user.status)}
-                                                >
-                                                    {user.status === 'active' ? (
-                                                        <>
-                                                            <UserX className="h-4 w-4 mr-1" />
-                                                            Khóa
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <UserCheck className="h-4 w-4 mr-1" />
-                                                            Mở khóa
-                                                        </>
-                                                    )}
-                                                </Button>
-                                                <Button variant="ghost" size="sm" className="w-full">
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                </Button>
-                                            </div>
+  const getStatusBadge = (isActive: boolean) => {
+    return isActive
+      ? { label: "Hoạt động", variant: "default" as const }
+      : { label: "Bị khóa", variant: "destructive" as const };
+  };
 
-                                        </TableCell>
-                                    </TableRow>
-                                );
-                            })}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+  const handleToggleStatus = async (userId: number, isActive: boolean) => {
+    try {
+      await toggleUserStatus(userId);
+      toast.success(`Đã ${isActive ? "khóa" : "mở khóa"} người dùng ${userId}`);
+      fetchUsers();
+    } catch (err: any) {
+      console.error("Toggle Status Error:", err.response?.data || err.message);
+      toast.error(
+        `Lỗi khi chuyển trạng thái người dùng: ${err.response?.data?.message || err.message}`,
+      );
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Quản lý người dùng</h1>
+        <p className="text-gray-600 mt-2">
+          Quản lý tài khoản và trạng thái người dùng
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="lg:col-span-3">
+          <Card>
+            <CardContent className="p-6">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Tìm kiếm theo username hoặc email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </CardContent>
+          </Card>
         </div>
-    );
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-blue-600">{totalUsers}</p>
+              <p className="text-sm text-gray-600">Tổng người dùng</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Danh sách người dùng</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="text-center">Đang tải...</div>
+          ) : error ? (
+            <div className="text-center text-red-500">{error}</div>
+          ) : (
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-center">Tên</TableHead>
+                    <TableHead className="text-center">Email</TableHead>
+                    <TableHead className="text-center">Vai trò</TableHead>
+                    <TableHead className="text-center">Trạng thái</TableHead>
+                    <TableHead className="text-center">Ngày tham gia</TableHead>
+                    <TableHead className="text-center">Điểm mục tiêu</TableHead>
+                    <TableHead className="text-center">Ngày thi</TableHead>
+                    <TableHead>Hành động</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users.map((user) => {
+                    const statusConfig = getStatusBadge(user.isActive);
+                    return (
+                      <TableRow key={user.userId}>
+                        <TableCell className="font-medium">
+                          {user.fullName}
+                        </TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell className="text-center">
+                          {user.roleName ?? "N/A"}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant={statusConfig.variant}>
+                            {statusConfig.label}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {new Date(user.registrationDate).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {user.targetScore ?? "N/A"}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {user.examDate
+                            ? new Date(user.examDate).toLocaleDateString()
+                            : "N/A"}
+                        </TableCell>
+                        <TableCell>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-[70%]"
+                              onClick={() =>
+                                handleToggleStatus(user.userId, user.isActive)
+                              }
+                            >
+                              {user.isActive ? (
+                                <>
+                                  <UserX className="h-4 w-4 mr-1" />
+                                  Khóa
+                                </>
+                              ) : (
+                                <>
+                                  <UserCheck className="h-4 w-4 mr-1" />
+                                  Mở khóa
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="w-full"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+              {/* <Pagination
+                currentPage={page + 1}
+                totalPages={totalPages}
+                onPageChange={(newPage) => setPage(newPage - 1)}
+              /> */}
+              {totalPages > 1 && (
+                  <Pagination
+                    currentPage={page + 1}
+                    totalPages={totalPages}
+                    onPageChange={(newPage) => setPage(newPage - 1)}
+                  />
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
 };
 
 export default AdminUsers;
