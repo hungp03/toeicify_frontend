@@ -17,33 +17,11 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { getUsers, toggleUserStatus } from "@/lib/api/user";
 import { Pagination } from "@/components/common/pagination";
-
-interface User {
-  userId: number;
-  username: string;
-  email: string;
-  fullName: string;
-  isActive: boolean;
-  registrationDate: string;
-  targetScore?: number;
-  examDate?: string;
-  roleId?: string;
-  roleName?: string;
-}
-
-interface PaginationResponse {
-  meta: {
-    page: number;
-    pageSize: number;
-    pages: number;
-    total: number;
-  };
-  result: User[];
-}
+import {AdminUpdateUser} from "@/types/user.d"
 
 const AdminUsers = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<AdminUpdateUser[]>([]);
   const [totalUsers, setTotalUsers] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);

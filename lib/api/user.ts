@@ -9,9 +9,9 @@ export const updateUserPassword = (currentPassword: string, newPassword: string,
     confirmPassword,
   });
 export const getUsers = async (page: number, size: number, searchTerm: string) => {
-  return api.get(`/admin/users?page=${page}&size=${size}&searchTerm=${searchTerm}`);
+  return api.get(`/users?page=${page}&size=${size}&searchTerm=${searchTerm}`);
 };
 
 export const toggleUserStatus = async (userId: number) => {
-  return api.put(`/admin/users/${userId}/toggle-status`);
+  return api.patch(`/users/${userId}/toggle-status`);
 };
