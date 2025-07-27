@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import clsx from 'clsx';
 import { useRouter } from 'next/navigation';
-
+import { Loader } from 'lucide-react';
 
 
 export default function LearnPage() {
@@ -196,7 +196,11 @@ export default function LearnPage() {
   const correctCount = queue.filter((c) => c.status === 'correct').length;
 
   if (!user || !list || queue.length === 0 || !flash) {
-    return <div className="text-center text-gray-500 mt-8">Đang tải dữ liệu...</div>;
+    return (
+      <div className="flex justify-center py-12">
+          <Loader className="h-6 w-6 text-gray-500 animate-spin" />
+      </div>
+    )
   }
 
   // Determine current cluster (for display, use 1-based index for user-friendliness)

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/auth';
 import {
   Card,
@@ -11,7 +10,7 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
-import { Book, Eye } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -21,6 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Book, Eye, Loader } from 'lucide-react';
 import { getFlashcardLists, createFlashcardList, markListInProgress } from '@/lib/api/flashcard';
 import { FlashcardList, PaginationResponse } from '@/types/flashcard';
 import { useRouter } from 'next/navigation';
@@ -33,6 +33,8 @@ export default function FlashcardsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [formData, setFormData] = useState({ listName: '', description: '' });
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
   const user = useAuthStore((s) => s.user);
   const hasHydrated = useAuthStore((s) => s.hasHydrated);
   const router = useRouter();
@@ -40,14 +42,18 @@ export default function FlashcardsPage() {
 
   const fetchLists = async (page = 1) => {
     try {
+      setIsLoading(true); // Bắt đầu loading
       const res: PaginationResponse<FlashcardList> = await getFlashcardLists(tab, page);
       setLists(res.result);
       setCurrentPage(res.meta.page);
       setTotalPages(res.meta.pages);
     } catch (e) {
       console.error('Tải danh sách thất bại:', e);
+    } finally {
+      setIsLoading(false); // Kết thúc loading
     }
   };
+  
 
   const handleCreate = async () => {
     try {
@@ -68,7 +74,7 @@ export default function FlashcardsPage() {
     if (hasHydrated && user) {
       fetchLists(1);
     }
-  }, [tab, hasHydrated]);
+  }, [tab, hasHydrated, user]);
 
   const renderPagination = () => {
     if (totalPages <= 1) return null;
@@ -176,7 +182,13 @@ export default function FlashcardsPage() {
 
       {renderPagination()}
 
-      {lists.length === 0 && user && (
+      {user && isLoading && (
+        <div className="flex justify-center py-12">
+          <Loader className="h-6 w-6 text-gray-500 animate-spin" />
+        </div>
+      )}
+
+      {user && lists.length === 0 && !isLoading && (
         <div className="text-center py-12 text-gray-500">
           Không có danh sách nào trong mục này.
         </div>

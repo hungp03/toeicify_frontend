@@ -7,8 +7,8 @@ import { useAuthStore } from '@/store/auth';
 import { getFlashcardListDetail, createFlashcard, updateFlashcard, 
   deleteFlashcard, toggleFlashcardListPublic, 
   getPaginatedFlashcards, markListInProgress, stopLearningFlashcardList } from '@/lib/api/flashcard';
-import { PaginationResponse, ListDetailResponse, FlashcardDetail } from '@/types/flashcard';
-import { Edit2, Trash2, Shuffle } from 'lucide-react';
+import { ListDetailResponse, FlashcardDetail } from '@/types/flashcard';
+import { Edit2, Trash2, Loader  } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -37,6 +37,7 @@ export default function FlashcardListPage() {
   const [flashcards, setFlashcards] = useState<FlashcardDetail[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   
   const user = useAuthStore((s) => s.user);
@@ -47,7 +48,7 @@ export default function FlashcardListPage() {
       setIsAddOpen(false);
       setFormData({ frontText: '', backText: '', category: ''});
       getFlashcardListDetail(id as string).then(setList); // Load lại danh sách
-      fetchFlashcards(currentPage);
+      fetchData(currentPage);
     } catch (e) {
       console.error('Lỗi khi thêm flashcard:', e);
     }
@@ -67,7 +68,7 @@ export default function FlashcardListPage() {
   
     setIsEditOpen(false);
     getFlashcardListDetail(id as string).then(setList);
-    fetchFlashcards(currentPage);
+    fetchData(currentPage);
   };  
   const handleDeleteFlashcard = async (cardId: number) => {
     if (!id) return;
@@ -85,7 +86,7 @@ export default function FlashcardListPage() {
       const newPage = currentPage > newTotalPages ? newTotalPages : currentPage;
   
       setCurrentPage(newPage);
-      fetchFlashcards(newPage); // Gọi lại API phân trang
+      fetchData(newPage); // Gọi lại API phân trang
     } catch (e) {
       console.error('Lỗi khi xóa flashcard:', e);
     }
@@ -100,16 +101,25 @@ export default function FlashcardListPage() {
       console.error('Lỗi khi toggle trạng thái:', err);
     }
   };
-  const fetchFlashcards = async (page = 1) => {
+  const fetchData = async (page = 1) => {
+    setIsLoading(true);
     try {
-      const res: PaginationResponse<FlashcardDetail> = await getPaginatedFlashcards(id as string, page);
-      setFlashcards(res.result);
-      setCurrentPage(res.meta.page);
-      setTotalPages(res.meta.pages);
-    } catch (error) {
-      console.error('Lỗi khi tải flashcards:', error);
+      const [listRes, flashcardRes] = await Promise.all([
+        getFlashcardListDetail(id as string),
+        getPaginatedFlashcards(id as string, page),
+      ]);
+      setList(listRes);
+      setFlashcards(flashcardRes.result);
+      setCurrentPage(flashcardRes.meta.page);
+      setTotalPages(flashcardRes.meta.pages);
+    } catch (err) {
+      console.error('Lỗi khi fetch dữ liệu:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
+  
+  
   const startLearning = async () => {
     await markListInProgress(id as string);
     router.push(`/flashcards/${id}/study`);
@@ -125,7 +135,7 @@ export default function FlashcardListPage() {
           key={i}
           variant={i === currentPage ? 'default' : 'outline'}
           size="sm"
-          onClick={() => fetchFlashcards(i)}
+          onClick={() => fetchData(i)}
         >
           {i}
         </Button>
@@ -138,7 +148,7 @@ export default function FlashcardListPage() {
           size="sm"
           variant="outline"
           disabled={currentPage === 1}
-          onClick={() => fetchFlashcards(currentPage - 1)}
+          onClick={() => fetchData(currentPage - 1)}
         >
           &larr;
         </Button>
@@ -147,7 +157,7 @@ export default function FlashcardListPage() {
           size="sm"
           variant="outline"
           disabled={currentPage === totalPages}
-          onClick={() => fetchFlashcards(currentPage + 1)}
+          onClick={() => fetchData(currentPage + 1)}
         >
           &rarr;
         </Button>
@@ -157,20 +167,25 @@ export default function FlashcardListPage() {
 
   useEffect(() => {
     if (id && hasHydrated && user) {
-      getFlashcardListDetail(id as string).then(setList);
-      fetchFlashcards(1);
+      fetchData();
     }
-  }, [id, hasHydrated]);
+  }, [id, hasHydrated, user]);
 
-  if (!list) return <div className="p-8">Loading...</div>;
+  if (isLoading) {
+  return (
+    <div className="flex items-center justify-center h-screen">
+      <Loader className="h-8 w-8 text-gray-500 animate-spin" />
+    </div>
+  );
+} 
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">
-          Flashcards: {list.listName}
+          Flashcards: {list?.listName}
         </h1>
-        {list.isOwner && (
+        {list?.isOwner && (
           <div className="flex gap-2">
             <Button 
               onClick={() => router.push(`/flashcards/${id}/edit`)} 
@@ -198,14 +213,14 @@ export default function FlashcardListPage() {
 
       
 
-      {list.flashcards.length > 0 && (
+      {list?.flashcards?.length && (
         <div>
           <Button onClick={startLearning} variant="outline" className="w-full mb-6">
             Luyện tập flashcards
           </Button>
 
 
-          {list.inProgress && (
+          {list?.inProgress && (
             <Button
               variant="destructive"
               className="w-full mb-4 bg-transparent text-red-500 hover:underline 
@@ -226,7 +241,7 @@ export default function FlashcardListPage() {
         </div>
       )}
 
-      <h2 className="text-lg font-semibold mb-2">List có {list.flashcards.length} từ</h2>
+      <h2 className="text-lg font-semibold mb-2">List có {list?.flashcards.length} từ</h2>
 
       <div className="space-y-4">
         {flashcards.map((card) => (

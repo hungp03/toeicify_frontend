@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import axios from 'axios';
 import { useAuthStore } from '@/store/auth';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Loader } from 'lucide-react';
 import { updateFlashcardList, getFlashcardListDetail } from '@/lib/api/flashcard';
 import { ListDetailResponse, FlashcardDetail } from '@/types/flashcard';
 import { toast } from 'sonner';
@@ -22,6 +22,7 @@ export default function FlashcardListEditPage() {
   const [description, setDescription] = useState('');
   const [flashcards, setFlashcards] = useState<FlashcardDetail[]>([]);
   const [list, setList] = useState<ListDetailResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const user = useAuthStore((s) => s.user);
   const hasHydrated = useAuthStore((s) => s.hasHydrated);
@@ -43,9 +44,9 @@ export default function FlashcardListEditPage() {
 
   useEffect(() => {
     if (id && hasHydrated && user) {
-      getFlashcardListDetail(id as string).then(setList);
+      fetchData();
     }
-  }, [id, hasHydrated]);
+  }, [id, hasHydrated, user]);
   useEffect(()=>{
     if(list){
       setTitle(list.listName);
@@ -104,9 +105,23 @@ export default function FlashcardListEditPage() {
     ]);
   };
 
+  const fetchData = async () => {
+    setIsLoading(true);
+    try{
+        const [listRes] = await Promise.all([
+        getFlashcardListDetail(id as string)     
+      ]);
+      setList(listRes);
+    }catch (err) {
+      console.error('Lỗi khi fetch dữ liệu:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <div className="relative">
-      {user && list && (
+      {user && list && !isLoading && (
         <div>
           <div className={`sticky top-[64px] z-40 pt-4 px-4 py-3 transition-colors duration-300 
             ${isSticky ? 'bg-white shadow-sm border-b' : 'bg-transparent'}`}>
@@ -213,6 +228,11 @@ export default function FlashcardListEditPage() {
       {!user && (
         <div className="text-center text-gray-500 text-sm mt-8">
           Vui lòng <Link href="/login" className="text-blue-600 underline">đăng nhập</Link> để chỉnh sửa danh sách flash card
+        </div>
+      )}
+      {user && isLoading && (
+        <div className="flex justify-center py-12">
+          <Loader className="h-6 w-6 text-gray-500 animate-spin" />
         </div>
       )}
     </div>

@@ -8,6 +8,7 @@ import { ListDetailResponse, TestQuestion, QuestionTypeTest } from '@/types/flas
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Loader } from 'lucide-react';
 
 
 export default function FlashcardTestPage() {
@@ -21,11 +22,14 @@ export default function FlashcardTestPage() {
   const [questions, setQuestions] = useState<TestQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   
   
   useEffect(() => {
-    if (!id || !count && (!hasHydrated && !user)) return;
+    if (!id || !count || !hasHydrated || !user) return;
+    
+    setIsLoading(true); // Bắt đầu loading
     getFlashcardListDetail(id as string).then((data) => {
       const flashcards = [...data.flashcards].sort(() => Math.random() - 0.5).slice(0, count);
       const generated: TestQuestion[] = flashcards.map((card): TestQuestion => {
@@ -46,8 +50,12 @@ export default function FlashcardTestPage() {
       
       setList(data);
       setQuestions(generated);
+      setIsLoading(false); // Kết thúc loading
+    }).catch((err) => {
+      console.error("Lỗi khi tải flashcard list:", err);
+      setIsLoading(false); // Dù lỗi cũng cần dừng loading
     });
-  }, [id, count, hasHydrated]);
+  }, [id, count, hasHydrated, user]);
 
   const handleSubmit = () => setSubmitted(true);
 
@@ -173,13 +181,10 @@ export default function FlashcardTestPage() {
     );
   };
   
-  
-  if (!list || questions.length === 0) {
-    return <div className="text-center py-10 text-gray-500">🔄 Đang tải câu hỏi...</div>;
-  }
+
   return (
     <div>
-        {user && (
+        {user && list && !isLoading && (
             <div className="max-w-3xl mx-auto px-4 py-8">
             <h1 className="text-2xl font-bold text-center mb-6">📝 Bài kiểm tra từ vựng</h1>
             {questions.map((q, idx) => renderQuestion(q, idx))}
@@ -203,10 +208,15 @@ export default function FlashcardTestPage() {
           </div>
         )}
         {!user && (
-            <div className="text-center text-gray-500 text-sm mt-8">
-                Vui lòng <Link href="/login" className="text-blue-600 underline">đăng nhập</Link> để luyện tập với flash card
-            </div>
-            )}
+          <div className="text-center text-gray-500 text-sm mt-8">
+            Vui lòng <Link href="/login" className="text-blue-600 underline">đăng nhập</Link> để luyện tập với flash card
+          </div>
+        )}
+        {user && isLoading && (
+          <div className="flex justify-center py-12">
+            <Loader className="h-6 w-6 text-gray-500 animate-spin" />
+          </div>
+        )}
     </div>
   );
 }
