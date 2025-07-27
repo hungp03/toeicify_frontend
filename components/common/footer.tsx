@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import {
   BookOpen,
@@ -76,7 +74,7 @@ const Footer = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <Phone className="h-4 w-4 text-blue-400" />
-                <span className="text-gray-300">+1 (555) 123-4567</span>
+                <span className="text-gray-300">+84 012 1234 567</span>
               </div>
               <div className="flex items-start space-x-2">
                 <MapPin className="h-4 w-4 text-blue-400 mt-0.5" />
@@ -95,14 +93,11 @@ const Footer = () => {
               © 2025 Toeicify.
             </div>
             <div className="flex space-x-6 text-sm">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
+              <a href="/privacy" className="text-gray-400 hover:text-white transition-colors">
                 Chính sách bảo mật
               </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
+              <a href="/terms" className="text-gray-400 hover:text-white transition-colors">
                 Điều khoản sử dụng
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                Chính sách Cookie
               </a>
             </div>
           </div>
