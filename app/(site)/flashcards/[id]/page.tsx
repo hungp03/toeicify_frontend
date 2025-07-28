@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/auth';
 import { getFlashcardListDetail, createFlashcard, updateFlashcard, 
   deleteFlashcard, toggleFlashcardListPublic, 
-  getPaginatedFlashcards, markListInProgress, stopLearningFlashcardList } from '@/lib/api/flashcard';
+  getPaginatedFlashcards, markListInProgress, stopLearningFlashcardList, deleteFlashcardList } from '@/lib/api/flashcard';
 import { ListDetailResponse, FlashcardDetail } from '@/types/flashcard';
 import { Edit2, Trash2, Loader  } from 'lucide-react';
 import {
@@ -20,7 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Lock, Globe2 } from "lucide-react";
 import { useRouter } from 'next/navigation';
-
+import { toast } from 'sonner';
 
 
 export default function FlashcardListPage() {
@@ -38,6 +38,7 @@ export default function FlashcardListPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const router = useRouter();
   
   const user = useAuthStore((s) => s.user);
@@ -91,7 +92,6 @@ export default function FlashcardListPage() {
       console.error('Lỗi khi xóa flashcard:', e);
     }
   };
-  
   const handleTogglePublic = async () => {
     if (!id) return;
     try {
@@ -101,6 +101,19 @@ export default function FlashcardListPage() {
       console.error('Lỗi khi toggle trạng thái:', err);
     }
   };
+  const handleDeleteList = async () => {
+    try {
+      await deleteFlashcardList(id as string);
+      toast.success('Đã xoá danh sách thành công!');
+      router.push('/flashcards');
+    } catch (e) {
+      console.error('Lỗi khi xoá danh sách:', e);
+      toast.error('Xoá danh sách thất bại. Vui lòng thử lại.');
+    } finally {
+      setIsDeleteDialogOpen(false);
+    }
+  };
+  
   const fetchData = async (page = 1) => {
     setIsLoading(true);
     try {
@@ -187,6 +200,12 @@ export default function FlashcardListPage() {
         </h1>
         {list?.isOwner && (
           <div className="flex gap-2">
+            <Button
+              onClick={() => setIsDeleteDialogOpen(true)}
+              className="bg-red-600 text-white hover:bg-red-700 text-sm px-3 py-1 rounded"
+            >
+              Xoá danh sách
+            </Button>
             <Button 
               onClick={() => router.push(`/flashcards/${id}/edit`)} 
               className="bg-blue-700 text-white hover:bg-blue-800 text-sm px-3 py-1 rounded"
@@ -373,6 +392,19 @@ export default function FlashcardListPage() {
 
           <DialogFooter className="mt-4">
             <Button onClick={handleUpdateFlashcard}>Lưu</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Xác nhận xoá danh sách?</DialogTitle>
+          </DialogHeader>
+          <p>Bạn có chắc chắn muốn xoá danh sách này và toàn bộ các flashcard bên trong?</p>
+          <DialogFooter className="mt-4 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Huỷ</Button>
+            <Button variant="destructive" onClick={handleDeleteList}>Xoá</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

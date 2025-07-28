@@ -43,9 +43,7 @@ export default function FlashcardStudyPage() {
   const fetchData = async () => {
     setIsLoading(true);
     try{
-        const [listRes] = await Promise.all([
-        getFlashcardListDetail(id as string)     
-      ]);
+      const listRes = await getFlashcardListDetail(id as string)     ;
       setList(listRes);
     }catch (err) {
       console.error('Lỗi khi fetch dữ liệu:', err);
@@ -195,19 +193,19 @@ export default function FlashcardStudyPage() {
       )}
 
     <TestDialog
-    open={showTestDialog}
-    max={Math.min(50, list?.flashcards.length || 0)}
-    defaultCount={
-        (list?.flashcards.length || 0) > 20
-        ? 20
-        : Math.floor((list?.flashcards.length || 0) / 2)
-    }
-    onConfirm={(count) => {
-        setShowTestDialog(false);
-        router.push(`/flashcards/${id}/test?count=${count}`);
-    }}
-    onClose={() => setShowTestDialog(false)}
-    />
+      open={showTestDialog}
+      max={Math.min(50, list?.flashcards.length || 0)}
+      defaultCount={
+          (list?.flashcards.length || 0) > 20
+          ? 20
+          : Math.floor((list?.flashcards.length || 0) / 2)
+      }
+      onConfirm={(count) => {
+          setShowTestDialog(false);
+          router.push(`/flashcards/${id}/test?count=${count}`);
+      }}
+      onClose={() => setShowTestDialog(false)}
+      />
 
     </div>
   );

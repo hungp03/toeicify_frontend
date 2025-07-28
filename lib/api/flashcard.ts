@@ -68,3 +68,7 @@ export const stopLearningFlashcardList = async (listId: string) => {
   const res = await api.put(`/flashcards/list/${listId}/stop-learning`);
   return res.data;
 };
+export const deleteFlashcardList = async (listId: string) => {
+  const res = await api.delete(`/flashcards/list/${listId}`);
+  return res.data;
+};

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import clsx from 'clsx';
 import { useRouter } from 'next/navigation';
-import { Loader } from 'lucide-react';
+import { ArrowLeft, Loader } from 'lucide-react';
 
 
 export default function LearnPage() {
@@ -257,7 +257,16 @@ export default function LearnPage() {
   
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-10 text-center">
+    <div className="relative max-w-3xl mx-auto px-4 py-10 text-center">
+      <Button
+        onClick={() => router.push(`/flashcards/${id}/study`)}
+        variant="outline"
+        size="icon"
+        className="absolute pl-4 pr-4 w-12 rounded-2xl cursor-pointer left-4 top-4 border-black hover:bg-black hover:text-white transition"
+        title="Quay về trang học"
+      >
+        <ArrowLeft className="h-4 w-4" />
+      </Button>
       <h1 className="text-2xl font-semibold mb-6">{list.listName} – Learn Mode</h1>
       <div className="flex justify-between text-sm mb-2">
         <span>{correctCount}</span>
