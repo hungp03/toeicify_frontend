@@ -10,6 +10,7 @@ import { Layers, Brain, FileText, Loader } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import TestDialog  from '@/components/ui/test-dialog';
+import { toast } from 'sonner';
 
 
 
@@ -46,6 +47,7 @@ export default function FlashcardStudyPage() {
       const listRes = await getFlashcardListDetail(id as string)     ;
       setList(listRes);
     }catch (err) {
+      toast.error('Lỗi khi lấy dữ liệu danh sách. Vui lòng thử lại.');
       console.error('Lỗi khi fetch dữ liệu:', err);
     } finally {
       setIsLoading(false);

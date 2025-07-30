@@ -113,6 +113,7 @@ export default function FlashcardListEditPage() {
       ]);
       setList(listRes);
     }catch (err) {
+      toast.error('Lỗi khi lấy dữ liệu danh sách. Vui lòng thử lại.');
       console.error('Lỗi khi fetch dữ liệu:', err);
     } finally {
       setIsLoading(false);

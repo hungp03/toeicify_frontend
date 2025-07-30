@@ -51,7 +51,7 @@ export default function FlashcardListPage() {
       getFlashcardListDetail(id as string).then(setList); // Load lại danh sách
       fetchData(currentPage);
     } catch (e) {
-      console.error('Lỗi khi thêm flashcard:', e);
+      toast.error('Không thể thêm flashcard. Vui lòng thử lại sau.');
     }
   };
   const handleUpdateFlashcard = async () => {
@@ -75,21 +75,17 @@ export default function FlashcardListPage() {
     if (!id) return;
     try {
       await deleteFlashcard(id as string, cardId);
-  
       // Gọi lại để cập nhật thống kê tổng flashcards
       const updatedList = await getFlashcardListDetail(id as string);
       setList(updatedList);
-  
       // Tính lại totalPages mới
       const newTotalPages = Math.ceil(updatedList.totalCards / 10);
-  
       // Nếu page hiện tại > số trang mới thì lùi về trang cuối cùng
       const newPage = currentPage > newTotalPages ? newTotalPages : currentPage;
-  
       setCurrentPage(newPage);
       fetchData(newPage); // Gọi lại API phân trang
     } catch (e) {
-      console.error('Lỗi khi xóa flashcard:', e);
+      toast.error('Xoá flashcard thất bại. Vui lòng thử lại.');
     }
   };
   const handleTogglePublic = async () => {
@@ -98,7 +94,7 @@ export default function FlashcardListPage() {
       const res = await toggleFlashcardListPublic(id as string);
       setList(prev => prev ? { ...prev, isPublic: res.isPublic } : prev);
     } catch (err) {
-      console.error('Lỗi khi toggle trạng thái:', err);
+      toast.error('Lỗi khi thay đổi trạng thái. Vui lòng thử lại.');
     }
   };
   const handleDeleteList = async () => {
@@ -107,7 +103,6 @@ export default function FlashcardListPage() {
       toast.success('Đã xoá danh sách thành công!');
       router.push('/flashcards');
     } catch (e) {
-      console.error('Lỗi khi xoá danh sách:', e);
       toast.error('Xoá danh sách thất bại. Vui lòng thử lại.');
     } finally {
       setIsDeleteDialogOpen(false);
@@ -126,7 +121,7 @@ export default function FlashcardListPage() {
       setCurrentPage(flashcardRes.meta.page);
       setTotalPages(flashcardRes.meta.pages);
     } catch (err) {
-      console.error('Lỗi khi fetch dữ liệu:', err);
+      toast.error('Lỗi khi lấy dữ liệu flashcards. Vui lòng thử lại.');
     } finally {
       setIsLoading(false);
     }
@@ -249,11 +244,11 @@ export default function FlashcardListPage() {
                   await stopLearningFlashcardList(id as string);
                   router.push(`/flashcards/`);
                 } catch (err) {
-                  console.error("Lỗi khi dừng học:", err);
+                  toast.error("Lỗi khi dừng học. Vui lòng thử lại.");
                 }
               }}
             >
-              ❌ Dừng học list này
+              Dừng học list này
             </Button>
           )}
         
