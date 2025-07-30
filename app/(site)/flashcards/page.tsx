@@ -39,7 +39,6 @@ export default function FlashcardsPage() {
   const [newSetDescription, setNewSetDescription] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [tab, setTab] = useState<'mine' | 'learning' | 'explore'>('mine');
-
   const user = useAuthStore((s) => s.user);
   const hasHydrated = useAuthStore((s) => s.hasHydrated);
   const router = useRouter();
@@ -50,9 +49,9 @@ export default function FlashcardsPage() {
       setFlashcardSets(res.result);
     } catch (e) {
       toast.error('Không thể tải danh sách flashcard. Vui lòng thử lại sau.');
-      console.error('Lỗi khi tải danh sách flashcard:', e);
     }
   };
+  
 
   const handleCreateSet = async () => {
     try {
@@ -67,7 +66,6 @@ export default function FlashcardsPage() {
       toast.success('Tạo bộ thẻ thành công!');
     } catch (e) {
       toast.error('Không thể tạo bộ thẻ. Vui lòng thử lại sau.');
-      console.error('Lỗi khi tạo bộ thẻ:', e);
     }
   };
 
@@ -76,7 +74,7 @@ export default function FlashcardsPage() {
       await markListInProgress(`${id}`);
       router.push(`/flashcards/${id}/study`);
     } catch (e) {
-      console.error('Lỗi khi bắt đầu ôn tập:', e);
+      toast.error('Không thể bắt đầu ôn tập. Vui lòng thử lại sau.');
     }
   };
 

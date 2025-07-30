@@ -6,10 +6,11 @@ import { useAuthStore } from '@/store/auth';
 import { Button } from '@/components/ui/button';
 import { getFlashcardListDetail } from '@/lib/api/flashcard';
 import { ListDetailResponse } from '@/types/flashcard';
-import { Layers, Brain, FileText } from 'lucide-react';
+import { Layers, Brain, FileText, Loader } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import TestDialog  from '@/components/ui/test-dialog';
+import { toast } from 'sonner';
 
 
 
@@ -22,6 +23,7 @@ export default function FlashcardStudyPage() {
   const [hintShown, setHintShown] = useState(false);
   const router = useRouter();
   const [showTestDialog, setShowTestDialog] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const user = useAuthStore((s) => s.user);
   const hasHydrated = useAuthStore((s) => s.hasHydrated);
@@ -39,18 +41,30 @@ export default function FlashcardStudyPage() {
 
   const toggleHint = () => setHintShown((prev) => !prev);
   const flipCard = () => setShowBack((prev) => !prev);
+  const fetchData = async () => {
+    setIsLoading(true);
+    try{
+      const listRes = await getFlashcardListDetail(id as string)     ;
+      setList(listRes);
+    }catch (err) {
+      toast.error('Lỗi khi lấy dữ liệu danh sách. Vui lòng thử lại.');
+      console.error('Lỗi khi fetch dữ liệu:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   useEffect(() => {
-    if (id && hasHydrated && user){
-        getFlashcardListDetail(id as string).then(setList);
+    if (id && hasHydrated && user) {
+      fetchData();
     }
-  }, [id, hasHydrated]);
+  }, [id, hasHydrated, user]);
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 text-center">
 
       {/* Flashcard */}
-    {user && list?.flashcards[currentIndex] && (
+    {user && list?.flashcards[currentIndex] && !isLoading && (
         <div>
             {/* Tiêu đề */}
             <h1 className="text-3xl font-bold mb-6">{list?.listName}</h1>
@@ -174,21 +188,26 @@ export default function FlashcardStudyPage() {
         Vui lòng <Link href="/login" className="text-blue-600 underline">đăng nhập</Link> để luyện tập với flash card
       </div>
     )}
+    {user && isLoading && (
+        <div className="flex justify-center py-12">
+          <Loader className="h-6 w-6 text-gray-500 animate-spin" />
+        </div>
+      )}
 
     <TestDialog
-    open={showTestDialog}
-    max={Math.min(50, list?.flashcards.length || 0)}
-    defaultCount={
-        (list?.flashcards.length || 0) > 20
-        ? 20
-        : Math.floor((list?.flashcards.length || 0) / 2)
-    }
-    onConfirm={(count) => {
-        setShowTestDialog(false);
-        router.push(`/flashcards/${id}/test?count=${count}`);
-    }}
-    onClose={() => setShowTestDialog(false)}
-    />
+      open={showTestDialog}
+      max={Math.min(50, list?.flashcards.length || 0)}
+      defaultCount={
+          (list?.flashcards.length || 0) > 20
+          ? 20
+          : Math.floor((list?.flashcards.length || 0) / 2)
+      }
+      onConfirm={(count) => {
+          setShowTestDialog(false);
+          router.push(`/flashcards/${id}/test?count=${count}`);
+      }}
+      onClose={() => setShowTestDialog(false)}
+      />
 
     </div>
   );
