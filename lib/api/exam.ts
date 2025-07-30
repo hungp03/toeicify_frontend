@@ -6,3 +6,7 @@ export const getAllExams = async (params?: {
     page?: number;
     size?: number;
 }) => api.get("/exams", { params });
+
+export const getExamCategories = async (
+    params?: { page?: number; size?: number }
+) => api.get("/exam-categories", { params });

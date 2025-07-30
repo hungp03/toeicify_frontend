@@ -6,8 +6,8 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 // import Notification from "@/components/common/notification";
-import UserDropdown from "@/components/common/user-dropdown";
-import UserDropdownMobile from "@/components/common/user-dropdown-mobile";
+import AuthSection from "@/components/common/auth-section";
+import AuthSectionMobile from "./auth-section-mobile";
 import { Search, Menu, BookOpen } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { navItems } from "@/lib/constants";
@@ -15,6 +15,8 @@ import { useAuthStore } from "@/store/auth";
 const Header = () => {
   const pathname = usePathname();
   const user = useAuthStore((state) => state.user);
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
+  const isFetchingUser = useAuthStore((state) => state.isFetchingUser);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const isActive = (path: string) => pathname === path;
@@ -53,21 +55,7 @@ const Header = () => {
           </div>
 
           <div className="hidden md:flex items-center space-x-3">
-            {!user ? (
-              <>
-                <Link href="/login">
-                  <Button variant="outline" size="sm">Đăng nhập</Button>
-                </Link>
-                <Link href="/register">
-                  <Button size="sm" className=" bg-blue-600 hover:bg-blue-500">Đăng ký</Button>
-                </Link>
-              </>
-            ) : (
-              <>
-                {/* <Notification /> */}
-                <UserDropdown />
-              </>
-            )}
+            <AuthSection />
           </div>
 
           <Sheet>
@@ -89,21 +77,7 @@ const Header = () => {
                   </Link>
                 ))}
                 <div className="pt-4 border-t">
-                  {!user ? (
-                    <div className="space-y-3">
-                      <Link href="/login" className="block">
-                        <Button variant="outline" className="w-full">Đăng nhập</Button>
-                      </Link>
-                      <Link href="/register" className="block">
-                        <Button className="w-full  bg-blue-600 hover:bg-blue-500">Đăng ký</Button>
-                      </Link>
-                    </div>
-                  ) : (
-                    <>
-                      {/* <Notification /> */}
-                      <UserDropdownMobile />
-                    </>
-                  )}
+                  <AuthSectionMobile />
                 </div>
               </nav>
             </SheetContent>

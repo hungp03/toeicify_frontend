@@ -33,6 +33,7 @@ export type AuthState = {
 
 export type InternalAuthState = AuthState & {
   hasHydrated: boolean;
+  isFetchingUser: boolean
   setHasHydrated: (value: boolean) => void;
 };
 

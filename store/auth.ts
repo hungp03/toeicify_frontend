@@ -10,6 +10,7 @@ export const useAuthStore = create<InternalAuthState>()(
       user: null,
       accessToken: null,
       hasHydrated: false,
+      isFetchingUser: false,
       setHasHydrated: (value) => set({ hasHydrated: value }),
       setAccessToken: (token) => set({ accessToken: token }),
       logout: async () => {
@@ -45,6 +46,7 @@ export const useAuthStore = create<InternalAuthState>()(
       fetchUser: async () => {
         const token = get().accessToken;
         if (!token) return;
+        set({ isFetchingUser: true });
         try {
           const res = await getUserInfo();
           const data = res.data;
@@ -63,6 +65,9 @@ export const useAuthStore = create<InternalAuthState>()(
         } catch (err) {
           console.error('Fetch user error:', err);
           get().logout();
+        }
+        finally{
+          set({ isFetchingUser: false });
         }
       },
       updateUser: async (updatedFields: UpdateUserRequest) => {
