@@ -8,3 +8,10 @@ export const updateUserPassword = (currentPassword: string, newPassword: string,
     newPassword,
     confirmPassword,
   });
+export const getUsers = async (page: number, size: number, searchTerm: string) => {
+  return api.get(`/users?page=${page}&size=${size}&searchTerm=${searchTerm}`);
+};
+
+export const toggleUserStatus = async (userId: number, lockReason?: string) => {
+    return api.patch(`users/${userId}/toggle-status`, { lockReason });
+};

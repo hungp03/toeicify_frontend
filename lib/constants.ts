@@ -5,13 +5,14 @@ import {
   Database,
   FileText,
   Settings,
+  Home,
 } from 'lucide-react';
 
 export const navItems = [
-    { name: "Trang chủ", path: "/" },
-    { name: "Luyện tập", path: "/practice-tests" },
-    { name: "Flashcards", path: "/flashcards" },
-    { name: "Tiến độ", path: "/progress" },
+  { name: "Trang chủ", path: "/" },
+  { name: "Luyện tập", path: "/practice-tests" },
+  { name: "Flashcards", path: "/flashcards" },
+  { name: "Tiến độ", path: "/progress" },
 ];
 
 export const adminMenuItems = [
@@ -21,6 +22,7 @@ export const adminMenuItems = [
   { name: 'Ngân hàng câu hỏi', path: '/admin/questions', icon: Database },
   { name: 'Quản lý đề thi', path: '/admin/tests', icon: FileText },
   { name: 'Tạo đề thi', path: '/test-creator', icon: Settings },
+  { name: "Trang chủ", path: "/", icon: Home },
 ];
 
 export enum ErrorCode {
