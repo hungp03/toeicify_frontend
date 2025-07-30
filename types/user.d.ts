@@ -13,8 +13,6 @@ export interface AdminUpdateUser {
     fullName: string;
     isActive: boolean;
     registrationDate: string;
-    targetScore?: number;
-    examDate?: string;
     roleId?: string;
     roleName?: string;
     lockReason?: string;

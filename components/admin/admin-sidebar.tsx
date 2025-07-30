@@ -8,9 +8,11 @@ export default function AdminSidebar() {
     const pathname = usePathname();
 
     const isActive = (path: string) => {
-        if (path === '/admin') return pathname === path;
-        return pathname?.startsWith(path);
+        if (path === '/') return false;
+        if (path === '/admin') return pathname === '/admin';
+        return pathname === path || pathname.startsWith(`${path}/`);
     };
+
 
     return (
         <div className="w-64 bg-white shadow-lg fixed h-full z-10">
@@ -25,8 +27,7 @@ export default function AdminSidebar() {
                             key={item.path}
                             href={item.path}
                             className={`flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors ${isActive(item.path) ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600' : ''
-                                }`}
-                        >
+                                }`}>
                             <Icon className="h-5 w-5" />
                             <span className="ml-3">{item.name}</span>
                         </Link>

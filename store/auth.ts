@@ -4,7 +4,6 @@ import { InternalAuthState, User, UpdateUserRequest } from '@/types';
 import { apiLogin, getUserInfo } from '@/lib/api/auth';
 import { updateUserInfo } from '@/lib/api/user';
 
-
 export const useAuthStore = create<InternalAuthState>()(
   persist(
     (set, get) => ({
@@ -12,26 +11,20 @@ export const useAuthStore = create<InternalAuthState>()(
       accessToken: null,
       hasHydrated: false,
       setHasHydrated: (value) => set({ hasHydrated: value }),
-      setAccessToken: (token: string) => {
-        set({ accessToken: token });
-      },
+      setAccessToken: (token) => set({ accessToken: token }),
       logout: async () => {
-        try {
-          const currentToken = get().accessToken;
-          set({ user: null, accessToken: null });
-          if (currentToken) {
-            // Không gọi từ axios tránh lỗi vòng lặp vô hạn do 401 Unauthorized
-            await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/logout`, {
-              method: 'POST',
-              credentials: 'include',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${currentToken}`,
-              },
-            });
-          }
-        } catch (error) {
-          console.error("Logout error:", error);
+        const token = get().accessToken;
+        set({ user: null, accessToken: null });
+        localStorage.removeItem('toeic-auth-storage');
+        if (token) {
+          await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/logout`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+          });
         }
       },
       login: async (identifier, password) => {
@@ -62,8 +55,8 @@ export const useAuthStore = create<InternalAuthState>()(
             email: data.email,
             roleId: data.roleId,
             roleName: data.roleName,
-            targetScore: data.targetScore || undefined,
-            examDate: data.examDate || undefined,
+            targetScore: data.targetScore ?? undefined,
+            examDate: data.examDate ?? undefined,
             registrationDate: data.registrationDate,
           };
           set({ user });
@@ -89,28 +82,21 @@ export const useAuthStore = create<InternalAuthState>()(
         }
       },
       oauthLogin: async (token: string) => {
-        try {
-          set({ accessToken: token });
-          await get().fetchUser();
-        } catch (err) {
-          console.error('OAuth login error:', err);
-        }
+        set({ accessToken: token });
+        await get().fetchUser();
       },
     }),
     {
       name: 'toeic-auth-storage',
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
-        accessToken: state.accessToken,
-      }),
+      partialize: (state) => ({ accessToken: state.accessToken }),
       onRehydrateStorage: () => (state) => {
         if (!state) return;
         state.setHasHydrated(true);
         if (state.accessToken) {
           state.fetchUser();
         }
-      }
-
+      },
     }
   )
 );

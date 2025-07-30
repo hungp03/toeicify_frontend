@@ -1,5 +1,5 @@
+// lib/axios.ts
 import axios from 'axios';
-import { useAuthStore } from '@/store/auth';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
@@ -10,19 +10,34 @@ const api = axios.create({
 });
 
 let isRefreshing = false;
-let failedQueue: any[] = [];
+let failedQueue: {
+  resolve: (token: string | null) => void;
+  reject: (error: any) => void;
+}[] = [];
 
 const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach(prom => {
+  failedQueue.forEach((prom) => {
     if (error) prom.reject(error);
     else prom.resolve(token);
   });
   failedQueue = [];
 };
 
+const getAccessTokenFromStorage = (): string | null => {
+  try {
+    const raw = localStorage.getItem('toeic-auth-storage');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed?.state?.accessToken ?? null;
+  } catch (err) {
+    console.warn('Error reading token from localStorage', err);
+    return null;
+  }
+};
+
 api.interceptors.request.use(
   (config) => {
-    const token = useAuthStore.getState().accessToken;
+    const token = getAccessTokenFromStorage();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     } else {
@@ -34,59 +49,63 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-  res => res.data,
-  async error => {
+  (res) => res.data,
+  async (error) => {
     const originalRequest = error.config;
-    
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
+
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
-        }).then(token => {
-          originalRequest.headers.Authorization = `Bearer ${token}`;
+        }).then((token) => {
+          if (token) originalRequest.headers.Authorization = `Bearer ${token}`;
           return api(originalRequest);
         });
       }
-      
+
       isRefreshing = true;
-      
+
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/refresh`, {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
         });
-        
+
         const json = await res.json();
         const newToken = json.data?.accessToken;
-        
         if (!newToken) throw new Error('No access token in refresh response');
-        
-        useAuthStore.getState().setAccessToken(newToken);
+
+        const raw = localStorage.getItem('toeic-auth-storage');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          parsed.state.accessToken = newToken;
+          localStorage.setItem('toeic-auth-storage', JSON.stringify(parsed));
+        }
+
         api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
         processQueue(null, newToken);
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        
+
         return api(originalRequest);
       } catch (err) {
         processQueue(err, null);
-        useAuthStore.getState().logout();
+        localStorage.removeItem('toeic-auth-storage');
         return Promise.reject(err);
       } finally {
         isRefreshing = false;
       }
     }
 
-    const errorData: any = error.response?.data || { 
-      success: false, 
+    const errorData = error.response?.data || {
+      success: false,
       message: 'Unknown error',
       code: 0,
       data: null,
-      error: 'Unknown Exception'
+      error: 'Unknown Exception',
     };
-    
     return Promise.reject(errorData);
   }
 );
