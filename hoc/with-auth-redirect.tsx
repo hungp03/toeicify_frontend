@@ -5,7 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import FullPageLoader from '@/components/common/full-page-loader';
 import { useAuthStore } from '@/store/auth';
 
-export function withAuthRedirectProtection<P extends Record<string, any>>(WrappedComponent: React.ComponentType<P>) {
+export function withAuthRedirectProtection<P extends Record<string, any> = {}>(
+  WrappedComponent: React.ComponentType<P>
+) {
   return function ProtectedComponent(props: P) {
     const router = useRouter();
     const searchParams = useSearchParams();

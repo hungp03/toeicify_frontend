@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth';
 import FullPageLoader from '@/components/common/full-page-loader';
 
-export default function withGuestOnly<P extends Record<string, any>>(WrappedComponent: React.ComponentType<P>) {
+export default function withGuestOnly<P extends Record<string, any> = {}>(
+  WrappedComponent: React.ComponentType<P>
+) {
     return function GuestOnlyWrapper(props: P) {
         const router = useRouter();
         const user = useAuthStore((state) => state.user);

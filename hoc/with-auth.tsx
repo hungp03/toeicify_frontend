@@ -10,7 +10,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Lock, User, ArrowRight, Eye } from "lucide-react"
 
-export default function withAuth<P extends Record<string, any>>(WrappedComponent: React.ComponentType<P>) {
+export default function withAuth<P extends Record<string, any> = {}>(
+  WrappedComponent: React.ComponentType<P>
+) {
   return function AuthWrapper(props: P) {
     const router = useRouter()
     const user = useAuthStore((state) => state.user)
