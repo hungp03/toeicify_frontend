@@ -40,20 +40,17 @@ export const profileSchema = z.object({
     .optional(),
 
    examDate: z
-  .union([
-    z.string().refine(
+    .string()
+    .optional()
+    .refine(
       (val) => {
         if (!val) return true; 
         const date = new Date(val);
-        const now = new Date();
-        return date >= new Date(now.toDateString()); 
+        const today = new Date();
+        return date >= new Date(today.toDateString());
       },
       { message: 'Ngày dự thi không được nhỏ hơn hôm nay' }
     ),
-    z.literal('').transform(() => undefined),
-  ])
-  .optional(),
-
 });
 
 export const changePasswordSchema = z.object({

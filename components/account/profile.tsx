@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,7 +17,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { profileSchema, changePasswordSchema, ProfileFormData, ChangePasswordFormData } from '@/lib/schema';
 import dayjs from 'dayjs';
-import api from '@/lib/axios';
 import { toast } from 'sonner';
 import { ErrorCode } from '@/lib/constants';
 import { updateUserPassword } from '@/lib/api/user';
@@ -25,11 +24,13 @@ import { updateUserPassword } from '@/lib/api/user';
 const ProfileCard = () => {
     const user = useAuthStore((s) => s.user);
     const updateUser = useAuthStore((s) => s.updateUser);
+    const [hasChanges, setHasChanges] = useState(false);
 
     const {
         register,
         handleSubmit,
         setValue,
+        watch,
         formState: { errors: profileErrors, isSubmitting },
     } = useForm<ProfileFormData>({
         resolver: zodResolver(profileSchema),
@@ -44,7 +45,6 @@ const ProfileCard = () => {
         },
     });
 
-
     const {
         register: pwRegister,
         handleSubmit: handlePasswordSubmit,
@@ -53,6 +53,9 @@ const ProfileCard = () => {
     } = useForm<ChangePasswordFormData>({
         resolver: zodResolver(changePasswordSchema),
     });
+
+    // Watch tất cả các field để theo dõi thay đổi
+    const watchedValues = watch();
 
     useEffect(() => {
         if (user) {
@@ -63,6 +66,34 @@ const ProfileCard = () => {
             setValue('examDate', user.examDate ? dayjs(user.examDate).format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD'));
         }
     }, [user, setValue]);
+
+    // Theo dõi thay đổi trong form
+    useEffect(() => {
+        if (!user) return;
+
+        const originalValues = {
+            fullName: user.fullName || '',
+            username: user.username || '',
+            email: user.email || '',
+            targetScore: String(user.targetScore ?? 600),
+            examDate: user.examDate ? dayjs(user.examDate).format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD'),
+        };
+
+        const currentValues = {
+            fullName: watchedValues.fullName || '',
+            username: watchedValues.username || '',
+            email: watchedValues.email || '',
+            targetScore: watchedValues.targetScore || '',
+            examDate: watchedValues.examDate || '',
+        };
+
+        // So sánh giá trị hiện tại với giá trị gốc
+        const isChanged = Object.keys(originalValues).some(
+            (key) => originalValues[key as keyof typeof originalValues] !== currentValues[key as keyof typeof currentValues]
+        );
+
+        setHasChanges(isChanged);
+    }, [watchedValues, user]);
 
     const onSubmitProfile = async (data: ProfileFormData) => {
         const payload = {
@@ -75,6 +106,7 @@ const ProfileCard = () => {
         try {
             await updateUser(payload);
             toast.success('Cập nhật hồ sơ thành công');
+            setHasChanges(false); // Reset trạng thái thay đổi sau khi cập nhật thành công
         } catch (error: any) {
             if (error.code === ErrorCode.RESOURCE_ALREADY_EXISTS) {
                 if (error.message.includes("Username is already in use")) {
@@ -162,16 +194,23 @@ const ProfileCard = () => {
                                     defaultValue={
                                         user?.examDate ? dayjs(user.examDate).format('YYYY-MM-DD') : ''
                                     }
-                                    min={dayjs().add(1, 'day').format('YYYY-MM-DD')}
+                                    min={dayjs().format('YYYY-MM-DD')}
                                 />
                                 {profileErrors.examDate && (
                                     <p className="text-sm text-red-500 mt-1">{profileErrors.examDate.message}</p>
                                 )}
                             </div>
                         </div>
-                        <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-500" disabled={isSubmitting}>
-                            {isSubmitting ? 'Đang cập nhật...' : 'Cập nhật hồ sơ'}
-                        </Button>
+                        
+                        {hasChanges && (
+                            <Button 
+                                type="submit" 
+                                className="w-full bg-blue-600 text-white hover:bg-blue-500" 
+                                disabled={isSubmitting}
+                            >
+                                {isSubmitting ? 'Đang cập nhật...' : 'Cập nhật hồ sơ'}
+                            </Button>
+                        )}
                     </form>
                 </CardContent>
             </Card>
