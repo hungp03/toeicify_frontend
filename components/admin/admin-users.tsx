@@ -18,11 +18,11 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { getUsers, toggleUserStatus } from '@/lib/api/user';
 import { Pagination } from '@/components/common/pagination';
-import type { AdminUpdateUser } from '@/types/user.d';
+import type { AdminUpdateUser } from '@/types';
 
-// Main component logic
 export function AdminUsersContent() {
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
     const [users, setUsers] = useState<AdminUpdateUser[]>([]);
     const [totalUsers, setTotalUsers] = useState(0);
     const [page, setPage] = useState(0);
@@ -32,12 +32,17 @@ export function AdminUsersContent() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<AdminUpdateUser | null>(null);
     const [lockReason, setLockReason] = useState('');
+    const [lastFetchKey, setLastFetchKey] = useState('');
 
-    // Fetch users (with optional params)
-    const fetchUsers = async (pageValue = page, term = searchTerm.trim()) => {
+    // Fetch users function
+    const fetchUsers = async (pageValue: number, term: string) => {
         setLoading(true);
         try {
-            const { data } = await getUsers(pageValue, 20, term);
+            const trimmedTerm = term.trim();
+            const { data } = trimmedTerm
+                ? await getUsers(pageValue, 20, trimmedTerm)
+                : await getUsers(pageValue, 20);
+
             const { result, meta } = data;
             setUsers(result);
             setTotalUsers(meta.total);
@@ -52,27 +57,35 @@ export function AdminUsersContent() {
         }
     };
 
-    // Debounced fetch (memoized)
-    const debouncedFetch = useCallback(
+    // Debounce search term
+    const debouncedSetSearch = useCallback(
         debounce((value: string) => {
-            fetchUsers(0, value);
-            setPage(0); // reset page on search
-        }, 2000),
+            setDebouncedSearchTerm(value);
+            setPage(0); // Reset page when search changes
+        }, 1000),
         []
     );
 
-    // Trigger fetch when searchTerm changes
+    // Handle search input change
     useEffect(() => {
-        debouncedFetch(searchTerm);
+        debouncedSetSearch(searchTerm);
         return () => {
-            debouncedFetch.cancel();
+            debouncedSetSearch.cancel();
         };
-    }, [searchTerm, debouncedFetch]);
+    }, [searchTerm, debouncedSetSearch]);
 
-    // Fetch when page changes
+    // Main effect - chỉ chạy khi debouncedSearchTerm hoặc page thay đổi
     useEffect(() => {
-        fetchUsers(page);
-    }, [page]);
+        const fetchKey = `${page}-${debouncedSearchTerm}`;
+        if (fetchKey !== lastFetchKey) {
+            setLastFetchKey(fetchKey);
+            fetchUsers(page, debouncedSearchTerm);
+        }
+    }, [page, debouncedSearchTerm, lastFetchKey]);
+
+    const handlePageChange = (newPage: number) => {
+        setPage(newPage);
+    };
 
     const handleToggleStatus = (user: AdminUpdateUser) => {
         if (user.isActive && user.roleName === 'Administrator') {
@@ -206,7 +219,11 @@ export function AdminUsersContent() {
                                 </TableBody>
                             </Table>
                             {totalPages > 1 && (
-                                <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+                                <Pagination
+                                    currentPage={page}
+                                    totalPages={totalPages}
+                                    onPageChange={handlePageChange}
+                                />
                             )}
                         </>
                     )}
@@ -236,7 +253,6 @@ export function AdminUsersContent() {
     );
 }
 
-// Loading component
 export function AdminUsersLoading() {
     return (
         <div className="space-y-6">

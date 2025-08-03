@@ -107,6 +107,29 @@ export const registerSchema = z.object({
   path: ['confirmPassword'],
 });
 
+const CATEGORY_PATTERN = /^[a-zA-Z0-9\s_\.!]*$/;
+
+export const categorySchema = z.object({
+  categoryName: z
+    .string()
+    .min(1, 'Tên danh mục là bắt buộc')
+    .max(255, 'Tên danh mục phải ít hơn 255 ký tự')
+    .regex(
+      CATEGORY_PATTERN,
+      'Tên danh mục chỉ được chứa chữ cái, số, khoảng trắng, "_", "." và "!"'
+    ),
+  description: z
+    .string()
+    .regex(
+      CATEGORY_PATTERN,
+      'Mô tả chỉ được chứa chữ cái, số, khoảng trắng, "_", "." và "!"'
+    )
+    .optional()
+    .or(z.literal('')),
+});
+
+export type CategoryFormData = z.infer<typeof categorySchema>;
+
 export type ProfileFormData = z.infer<typeof profileSchema>;
 export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 export type LoginFormData = z.infer<typeof loginSchema>;

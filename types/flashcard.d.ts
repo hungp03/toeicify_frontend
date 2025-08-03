@@ -23,15 +23,6 @@ export type FlashcardList = {
   ownerName?: string;
 };
 
-export interface PaginationResponse<T> {
-    meta: {
-      page: number;       // Trang hiện tại
-      pageSize: number;   // Số phần tử mỗi trang
-      pages: number;      // Tổng số trang
-      total: number;      // Tổng số phần tử
-    };
-    result: T[];           // Dữ liệu của trang hiện tại
-  }
   
 export interface TestDialogProps {
     open: boolean;

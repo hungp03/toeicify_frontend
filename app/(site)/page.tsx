@@ -11,7 +11,6 @@ import {
   BookOpen,
   Users,
   Award,
-  TrendingUp,
   Play,
   ChevronRight,
   Monitor,
@@ -115,7 +114,7 @@ const HomePage = () => {
                   <Badge
                     className={`${getColor(index)} text-white w-fit mx-auto mb-4`}
                   >
-                    #{cat.categoryName}
+                    {cat.examCount} Bài thi
                   </Badge>
                   <CardTitle className="text-2xl">{cat.categoryName}</CardTitle>
                 </CardHeader>
@@ -167,9 +166,6 @@ const HomePage = () => {
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Sẵn sàng tăng điểm TOEIC của bạn?
           </h2>
-          <p className="text-xl mb-8 text-green-100">
-            Hàng chục ngàn học viên đã thành công – bạn sẽ là người tiếp theo?
-          </p>
           <Button onClick={handleClick}
             size="lg"
             className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 text-lg"
