@@ -51,6 +51,20 @@ export function FlashcardTestContent() {
   
           q.options = [...otherOptions, card.backText].sort(() => Math.random() - 0.5);
         }
+        if (type === 'truefalse') {
+          const isTrue = Math.random() < 0.5; // ✅ 50% đúng / sai
+          q.isTrueStatement = isTrue;
+          q.correctBackText = card.backText;
+          if (!isTrue) {
+            // Lấy backText của một flashcard khác
+            const other = listRes.flashcards.find(
+              (c: FlashcardDetail) => c.frontText !== card.frontText
+            );
+            if (other) {
+              q.backText = other.backText;
+            }
+          }
+        }
   
         return q;
       });
@@ -75,11 +89,7 @@ export function FlashcardTestContent() {
     }
   
     if (q.type === 'truefalse') {
-      const matched = list?.flashcards.find(
-        (f) => f.frontText === q.frontText && f.backText === q.backText
-      );
-      const shouldBeTrue = Boolean(matched);
-      return (userAnswer === 'true') === shouldBeTrue ? total + 1 : total;
+      return (userAnswer === 'true') === q.isTrueStatement ? total + 1 : total;
     }
   
     return total;
@@ -177,7 +187,11 @@ export function FlashcardTestContent() {
   
         {submitted && (
           <p className={`mt-2 text-sm ${isCorrectAnswer ? 'text-green-600' : 'text-red-500'}`}>
-            Đáp án đúng: <span className="font-semibold">{q.frontText} : {q.backText}</span>
+            Đáp án đúng: <span className="font-semibold">
+            {q.type === 'truefalse'
+            ? `${q.frontText} : ${q.correctBackText}`
+            : `${q.frontText} : ${q.backText}`}
+            </span>
           </p>
         )}
       </div>
