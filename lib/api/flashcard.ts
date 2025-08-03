@@ -1,4 +1,5 @@
 import api from '@/lib/axios';
+import { PaginationResponse, FlashcardList } from '@/types/flashcard';
 
 export const getFlashcardLists = async (type: 'mine' | 'learning' | 'explore', page = 1, size = 10) => {
   const res = await api.get(`/flashcards/list?type=${type}&page=${page - 1}&size=${size}`);
@@ -71,4 +72,10 @@ export const stopLearningFlashcardList = async (listId: string) => {
 export const deleteFlashcardList = async (listId: string) => {
   const res = await api.delete(`/flashcards/list/${listId}`);
   return res.data;
+};
+export const searchFlashcardLists = async (keyword: string, page = 1, size = 8) => {
+  const res = await api.get(`/flashcards/search`, {
+    params: { keyword, page: page - 1, size }
+  });
+  return res.data;  
 };

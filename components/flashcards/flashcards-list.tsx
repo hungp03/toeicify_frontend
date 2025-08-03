@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Book, BookPlus, FlipHorizontal } from 'lucide-react';
+import { Book, BookPlus, FlipHorizontal, Search  } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,9 +30,12 @@ import {
   getFlashcardLists,
   createFlashcardList,
   markListInProgress,
+  searchFlashcardLists
 } from '@/lib/api/flashcard';
 import { FlashcardList } from '@/types/flashcard';
 import FullPageLoader from '@/components/common/full-page-loader';
+import { createFlashcardListSchema, CreateFlashcardListFormData } from '@/lib/schema'; 
+
 
 export function FlashcardsListContent() {
   const [flashcardSets, setFlashcardSets] = useState<FlashcardList[]>([]);
@@ -40,6 +43,8 @@ export function FlashcardsListContent() {
   const [newSetDescription, setNewSetDescription] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [tab, setTab] = useState<'mine' | 'learning' | 'explore'>('mine');
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [errors, setErrors] = useState<{ title?: string; description?: string }>({});
   const user = useAuthStore((s) => s.user);
   const hasHydrated = useAuthStore((s) => s.hasHydrated);
   const router = useRouter();
@@ -53,12 +58,40 @@ export function FlashcardsListContent() {
     }
   };
 
+  const handleSearch = async () => {
+    if (tab === 'explore' && searchKeyword.trim()) {
+      try {
+        const res = await searchFlashcardLists(searchKeyword.trim(), 1);
+        setFlashcardSets(res.result);
+      } catch (e) {
+        toast.error('Không thể tìm kiếm.');
+      }
+    }
+  };
+
   const handleCreateSet = async () => {
-    try {
-      await createFlashcardList({
-        listName: newSetTitle,
-        description: newSetDescription,
+
+    const validation = createFlashcardListSchema.safeParse({
+      listName: newSetTitle,
+      description: newSetDescription,
+    });
+
+    // Trong handleCreateSet
+    if (!validation.success) {
+      const fieldErrors: { title?: string; description?: string } = {};
+      validation.error.errors.forEach((e) => {
+        if (e.path[0] === 'listName') fieldErrors.title = e.message;
+        if (e.path[0] === 'description') fieldErrors.description = e.message;
       });
+      setErrors(fieldErrors);
+      return;
+    } else {
+      setErrors({});
+    }
+
+    try {
+      const payload: CreateFlashcardListFormData = validation.data;
+      await createFlashcardList(payload);
       setIsCreateDialogOpen(false);
       setNewSetTitle('');
       setNewSetDescription('');
@@ -147,6 +180,7 @@ export function FlashcardsListContent() {
                           value={newSetTitle}
                           onChange={(e) => setNewSetTitle(e.target.value)}
                         />
+                        {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
                       </div>
                       <div>
                         <Label htmlFor="description" className='mb-2'>Mô tả (tùy chọn)</Label>
@@ -156,6 +190,7 @@ export function FlashcardsListContent() {
                           value={newSetDescription}
                           onChange={(e) => setNewSetDescription(e.target.value)}
                         />
+                        {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
                       </div>
                       <div className="flex justify-end gap-2">
                         <Button
@@ -175,6 +210,24 @@ export function FlashcardsListContent() {
                     </div>
                   </DialogContent>
                 </Dialog>
+              )}
+
+              {tab === 'explore' && (
+                <div className="flex items-center mb-6 gap-2">
+                  <Input
+                    placeholder="Tìm kiếm flashcard theo tên..."
+                    value={searchKeyword}
+                    onChange={(e) => setSearchKeyword(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button 
+                    onClick={handleSearch} 
+                    className="bg-blue-600 hover:bg-blue-500 flex items-center"
+                  >
+                    <Search className="h-4 w-4 mr-2" />
+                    Tìm kiếm
+                  </Button>
+                </div>
               )}
             </div>
 

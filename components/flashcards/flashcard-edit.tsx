@@ -9,6 +9,7 @@ import { useAuthStore } from '@/store/auth';
 import { Trash2, Loader } from 'lucide-react';
 import { updateFlashcardList, getFlashcardListDetail } from '@/lib/api/flashcard';
 import { ListDetailResponse, FlashcardDetail } from '@/types/flashcard';
+import { updateFlashcardListSchema, UpdateFlashcardListFormData } from '@/lib/schema';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -26,9 +27,11 @@ export function FlashcardEditContent() {
   const hasHydrated = useAuthStore((s) => s.hasHydrated);
   const [isSticky, setIsSticky] = useState(false);
 
-  // Báo lỗi
-  const [titleError, setTitleError] = useState('');
-  const [descriptionError, setDescriptionError] = useState('');
+  const [errors, setErrors] = useState<{
+    title?: string;
+    description?: string;
+    flashcards?: Record<number, { frontText?: string; backText?: string; category?: string }>;
+  }>({});
 
   useEffect(() => {
     const handleScroll = () => {
@@ -55,29 +58,38 @@ export function FlashcardEditContent() {
   }, [list]);
 
   const handleSave = async () => {
-    let hasError = false;
-    if (!title.trim()) {
-      setTitleError('Vui lòng nhập tên danh sách.');
-      hasError = true;
-    } else {
-      setTitleError('');
+    const validation = updateFlashcardListSchema.safeParse({
+      listName: title,
+      description,
+      flashcards,
+    });
+  
+    if (!validation.success) {
+      const newErrors: typeof errors = { flashcards: {} };
+  
+      validation.error.errors.forEach((err) => {
+        const field = err.path[0];
+        if (field === 'listName') newErrors.title = err.message;
+        if (field === 'description') newErrors.description = err.message;
+  
+        // Xử lý lỗi cho từng flashcard
+        if (field === 'flashcards' && typeof err.path[1] === 'number') {
+          const idx = err.path[1];
+          const key = err.path[2] as 'frontText' | 'backText' | 'category';
+          if (!newErrors.flashcards![idx]) newErrors.flashcards![idx] = {};
+          newErrors.flashcards![idx][key] = err.message;
+        }
+      });
+  
+      setErrors(newErrors);
+      return;
     }
-
-    if (!description.trim()) {
-      setDescriptionError('Vui lòng nhập mô tả.');
-      hasError = true;
-    } else {
-      setDescriptionError('');
-    }
-
-    if (hasError) return;
+  
+    setErrors({});
     
     try {
-      const res = await updateFlashcardList(id as string, {
-        listName: title,
-        description,
-        flashcards,
-      });
+      const payload: UpdateFlashcardListFormData = validation.data;
+      const res = await updateFlashcardList(id as string, payload);
 
       // Nếu API có trả về success thì kiểm tra:
       if (res?.success !== false) {
@@ -86,8 +98,9 @@ export function FlashcardEditContent() {
       } else {
         toast.error('Lưu thất bại, vui lòng thử lại!');
       }
-    } catch (error) {
-      toast.error('Đã xảy ra lỗi, vui lòng thử lại sau!');
+    } catch (error: any) {
+      const errorMessage = error?.message || "Đã xảy ra lỗi, vui lòng thử lại sau!";
+      toast.error(errorMessage);
     }
   };
 
@@ -142,14 +155,16 @@ export function FlashcardEditContent() {
                 onChange={(e) => setTitle(e.target.value)}
                 className="text-xl font-bold mb-3"
               />
-              {titleError && <p className="text-sm text-red-500">{titleError}</p>}
+              {errors.title && (
+                <p className="text-red-500 text-sm mt-1">{errors.title}</p>)}
               <p className="text-sm font-medium text-gray-600 mb-1">Mô tả</p>
               <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Mô tả"
               />
-              {descriptionError && <p className="text-sm text-red-500">{descriptionError}</p>}
+              {errors.description && (
+                <p className="text-red-500 text-sm mt-1">{errors.description}</p>)}
             </div>
 
             <div className="space-y-6">
@@ -167,6 +182,9 @@ export function FlashcardEditContent() {
                           setFlashcards(updated);
                         }}
                       />
+                      {errors.flashcards?.[index]?.frontText && (
+                        <p className="text-red-500 text-sm mt-1">{errors.flashcards[index].frontText}</p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">Loại từ</label>
@@ -190,6 +208,9 @@ export function FlashcardEditContent() {
                         <option value="pronoun">pronoun (đại từ)</option>
                         <option value="article">article (mạo từ)</option>
                       </select>
+                      {errors.flashcards?.[index]?.category && (
+                        <p className="text-red-500 text-sm mt-1">{errors.flashcards[index].category}</p>
+                      )}
                     </div>
                   </div>
 
@@ -203,6 +224,9 @@ export function FlashcardEditContent() {
                         setFlashcards(updated);
                       }}
                     />
+                    {errors.flashcards?.[index]?.backText && (
+                      <p className="text-red-500 text-sm mt-1">{errors.flashcards[index].backText}</p>
+                    )}
                   </div>
 
                   <Trash2

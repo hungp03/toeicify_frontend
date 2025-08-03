@@ -51,4 +51,6 @@ export interface TestQuestion {
   backText: string;
   options?: string[];
   image?: string;
+  isTrueStatement?: boolean;
+  correctBackText?: string;
 }
