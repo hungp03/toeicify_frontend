@@ -74,22 +74,14 @@ export function AdminTestsContent() {
     }
   };
 
-  // CÁCH 1: Chỉ dùng 1 useEffect với logic kiểm tra
   useEffect(() => {
     if (isInitialLoad) {
-      // Lần đầu load không có search term
       loadExams(0);
       setIsInitialLoad(false);
     } else {
-      // Các lần sau thì search với debouncedSearchTerm
       loadExams(0, debouncedSearchTerm);
     }
   }, [debouncedSearchTerm]);
-
-  // Loại bỏ useEffect này để tránh gọi API 2 lần
-  // useEffect(() => {
-  //   loadExams(0);
-  // }, []);
 
   const filteredExams = exams.filter(exam => {
     const examStatus = exam.status?.toLowerCase() || 'draft';
@@ -319,6 +311,22 @@ export function AdminTestsContent() {
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+export function AdminTestsLoading() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Quản lý đề thi</h1>
+          <p className="text-gray-600 mt-2">Quản lý tất cả đề thi và phần thi</p>
+        </div>
+      </div>
+      <div className="flex justify-center py-12">
+        <Loader className="h-8 w-8 text-gray-500 animate-spin" />
+      </div>
     </div>
   );
 }

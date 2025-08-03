@@ -1,6 +1,4 @@
 import api from '@/lib/axios';
-import { PaginationResponse, FlashcardList } from '@/types/flashcard';
-
 export const getFlashcardLists = async (type: 'mine' | 'learning' | 'explore', page = 1, size = 10) => {
   const res = await api.get(`/flashcards/list?type=${type}&page=${page - 1}&size=${size}`);
   return res.data;
