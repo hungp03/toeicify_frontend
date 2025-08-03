@@ -107,7 +107,75 @@ export const registerSchema = z.object({
   path: ['confirmPassword'],
 });
 
+export const createFlashcardListSchema = z.object({
+  listName: z
+    .string()
+    .trim()
+    .max(255, 'Tiêu đề không được vượt quá 255 ký tự')
+    .superRefine((val, ctx) => {
+      if (val.length < 3) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.too_small,
+          minimum: 3,
+          type: "string",
+          inclusive: true,
+          message: "Tiêu đề nên nhiều hơn 3 ký tự",
+        });
+        return;
+      }
+  
+      if (!/^[\p{L}\p{N}\s._-]+$/u.test(val)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Tiêu đề chỉ được chứa chữ, số, khoảng trắng và ký tự ., _, -",
+        });
+      }
+  
+      if (/^(\w)\1+$/.test(val)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Tiêu đề không được là chuỗi lặp ký tự duy nhất",
+        });
+      }
+    }),
+  description: z
+    .string()
+    .trim()
+    .max(500, 'Mô tả không được vượt quá 500 ký tự')
+    .optional(),
+});
+
+export const createFlashcardSchema = z.object({
+  frontText: z.string()
+    .trim()
+    .min(2, 'Từ mới phải có ít nhất 2 ký tự')
+    .max(255, 'Từ mới không được vượt quá 255 ký tự'),
+
+  backText: z.string()
+    .trim()
+    .min(2, 'Định nghĩa phải có ít nhất 2 ký tự')
+    .max(255, 'Định nghĩa không được vượt quá 255 ký tự'),
+
+  category: z.string()
+    .trim()
+    .min(1, 'Loại từ là bắt buộc')
+    .regex(
+      /^(noun|verb|adjective|adverb|preposition|conjunction|interjection|pronoun|article)$/,
+      'Loại từ không hợp lệ'
+    ),
+});
+
+export const updateFlashcardListSchema = createFlashcardListSchema.extend({
+  flashcards: z.array(createFlashcardSchema)
+    .min(1, 'Danh sách phải có ít nhất một flashcard')
+    .max(500, 'Danh sách không được vượt quá 500 flashcard'),
+});
+
 export type ProfileFormData = z.infer<typeof profileSchema>;
 export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 export type LoginFormData = z.infer<typeof loginSchema>;
 export type RegisterFormData = z.infer<typeof registerSchema>;
+
+export type CreateFlashcardListFormData = z.infer<typeof createFlashcardListSchema>;
+export type CreateFlashcardFormData = z.infer<typeof createFlashcardSchema>;
+export type UpdateFlashcardListFormData = z.infer<typeof updateFlashcardListSchema>;

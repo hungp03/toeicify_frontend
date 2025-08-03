@@ -21,16 +21,19 @@ import { Textarea } from '@/components/ui/textarea';
 import { Lock, Globe2 } from "lucide-react";
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { createFlashcardSchema, CreateFlashcardFormData } from '@/lib/schema';
+
 
 export function FlashcardListDetailContent() {
   const { id } = useParams();
   const [list, setList] = useState<ListDetailResponse | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CreateFlashcardFormData>({
     frontText: '',
     backText: '',
     category: '',
-  });  
+  });
+  const [errors, setErrors] = useState<{ frontText?: string; backText?: string; category?: string }>({});
   const [editingCard, setEditingCard] = useState<FlashcardDetail | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [flashcards, setFlashcards] = useState<FlashcardDetail[]>([]);
@@ -44,33 +47,73 @@ export function FlashcardListDetailContent() {
   const hasHydrated = useAuthStore((s) => s.hasHydrated);
 
   const handleAddFlashcard = async () => {
+    const validation = createFlashcardSchema.safeParse(formData);
+
+    if (!validation.success) {
+      const fieldErrors: { frontText?: string; backText?: string; category?: string } = {};
+      validation.error.errors.forEach((e) => {
+        if (e.path[0] === 'frontText') fieldErrors.frontText = e.message;
+        if (e.path[0] === 'backText') fieldErrors.backText = e.message;
+        if (e.path[0] === 'category') fieldErrors.category = e.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    } else {
+      setErrors({});
+    }
+
     try {
-      await createFlashcard(id as string, formData);
+      await createFlashcard(id as string, validation.data);
       setIsAddOpen(false);
       setFormData({ frontText: '', backText: '', category: ''});
       getFlashcardListDetail(id as string).then(setList); // Load lại danh sách
       fetchData(currentPage);
-    } catch (e) {
-      toast.error('Không thể thêm flashcard. Vui lòng thử lại sau.');
+      toast.success('Thêm flashcard thành công!');
+    } catch (e : any) {
+      const errorMessage = e?.message || 'Không thể thêm flashcard. Vui lòng thử lại sau.'
+      toast.error(errorMessage);
     }
   };
 
   const handleUpdateFlashcard = async () => {
     if (!editingCard || !id) return;
-  
-    await updateFlashcard(
-      parseInt(id as string),
-      editingCard.cardId,
-      {
-        frontText: editingCard.frontText,
-        backText: editingCard.backText,
-        category: editingCard.category,
-      }
-    );
-  
-    setIsEditOpen(false);
-    getFlashcardListDetail(id as string).then(setList);
-    fetchData(currentPage);
+
+    const validation = createFlashcardSchema.safeParse({
+      frontText: editingCard.frontText,
+      backText: editingCard.backText,
+      category: editingCard.category,
+    });
+
+    if (!validation.success) {
+      const fieldErrors: { frontText?: string; backText?: string; category?: string } = {};
+      validation.error.errors.forEach((e) => {
+        if (e.path[0] === 'frontText') fieldErrors.frontText = e.message;
+        if (e.path[0] === 'backText') fieldErrors.backText = e.message;
+        if (e.path[0] === 'category') fieldErrors.category = e.message;
+      });
+      setErrors(fieldErrors); // cần tạo state errors giống phần add flashcard
+      return;
+    } else {
+      setErrors({});
+    }
+
+
+    try {
+      const payload: CreateFlashcardFormData = validation.data;
+      await updateFlashcard(
+        parseInt(id as string),
+        editingCard.cardId,
+        payload
+      );
+    
+      setIsEditOpen(false);
+      getFlashcardListDetail(id as string).then(setList);
+      fetchData(currentPage);
+      toast.success("Cập nhật flashcard thành công!");
+    }catch (e : any) {
+      const errorMessage = e?.message || "Không cập nhật thông tin flashcard. Vui lòng thử lại sau.";
+      toast.error(errorMessage);
+    }
   };
 
   const handleDeleteFlashcard = async (cardId: number) => {
@@ -81,12 +124,13 @@ export function FlashcardListDetailContent() {
       const updatedList = await getFlashcardListDetail(id as string);
       setList(updatedList);
       // Tính lại totalPages mới
-      const newTotalPages = Math.ceil(updatedList.totalCards / 10);
+      const newTotalPages = Math.ceil(updatedList.flashcards.length / 10);
       // Nếu page hiện tại > số trang mới thì lùi về trang cuối cùng
       const newPage = currentPage > newTotalPages ? newTotalPages : currentPage;
       setCurrentPage(newPage);
       fetchData(newPage); // Gọi lại API phân trang
     } catch (e) {
+      console.log(e);
       toast.error('Xoá flashcard thất bại. Vui lòng thử lại.');
     }
   };
@@ -295,6 +339,7 @@ export function FlashcardListDetailContent() {
                 value={formData.frontText}
                 onChange={(e) => setFormData({ ...formData, frontText: e.target.value })}
               />
+              {errors.frontText && <p className="text-red-500 text-sm mt-1">{errors.frontText}</p>}
             </div>
 
             <div>
@@ -303,6 +348,7 @@ export function FlashcardListDetailContent() {
                 value={formData.backText}
                 onChange={(e) => setFormData({ ...formData, backText: e.target.value })}
               />
+              {errors.backText && <p className="text-red-500 text-sm mt-1">{errors.backText}</p>}
             </div>
 
             <div>
@@ -323,6 +369,7 @@ export function FlashcardListDetailContent() {
                 <option value="pronoun">pronoun (đại từ)</option>
                 <option value="article">article (mạo từ)</option>
               </select>
+              {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
             </div>
           </div>
 
@@ -348,6 +395,7 @@ export function FlashcardListDetailContent() {
                     setEditingCard({ ...editingCard, frontText: e.target.value })
                   }
                 />
+                {errors.frontText && <p className="text-red-500 text-sm mt-1">{errors.frontText}</p>}
               </div>
 
               <div>
@@ -358,6 +406,7 @@ export function FlashcardListDetailContent() {
                     setEditingCard({ ...editingCard, backText: e.target.value })
                   }
                 />
+                {errors.backText && <p className="text-red-500 text-sm mt-1">{errors.backText}</p>}
               </div>
 
               <div>
@@ -380,6 +429,7 @@ export function FlashcardListDetailContent() {
                   <option value="pronoun">pronoun (đại từ)</option>
                   <option value="article">article (mạo từ)</option>
                 </select>
+                {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
               </div>
             </div>
           )}
