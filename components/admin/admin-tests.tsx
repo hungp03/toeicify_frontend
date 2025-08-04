@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import _ from 'lodash';
 import {
   Card, CardContent, CardHeader, CardTitle
 } from '@/components/ui/card';
@@ -15,7 +16,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import {
-  Search, Plus, Edit, Trash2, FileText, Eye, RefreshCw, Loader
+  Search, Plus, Edit, Trash2, FileText, Eye, RefreshCw, Loader, Loader2
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from "sonner";
@@ -25,6 +26,7 @@ import { Pagination } from '@/components/common/pagination';
 
 export function AdminTestsContent() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [actualSearchTerm, setActualSearchTerm] = useState(''); // The term actually used for API
   const [filterStatus, setFilterStatus] = useState('all');
   const [exams, setExams] = useState<ExamResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,17 +38,21 @@ export function AdminTestsContent() {
   });
   const [currentPage, setCurrentPage] = useState(0);
 
-  // Debounced search
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [isInitialLoad, setIsInitialLoad] = useState(true); // Thêm flag để track lần đầu load
+  // Create debounced search function
+  const debouncedSearch = useMemo(
+    () => _.debounce((searchValue: string) => {
+      setActualSearchTerm(searchValue);
+      setCurrentPage(0); // Reset to first page when search changes
+    }, 1000),
+    []
+  );
 
+  // Cleanup debounce on unmount
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [debouncedSearch]);
 
   const loadExams = async (page = 0, keyword?: string) => {
     try {
@@ -59,6 +65,8 @@ export function AdminTestsContent() {
       if (keyword) {
         params.keyword = keyword;
       }
+
+      console.log('Loading exams with params:', params);
 
       const response = await getAllExams(params);
       const data: PaginationResponse = response.data;
@@ -74,14 +82,22 @@ export function AdminTestsContent() {
     }
   };
 
+  // Initial load
   useEffect(() => {
-    if (isInitialLoad) {
-      loadExams(0);
-      setIsInitialLoad(false);
-    } else {
-      loadExams(0, debouncedSearchTerm);
+    loadExams(0);
+  }, []);
+
+  // Load when actualSearchTerm changes (after debounce)
+  useEffect(() => {
+    if (actualSearchTerm !== '' || currentPage > 0) { // Don't reload on initial empty search
+      loadExams(0, actualSearchTerm || undefined);
     }
-  }, [debouncedSearchTerm]);
+  }, [actualSearchTerm]);
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    debouncedSearch(value); // This will update actualSearchTerm after 500ms
+  };
 
   const filteredExams = exams.filter(exam => {
     const examStatus = exam.status?.toLowerCase() || 'draft';
@@ -93,11 +109,19 @@ export function AdminTestsContent() {
     try {
       await deleteExam(examId);
       toast.success("Đã xóa đề thi thành công!");
-      loadExams(currentPage, debouncedSearchTerm);
+      loadExams(currentPage, actualSearchTerm || undefined);
     } catch (error) {
       toast.error("Không thể xóa đề thi");
       console.error('Error deleting exam:', error);
     }
+  };
+
+  const handleRefresh = () => {
+    loadExams(currentPage, actualSearchTerm || undefined);
+  };
+
+  const handlePageChange = (page: number) => {
+    loadExams(page, actualSearchTerm || undefined);
   };
 
   const getStatusBadge = (status: string | null) => {
@@ -105,9 +129,11 @@ export function AdminTestsContent() {
     const config = {
       active: { variant: 'default' as const, label: 'Hoạt động' },
       published: { variant: 'default' as const, label: 'Đã xuất bản' },
+      public: { variant: 'default' as const, label: 'Công khai' },
       draft: { variant: 'secondary' as const, label: 'Bản nháp' },
       inactive: { variant: 'destructive' as const, label: 'Không hoạt động' },
       archived: { variant: 'destructive' as const, label: 'Đã lưu trữ' },
+      private: { variant: 'outline' as const, label: 'Riêng tư' },
     };
     return config[normalizedStatus as keyof typeof config] || config.draft;
   };
@@ -120,7 +146,7 @@ export function AdminTestsContent() {
   const totalExams = pagination.total;
   const publishedCount = exams.filter(e => {
     const status = e.status?.toLowerCase() || 'draft';
-    return status === 'published' || status === 'active';
+    return status === 'published' || status === 'active' || status === 'public';
   }).length;
   const draftCount = exams.filter(e => {
     const status = e.status?.toLowerCase() || 'draft';
@@ -136,8 +162,8 @@ export function AdminTestsContent() {
           <p className="text-gray-600 mt-2">Quản lý tất cả đề thi và phần thi</p>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline" onClick={() => loadExams(currentPage, debouncedSearchTerm)}>
-            <RefreshCw className="h-4 w-4 mr-2" />
+          <Button variant="outline" onClick={handleRefresh} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Làm mới
           </Button>
           <Link href="/admin/tests/create">
@@ -167,7 +193,7 @@ export function AdminTestsContent() {
             </div>
             <div className="ml-4">
               <p className="text-2xl font-bold text-gray-900">{publishedCount}</p>
-              <p className="text-sm text-gray-600">Đã xuất bản</p>
+              <p className="text-sm text-gray-600">Đã công khai</p>
             </div>
           </CardContent>
         </Card>
@@ -203,9 +229,13 @@ export function AdminTestsContent() {
             <Input
               placeholder="Tìm kiếm đề thi..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="pl-10 pr-10"
             />
+            {/* Show loading indicator when search is being debounced */}
+            {searchTerm !== actualSearchTerm && (
+              <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-blue-600" />
+            )}
           </div>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger className="w-full sm:w-48">
@@ -213,11 +243,11 @@ export function AdminTestsContent() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tất cả trạng thái</SelectItem>
-              <SelectItem value="active">Hoạt động</SelectItem>
-              <SelectItem value="published">Đã xuất bản</SelectItem>
+              <SelectItem value="public">Công khai</SelectItem>
               <SelectItem value="draft">Bản nháp</SelectItem>
-              <SelectItem value="inactive">Không hoạt động</SelectItem>
-              <SelectItem value="archived">Đã lưu trữ</SelectItem>
+              <SelectItem value="private">Riêng tư</SelectItem>
+              <SelectItem value="cancelled">Không hoạt động</SelectItem>
+              <SelectItem value="pending">Đang chờ thêm</SelectItem>
             </SelectContent>
           </Select>
         </CardContent>
@@ -226,7 +256,14 @@ export function AdminTestsContent() {
       {/* Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Danh sách đề thi</CardTitle>
+          <CardTitle>
+            Danh sách đề thi
+            {actualSearchTerm && (
+              <span className="text-sm font-normal text-gray-500 ml-2">
+                (Tìm kiếm: "{actualSearchTerm}")
+              </span>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -243,58 +280,85 @@ export function AdminTestsContent() {
                     <TableHead className="text-center">Danh mục</TableHead>
                     <TableHead className="text-center">Số câu hỏi</TableHead>
                     <TableHead className="text-center">Trạng thái</TableHead>
-                    <TableHead className="text-center">Người tạo</TableHead>
                     <TableHead className="text-center">Ngày tạo</TableHead>
                     <TableHead className="text-center">Hành động</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredExams.map((exam) => {
-                    const status = getStatusBadge(exam.status);
-                    return (
-                      <TableRow key={exam.examId}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{exam.examName}</div>
-                            <div className="text-sm text-gray-500 truncate max-w-xs">
-                              {exam.examDescription}
+                  {filteredExams.length > 0 ? (
+                    filteredExams.map((exam) => {
+                      const status = getStatusBadge(exam.status);
+                      return (
+                        <TableRow key={exam.examId}>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{exam.examName}</div>
+                              <div className="text-sm text-gray-500 truncate max-w-xs">
+                                {exam.examDescription}
+                              </div>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center">{exam.categoryName}</TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant="outline">{exam.totalQuestions} câu</Badge>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant={status.variant}>{status.label}</Badge>
-                        </TableCell>
-                        <TableCell className="text-center">{exam.createdByName}</TableCell>
-                        <TableCell className="text-center">{formatDate(exam.createdAt)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center justify-center space-x-2">
-                            <Link href={`/admin/tests/${exam.examId}`}>
-                              <Button variant="outline" size="sm" title="Xem chi tiết">
-                                <Eye className="h-4 w-4" />
+                          </TableCell>
+                          <TableCell className="text-center">{exam.categoryName}</TableCell>
+                          <TableCell className="text-center">
+                            <Badge variant="outline">{exam.totalQuestions} câu</Badge>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge variant={status.variant}>{status.label}</Badge>
+                          </TableCell>
+                          <TableCell className="text-center">{formatDate(exam.createdAt)}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center justify-center space-x-2">
+                              <Link href={`/admin/tests/${exam.examId}`}>
+                                <Button variant="outline" size="sm" title="Xem chi tiết">
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </Link>
+                              <Link href={`/admin/tests/${exam.examId}/edit`}>
+                                <Button variant="outline" size="sm" title="Chỉnh sửa">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </Link>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                title="Xóa"
+                                onClick={() => handleDelete(exam.examId)}
+                              >
+                                <Trash2 className="h-4 w-4" />
                               </Button>
-                            </Link>
-                            <Link href={`/admin/tests/${exam.examId}/edit`}>
-                              <Button variant="outline" size="sm" title="Chỉnh sửa">
-                                <Edit className="h-4 w-4" />
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8">
+                        <div className="text-gray-500">
+                          {actualSearchTerm ? (
+                            <>
+                              <p className="text-lg mb-2">Không tìm thấy đề thi nào phù hợp</p>
+                              <p className="text-sm">Thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc</p>
+                              <Button
+                                variant="outline"
+                                className="mt-4"
+                                onClick={() => {
+                                  setSearchTerm('');
+                                  setActualSearchTerm('');
+                                  setFilterStatus('all');
+                                  debouncedSearch.cancel();
+                                }}
+                              >
+                                Xóa bộ lọc
                               </Button>
-                            </Link>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              title="Xóa"
-                              onClick={() => handleDelete(exam.examId)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
+                            </>
+                          ) : (
+                            <p className="text-lg">Chưa có đề thi nào</p>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
 
@@ -303,7 +367,7 @@ export function AdminTestsContent() {
                   <Pagination
                     currentPage={currentPage}
                     totalPages={pagination.pages}
-                    onPageChange={(page) => loadExams(page, debouncedSearchTerm)}
+                    onPageChange={handlePageChange}
                   />
                 </div>
               )}

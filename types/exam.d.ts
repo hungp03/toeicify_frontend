@@ -76,3 +76,125 @@ export interface ExamSearchParams {
   page?: number;
   size?: number;
 }
+
+export interface PartConfig {
+  name: string;
+  questionType: string;
+  hasAudio: boolean;
+  hasImage: boolean;
+  hasPassage: boolean;
+  hasQuestionText: boolean;
+  optionCount: number;
+  questionsPerGroup: number;
+  description: string;
+}
+
+export interface TestInfoProps {
+  testTitle: string;
+  setTestTitle: (title: string) => void;
+  testDescription: string;
+  setTestDescription: (description: string) => void;
+  currentPart: number;
+  setCurrentPart: (part: number) => void;
+  totalQuestions: number;
+  questionsByPart: Record<number, number>;
+  partConfigs: Record<number, PartConfig>;
+  onAddQuestionGroup: () => void;
+  onSaveTest: () => void;
+  onPreviewTest: () => void;
+}
+
+
+export type QuestionOption = {
+  optionLetter: string;
+  optionText: string;
+};
+
+export type Question = {
+  questionText?: string;
+  questionType: string;
+  correctAnswerOption: string;
+  explanation: string;
+  options: QuestionOption[];
+};
+
+export type QuestionGroup = {
+  id?: string;
+  partId: number;
+  imageUrl?: string;
+  audioUrl?: string;
+  passageText?: string;
+  questions: Question[];
+};
+
+export interface PartConfig {
+  name: string;
+  questionType: string;
+  hasAudio: boolean;
+  hasImage: boolean;
+  hasPassage: boolean;
+  hasQuestionText: boolean;
+  optionCount: number;
+  questionsPerGroup: number;
+  description: string;
+}
+
+export interface QuestionGroupListProps {
+  questionGroups: QuestionGroup[];
+  partConfigs: Record<number, PartConfig>;
+  onEdit: (group: QuestionGroup) => void;
+  onRemove: (id: string) => void;
+}
+
+export type QuestionOption = {
+  optionLetter: string;
+  optionText: string;
+};
+
+export type Question = {
+  questionText?: string;
+  questionType: string;
+  correctAnswerOption: string;
+  explanation: string;
+  options: QuestionOption[];
+};
+
+export type QuestionCreator = {
+  id: string;
+  part: string;
+  type: string;
+  question: string;
+  options: string[];
+  correct: string;
+  audio?: File | null;
+  image?: File | null;
+  text?: string;
+};
+
+export type QuestionGroup = {
+  id?: string;
+  partId: number;
+  imageUrl?: string;
+  audioUrl?: string;
+  passageText?: string;
+  questions: Question[];
+};
+
+export interface PartConfig {
+  name: string;
+  questionType: string;
+  hasAudio: boolean;
+  hasImage: boolean;
+  hasPassage: boolean;
+  hasQuestionText: boolean;
+  optionCount: number;
+  questionsPerGroup: number;
+  description: string;
+}
+
+export interface QuestionGroupFormProps {
+  questionGroup: QuestionGroup;
+  partConfig: PartConfig;
+  onSave: (group: QuestionGroup) => void;
+  onCancel: () => void;
+}
