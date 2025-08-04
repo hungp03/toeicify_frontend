@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { CategoryState, PaginationMeta } from "@/types";
+import { CategoryState } from "@/types";
 import { getExamCategories, createExamCategory, updateExamCategory, deleteExamCategory} from "@/lib/api/exam";
 
 export const useCategoryStore = create<CategoryState>((set, get) => ({

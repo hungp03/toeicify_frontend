@@ -1,15 +1,13 @@
-import React from 'react'
+import dynamic from 'next/dynamic';
+import FullPageLoader from '@/components/common/full-page-loader';
 
-const ProgressPage = () => {
-  return (
-    <div>
-      <audio
-        src="https://media.toeicify.online/economy1000/test1_audios/Test1.mp3"
-        controls
-        className="w-full"
-      />
-    </div>
-  )
+const LoginWithProtection = dynamic(
+  () => import('@/components/progress/progress'),
+  { 
+    loading: () => <FullPageLoader />
+  }
+);
+
+export default function Page() {
+  return <LoginWithProtection />;
 }
-
-export default ProgressPage
