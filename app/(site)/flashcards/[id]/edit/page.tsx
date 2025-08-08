@@ -1,15 +1,13 @@
 import dynamic from 'next/dynamic';
-import { FlashcardEditLoading } from '@/components/flashcards/flashcard-edit';
+import FullPageLoader from '@/components/common/full-page-loader';
 
-const FlashcardEditContent = dynamic(
-  () => import('@/components/flashcards/flashcard-edit').then(mod => ({ 
-    default: mod.FlashcardEditContent 
-  })),
+const FlashcardEditWithProtection = dynamic(
+  () => import('@/components/flashcards/flashcard-edit-wrapper'),
   { 
-    loading: () => <FlashcardEditLoading />
+    loading: () => <FullPageLoader />
   }
 );
 
 export default function Page() {
-  return <FlashcardEditContent />;
+  return <FlashcardEditWithProtection />;
 }
