@@ -5,6 +5,7 @@ interface Option {
 }
 
 interface Question {
+  questionNumber: number;
   questionId: number;
   questionText: string;
   questionType: string;
