@@ -1,8 +1,8 @@
-// lib/axios.ts
+
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+  baseURL: '/api',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -68,7 +68,7 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/refresh`, {
+        const res = await fetch('/api/auth/refresh', {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
