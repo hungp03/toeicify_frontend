@@ -1,15 +1,13 @@
 import dynamic from 'next/dynamic';
-import { FlashcardStudyLoading } from '@/components/flashcards/flashcard-study';
+import FullPageLoader from '@/components/common/full-page-loader';
 
-const FlashcardStudyContent = dynamic(
-  () => import('@/components/flashcards/flashcard-study').then(mod => ({ 
-    default: mod.FlashcardStudyContent 
-  })),
+const FlashcardStudyWithProtection = dynamic(
+  () => import('@/components/flashcards/flashcard-study-wrapper'),
   { 
-    loading: () => <FlashcardStudyLoading />
+    loading: () => <FullPageLoader />
   }
 );
 
 export default function Page() {
-  return <FlashcardStudyContent />;
+  return <FlashcardStudyWithProtection />;
 }
