@@ -7,3 +7,7 @@ export const getQuestionsByPartIds = async (params?: { partIds: string[] }) => {
     },
   });
 };
+
+export const getQuestionsByExamId = async (examId: number) => {
+  return await api.get(`/question-groups/by-exam/${examId}`);
+};
