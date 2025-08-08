@@ -1,11 +1,13 @@
+import dynamic from 'next/dynamic';
+import FullPageLoader from '@/components/common/full-page-loader';
 
-import { Suspense } from 'react';
-import { FlashcardTestContent, FlashcardTestLoading } from '@/components/flashcards/flashcard-test';
+const FlashcardTestWithProtection = dynamic(
+  () => import('@/components/flashcards/flashcard-test-wrapper'),
+  { 
+    loading: () => <FullPageLoader />
+  }
+);
 
 export default function Page() {
-  return (
-    <Suspense fallback={<FlashcardTestLoading />}>
-      <FlashcardTestContent />
-    </Suspense>
-  );
+  return <FlashcardTestWithProtection />;
 }
