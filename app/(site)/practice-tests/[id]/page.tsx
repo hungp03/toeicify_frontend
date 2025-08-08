@@ -17,7 +17,6 @@ import { ExamData } from '@/types/exam';
 const TestSetup = () => {
   const router = useRouter();
   const { id } = useParams() as { id: string };
-
   const [examData, setExamData] = useState<ExamData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,10 +25,8 @@ const TestSetup = () => {
   const [customTime, setCustomTime] = useState<string>('');
   const [invalidId, setInvalidId] = useState(false);
 
-  // Validate and fetch exam data
   useEffect(() => {
     const validateAndFetchExam = async () => {
-      // Kiểm tra id có phải là số không
       if (!id || isNaN(Number(id)) || !Number.isInteger(Number(id)) || Number(id) <= 0) {
         setInvalidId(true);
         setLoading(false);
@@ -87,7 +84,6 @@ const TestSetup = () => {
 
   const canStartTest = useFullTest || selectedParts.length > 0;
 
-  // Invalid ID state
   if (invalidId) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
@@ -121,7 +117,6 @@ const TestSetup = () => {
     );
   }
 
-  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
@@ -135,7 +130,6 @@ const TestSetup = () => {
     );
   }
 
-  // Error state
   if (error || !examData) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
@@ -188,14 +182,12 @@ const TestSetup = () => {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {/* Thông tin đề thi */}
             <div className="p-4 rounded-lg">
               <Badge className="mb-2 ml-2 bg-amber-500">{examData.totalQuestions} câu</Badge>
               <Badge className="mb-2 ml-2 bg-emerald-600">#{examData.categoryName}</Badge>
               <Badge className="mb-2 ml-2 bg-blue-600">{examData.examParts.length} phần thi</Badge>
             </div>
 
-            {/* Chọn Full test */}
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -209,7 +201,6 @@ const TestSetup = () => {
               </div>
             </div>
 
-            {/* Chọn phần */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Hoặc chọn từng phần:</h3>
               <div className="grid gap-3">
@@ -232,8 +223,6 @@ const TestSetup = () => {
               </div>
             </div>
 
-
-            {/* Thời gian làm bài */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Thời gian làm bài (phút)</h3>
               <div className="flex gap-4 items-center flex-wrap">
@@ -267,17 +256,13 @@ const TestSetup = () => {
               </div>
             </div>
 
-            {/* Tổng kết */}
             {canStartTest && (
               <div className="bg-green-50 p-4 rounded-lg">
                 <h4 className="font-semibold mb-2">Tóm tắt lựa chọn:</h4>
                 <div className="space-y-1 text-sm">
                   <p>Số câu hỏi đã chọn: {getTotalQuestions()}</p>
                   <p>
-                    Thời gian:{" "}
-                    {customTime
-                      ? `${customTime} phút`
-                      : "Không giới hạn"}
+                    Thời gian: {customTime ? `${customTime} phút` : "Không giới hạn"}
                   </p>
                   {!useFullTest && selectedParts.length > 0 && (
                     <p>
@@ -291,7 +276,6 @@ const TestSetup = () => {
               </div>
             )}
 
-            {/* Bắt đầu */}
             <Button
               onClick={handleStartTest}
               disabled={!canStartTest}
