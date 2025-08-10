@@ -21,7 +21,7 @@ export const adminMenuItems = [
   { name: 'Phân loại đề thi', path: '/admin/categories', icon: FolderTree },
   // { name: 'Ngân hàng câu hỏi', path: '/admin/questions', icon: Database },
   { name: 'Quản lý đề thi', path: '/admin/tests', icon: FileText },
-  { name: 'Tạo đề thi', path: '/test-creator', icon: Settings },
+  // { name: 'Tạo đề thi', path: '/test-creator', icon: Settings },
   { name: "Trang chủ", path: "/", icon: Home },
 ];
 

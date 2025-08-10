@@ -126,7 +126,7 @@ export interface EditQuestionGroupDialogProps {
     partId: number | null;
     onUpdated?: () => void;
   }
-type ConfirmDeleteGroupDialogProps = {
+export type ConfirmDeleteGroupDialogProps = {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   group: QuestionGroupResponse | null;

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { deleteQuestionGroup } from "@/lib/api/question";
-import type { ConfirmDeleteGroupDialogProps } from "@/types/question";
+import { ConfirmDeleteGroupDialogProps } from "@/types/question";
 
 
 
@@ -28,8 +28,8 @@ export function ConfirmDeleteGroupDialog({ open, onOpenChange, group, onDeleted 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
+      <DialogContent className="p-3 w-[560px] max-w-[95vw] max-h-[90vh] flex flex-col">
+        <DialogHeader className="px-6 py-4 sticky top-0 z-10 bg-white border-b">
           <DialogTitle>Xoá question group</DialogTitle>
           <DialogDescription>
             Bạn sắp xoá <b>Group #{group.groupId}</b> (Part {group.partId}). Hành động này không thể hoàn tác.
@@ -37,7 +37,7 @@ export function ConfirmDeleteGroupDialog({ open, onOpenChange, group, onDeleted 
         </DialogHeader>
 
         {/* Thông tin group */}
-        <div className="space-y-3">
+        <div className="space-y-3 px-6 py-4 overflow-y-auto flex-1">
           {(group.imageUrl || group.audioUrl) && (
             <div className="flex flex-col gap-2">
               {group.imageUrl && <img src={group.imageUrl} className="max-h-40 object-contain rounded border" />}
