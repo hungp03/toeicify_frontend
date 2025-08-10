@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, FileText, HelpCircle, TrendingUp } from 'lucide-react';
 import {
@@ -13,33 +14,41 @@ import {
   LineChart,
   Line,
 } from 'recharts';
+import {StatItem,ActivityItem,MonthlyDataItem,WeeklyGrowthItem} from '@/types/admin'
+import { getAdminOverview } from '@/lib/api/admin';
 
 const AdminDashboard = () => {
-  const stats = [
-    { title: 'Tổng người dùng', value: '1,234', icon: Users, change: '+12%', color: 'text-blue-600' },
-    { title: 'Số đề thi', value: '89', icon: FileText, change: '+5%', color: 'text-green-600' },
-    { title: 'Số câu hỏi', value: '2,450', icon: HelpCircle, change: '+18%', color: 'text-purple-600' },
-    { title: 'Tăng trưởng', value: '15%', icon: TrendingUp, change: '+3%', color: 'text-orange-600' },
-  ];
+  const [data, setData] = useState<{
+    stats: StatItem[];
+    monthlyData: MonthlyDataItem[];
+    weeklyGrowth: WeeklyGrowthItem[];
+    recentActivities: ActivityItem[];
+  }>({
+    stats: [],
+    monthlyData: [],
+    weeklyGrowth: [],
+    recentActivities: [],
+  });
 
-  const monthlyData = [
-    { name: 'Jan', users: 400, tests: 20 },
-    { name: 'Feb', users: 600, tests: 25 },
-    { name: 'Mar', users: 800, tests: 30 },
-    { name: 'Apr', users: 1000, tests: 35 },
-    { name: 'May', users: 1200, tests: 40 },
-    { name: 'Jun', users: 1234, tests: 45 },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await getAdminOverview();
+        setData(response.data);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      }
+    };
+    fetchData();
+  }, []);
 
-  const weeklyGrowth = [
-    { name: 'Mon', value: 20 },
-    { name: 'Tue', value: 35 },
-    { name: 'Wed', value: 45 },
-    { name: 'Thu', value: 30 },
-    { name: 'Fri', value: 60 },
-    { name: 'Sat', value: 55 },
-    { name: 'Sun', value: 40 },
-  ];
+  // Ánh xạ title sang icon
+  const iconMap: { [key: string]: any } = {
+    'Tổng người dùng': Users,
+    'Số đề thi': FileText,
+    'Số câu hỏi': HelpCircle,
+    'Tăng trưởng': TrendingUp,
+  };
 
   return (
     <div className="space-y-6">
@@ -49,8 +58,8 @@ const AdminDashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
+        {data.stats.map((stat) => {
+          const Icon = iconMap[stat.title] || Users; // Mặc định là Users nếu không tìm thấy
           return (
             <Card key={stat.title}>
               <CardContent className="p-6">
@@ -58,7 +67,11 @@ const AdminDashboard = () => {
                   <div>
                     <p className="text-sm font-medium text-gray-600">{stat.title}</p>
                     <p className="text-2xl font-bold text-gray-900 mt-2">{stat.value}</p>
-                    <p className={`text-sm mt-1 ${stat.color}`}>{stat.change} so với tháng trước</p>
+                    {stat.change && (
+                      <p className={`text-sm mt-1 ${stat.color}`}>
+                        {stat.change} so với tháng trước
+                      </p>
+                    )}
                   </div>
                   <Icon className={`h-8 w-8 ${stat.color}`} />
                 </div>
@@ -75,7 +88,7 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={monthlyData}>
+              <BarChart data={data.monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
@@ -93,7 +106,7 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={weeklyGrowth}>
+              <LineChart data={data.weeklyGrowth}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
@@ -111,12 +124,7 @@ const AdminDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {[
-              { action: 'Người dùng mới đăng ký', user: 'user123@example.com', time: '5 phút trước' },
-              { action: 'Đề thi mới được tạo', user: 'Admin', time: '15 phút trước' },
-              { action: 'Câu hỏi được thêm vào ngân hàng', user: 'Teacher01', time: '30 phút trước' },
-              { action: 'Người dùng hoàn thành bài thi', user: 'student456@example.com', time: '1 giờ trước' },
-            ].map((activity, index) => (
+            {data.recentActivities.map((activity, index) => (
               <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100">
                 <div>
                   <p className="font-medium text-gray-900">{activity.action}</p>

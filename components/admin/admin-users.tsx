@@ -198,7 +198,7 @@ export function AdminUsersContent() {
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>{new Date(user.registrationDate).toLocaleDateString()}</TableCell>
-                                            <TableCell>{user.lockReason || '—'}</TableCell>
+                                            <TableCell className="whitespace-pre-wrap max-w-[200px]">{user.lockReason || '—'}</TableCell>
                                             <TableCell>
                                                 <Button
                                                     variant="outline"
