@@ -1,3 +1,5 @@
+import { QuestionGroupResponse } from "./question";
+
 export type PracticeTests = {
   examId: number;
   examName: string;
@@ -15,6 +17,7 @@ export type ExamPart = {
   partName: string;
   description: string;
   questionCount: number;
+  expectedQuestionCount: number
 }
 export type ExamData = {
   examId: number;
@@ -37,6 +40,7 @@ export interface ExamPartResponse {
   partName: string;
   description: string;
   questionCount: number;
+  expectedQuestionCount: number;
 }
 
 export interface ExamResponse {
@@ -106,11 +110,13 @@ export interface TestInfoProps {
 
 
 export type QuestionOption = {
+  optionId?: number;
   optionLetter: string;
   optionText: string;
 };
 
 export type Question = {
+  questionId?: number,
   questionText?: string;
   questionType: string;
   correctAnswerOption: string;
@@ -119,25 +125,13 @@ export type Question = {
 };
 
 export type QuestionGroup = {
-  id?: string;
+  groupId?: number;
   partId: number;
   imageUrl?: string;
   audioUrl?: string;
   passageText?: string;
   questions: Question[];
 };
-
-export interface PartConfig {
-  name: string;
-  questionType: string;
-  hasAudio: boolean;
-  hasImage: boolean;
-  hasPassage: boolean;
-  hasQuestionText: boolean;
-  optionCount: number;
-  questionsPerGroup: number;
-  description: string;
-}
 
 export interface QuestionGroupListProps {
   questionGroups: QuestionGroup[];
@@ -198,3 +192,81 @@ export interface QuestionGroupFormProps {
   onSave: (group: QuestionGroup) => void;
   onCancel: () => void;
 }
+
+export interface ConfirmDialogProps {
+  onConfirm: () => void
+  title?: string
+  description?: string
+  confirmLabel?: string
+  cancelLabel?: string
+}
+
+export interface ViewQuestionDetailProps {
+  groupId: number;
+  questionId: number;
+  groups: QuestionGroupResponse [];
+  onClose: () => void;
+}
+// =========================
+//  Form wrapper
+// =========================
+//  Sửa: KHÔNG cho onSubmit nằm trong props kế thừa HTML
+export interface FormProps<TFieldValues extends FieldValues = FieldValues> {
+  form: UseFormReturn<TFieldValues>;
+  onSubmit?: (values: TFieldValues) => void | Promise<void>;
+  className?: string;
+  children: React.ReactNode;
+}
+export // =========================
+//  FormField wrapper
+// =========================
+interface FormFieldProps {
+  name: string;
+  children: (field: {
+    value: any;
+    onChange: (...event: any[]) => void;
+    onBlur: () => void;
+    name: string;
+    ref: React.Ref<any>;
+    error?: string;
+  }) => React.ReactElement; //  Bắt buộc phải trả về ReactElement
+}
+
+export type ExamPartVM = {
+  partId?: number;
+  partNumber: number;
+  partName: string;
+  description?: string;
+  questionCount: number;
+  expectedQuestionCount?: number;
+};
+
+export interface MissingPartResponse {
+  partNumber: number;
+  partName: string;
+  expectedQuestionCount: number;
+}
+
+export type ExamPartLite = {
+  partId?: number;
+  partNumber: number;
+  partName: string;
+  description?: string;
+  questionCount: number;
+};
+
+export type AddMissingPartsDialogProps = {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  exam: {
+    examId: number;
+    examName: string;
+    examDescription: string;
+    totalQuestions: number;
+    listeningAudioUrl: string;
+    categoryId: number;
+    examParts: ExamPartLite[];
+  };
+  /** Gọi sau khi thêm thành công; truyền về danh sách partNumber đã thêm để parent xử lý */
+  onAdded?: (addedPartNumbers: number[]) => void;
+};

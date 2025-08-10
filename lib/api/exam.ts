@@ -1,5 +1,5 @@
 import api from "@/lib/axios";
-import { ExamRequest } from "@/types";
+import { ExamRequest, ExamResponse } from "@/types";
 
 export const getAllExams = async (params?: {
     keyword?: string;
@@ -11,6 +11,9 @@ export const getAllExams = async (params?: {
 export const getExamCategories = async (
     params?: { page?: number; size?: number }
 ) => api.get("/exam-categories", { params });
+
+export const getAllExamCategoriesList = async () =>
+    api.get("/exam-categories/all");
 
 export const createExamCategory = async (data: {
     categoryName: string;
@@ -28,6 +31,15 @@ export const getExamById = async (examId: number) => api.get(`/exams/${examId}`)
 
 export const createExam = async (data: ExamRequest) => api.post("/exams", data);
 
-export const updateExam = async (examId: number, data: ExamRequest) => api.put(`/exams/${examId}`, data);
+// export const updateExam = async (examId: number, data: ExamRequest) => api.put(`/exams/${examId}`, data);
 
 export const deleteExam = async (examId: number) => api.delete(`/exams/${examId}`);
+
+export const updateExamStatus = async (examId: number, status: string) =>
+    api.patch(`/exams/${examId}/status`, null, {
+        params: { status },
+    });
+export const updateExam = async (id: number, data: ExamRequest) => {
+        const res = await api.put<ExamResponse>(`/exams/${id}`, data);
+        return res.data;
+    };
