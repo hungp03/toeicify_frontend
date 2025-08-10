@@ -42,7 +42,7 @@ export const PracticeTestsLoading = () => (
 const PracticeTestsList = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   // Initialize state from URL params
   const [searchTerm, setSearchTerm] = useState('');
   const [actualSearchTerm, setActualSearchTerm] = useState(''); // The term actually used for API
@@ -77,7 +77,7 @@ const PracticeTestsList = () => {
     const page = Math.max(0, pageNumber - 1);
 
     setSearchTerm(keyword);
-    setActualSearchTerm(keyword); 
+    setActualSearchTerm(keyword);
     setSelectedCategory(categoryId);
     setCurrentPage(page);
     setIsInitialized(true);
@@ -87,18 +87,20 @@ const PracticeTestsList = () => {
     const params = new URLSearchParams();
     if (keyword) params.set('keyword', keyword);
     if (categoryId !== 'all') params.set('categoryId', categoryId);
-    params.set('page', String(page + 1));
-    router.push(`/practice-tests?${params.toString()}`);
+    if (page > 0) params.set('page', String(page + 1));
+
+    const newURL = params.toString() ? `/practice-tests?${params.toString()}` : '/practice-tests';
+    router.push(newURL);
   };
 
   const fetchData = async () => {
-    if (loading) return; 
-    
+    if (loading) return;
+
     setLoading(true);
     try {
       const res = await getAllExams({
         page: currentPage,
-        size: 12,
+        size: 1,
         keyword: actualSearchTerm || undefined,
         categoryId: selectedCategory !== 'all' ? Number(selectedCategory) : undefined,
       });
@@ -123,7 +125,7 @@ const PracticeTestsList = () => {
     if (categories.length === 0) {
       loadCategories();
     }
-  }, []); 
+  }, []);
 
   useEffect(() => {
     if (isInitialized) {
@@ -196,8 +198,8 @@ const PracticeTestsList = () => {
                 <SelectContent>
                   <SelectItem value="all">Tất cả</SelectItem>
                   {categories.map((category) => (
-                    <SelectItem 
-                      key={category.categoryId} 
+                    <SelectItem
+                      key={category.categoryId}
                       value={category.categoryId.toString()}
                     >
                       {category.categoryName} ({category.examCount})
@@ -217,7 +219,7 @@ const PracticeTestsList = () => {
           </div>
         )}
 
-   
+
         {!loading && (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {practiceTests.map((test) => (
@@ -263,20 +265,20 @@ const PracticeTestsList = () => {
           </div>
         )}
 
-  
+
         {!loading && practiceTests.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">Không tìm thấy đề phù hợp với tiêu chí của bạn.</p>
             {(selectedCategory !== 'all' || actualSearchTerm) && (
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="mt-4"
                 onClick={() => {
                   setSearchTerm('');
                   setActualSearchTerm('');
                   setSelectedCategory('all');
                   setCurrentPage(0);
-                  debouncedSearch.cancel(); 
+                  debouncedSearch.cancel();
                 }}
               >
                 Xem tất cả đề thi

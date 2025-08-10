@@ -18,3 +18,13 @@ export const updateQuestionGroup = async (groupId: number, data: UpdateQuestionG
 export const deleteQuestionGroup = async (groupId: number) => {
     await api.delete(`/question-groups/${groupId}`);
   };
+
+
+export const getQuestionsByPartIds = async (params?: { partIds: string[] }) => {
+  return await api.get('/question-groups/by-parts', {
+    params: {
+      partIds: params?.partIds?.join(','), // -> partIds=1,2,3
+    },
+  });
+};
+
