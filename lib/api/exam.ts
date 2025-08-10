@@ -33,3 +33,7 @@ export const updateExam = async (examId: number, data: ExamRequest) => api.put(`
 export const deleteExam = async (examId: number) => api.delete(`/exams/${examId}`);
 
 export const submitExam = async (data: SubmitExamRequest) => api.post("/exams/submit", data);
+
+export const getExamResults = async (attemptId: number) => api.get(`/exams/attempts/${attemptId}/result`);
+
+export const getQuestionExplain = async (questionId: number) => api.get(`/question-groups/explain/${questionId}`);

@@ -231,3 +231,53 @@ export interface ExamSubmissionResponse {
     partsSubmitted: number[];
   };
 }
+
+
+interface PartDetail {
+  partNumber: number;
+  partName: string;
+  correctAnswers: number;
+  totalQuestions: number;
+  accuracyPercent: number;
+}
+
+interface AnswerDetail {
+  questionId: number;
+  questionNumber: number;
+  userAnswer: string;
+  correctAnswer: string;
+  isCorrect: boolean | null;
+  partNumber: number;
+}
+
+interface ExamSummary {
+  examId: number;
+  examName: string;
+  examDescription: string;
+  totalQuestions: number;
+}
+
+interface TestResult {
+  isFullTest: boolean;
+  totalScore: number;
+  listeningScore: number;
+  readingScore: number;
+  completionTimeMinutes: number;
+  submittedAt: string;
+  partsDetail: PartDetail[];
+  answersDetail: AnswerDetail[];
+  examSummary: ExamSummary;
+}
+
+
+export type QuestionExplainResponse = {
+  questionId: number;
+  questionNumber: number | null;
+  questionText: string | null;
+  audioUrl: string | null;
+  imageUrl: string | null;
+  questionType: string;
+  correctAnswerOption: string;
+  explanation: string;
+  options: QuestionOption[];
+};
