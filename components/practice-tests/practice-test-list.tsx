@@ -100,7 +100,7 @@ const PracticeTestsList = () => {
     try {
       const res = await getAllExams({
         page: currentPage,
-        size: 1,
+        size: 6,
         keyword: actualSearchTerm || undefined,
         categoryId: selectedCategory !== 'all' ? Number(selectedCategory) : undefined,
       });
