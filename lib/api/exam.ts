@@ -1,5 +1,7 @@
 import api from "@/lib/axios";
-import { ExamRequest, ExamResponse } from "@/types";
+
+import { ExamRequest, ExamResponse, SubmitExamRequest } from "@/types";
+
 
 export const getAllExams = async (params?: {
     keyword?: string;
@@ -37,6 +39,7 @@ export const createExam = async (data: ExamRequest) => api.post("/exams", data);
 
 export const deleteExam = async (examId: number) => api.delete(`/exams/${examId}`);
 
+
 export const updateExamStatus = async (examId: number, status: string) =>
     api.patch(`/exams/${examId}/status`, null, {
         params: { status },
@@ -45,3 +48,6 @@ export const updateExam = async (id: number, data: ExamRequest) => {
         const res = await api.put<ExamResponse>(`/exams/${id}`, data);
         return res.data;
     };
+
+export const submitExam = async (data: SubmitExamRequest) => api.post("/exams/submit", data);
+

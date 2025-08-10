@@ -142,13 +142,14 @@ export type UIQuestion = {
     options: Record<"A"|"B"|"C"|"D", UIOption | undefined>; // undefined nếu part không dùng (vd D của Part 2)
   };
 
-interface Option {
+
+export interface Option {
   optionId: number;
   optionText: string;
   optionLetter: string;
 }
 
-interface Question {
+export interface Question {
   questionNumber: number;
   questionId: number;
   questionText: string;
@@ -156,14 +157,14 @@ interface Question {
   options: Option[];
 }
 
-interface Group {
+export interface Group {
   groupId: number;
   audioUrl: string;
   imageUrl: string;
   questions: Question[];
   passageText: string;
 }
-interface PartData {
+export interface PartData {
   partId: number;
   partName: string;
   partNumber: number;
@@ -172,3 +173,4 @@ interface PartData {
 }
 
 export {PartData, Group, Question, Option};
+

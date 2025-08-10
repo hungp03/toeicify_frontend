@@ -28,7 +28,6 @@ export function FlashcardTestContent() {
     try {
       const listRes = await getFlashcardListDetail(id as string);
       setList(listRes);
-      console.log(listRes);
   
       // Lấy ngẫu nhiên flashcards từ listRes, không phải từ state list
       const flashcards = [...listRes.flashcards].sort(() => Math.random() - 0.5).slice(0, count);

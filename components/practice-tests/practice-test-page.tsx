@@ -34,18 +34,21 @@ export default function TestPage() {
   const [remainingTime, setRemainingTime] = useState<number>(0);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [testFinished, setTestFinished] = useState<boolean>(false);
+  const [examStartTime] = useState(() => new Date());
+  const [isFullExam, setIsFullExam] = useState(false);
+  const [showingResult, setShowingResult] = useState<boolean>(false);
 
   // Ref để kiểm tra xem test đang trong quá trình làm bài hay không
   const isTestActiveRef = useRef(false);
 
   // Cập nhật trạng thái test active
   useEffect(() => {
-    if (!loading && !error && !testFinished && partIds.length > 0) {
+    if (!loading && !error && !testFinished && !showingResult && partIds.length > 0) {
       isTestActiveRef.current = true;
     } else {
       isTestActiveRef.current = false;
     }
-  }, [loading, error, testFinished, partIds.length]);
+  }, [loading, error, testFinished, showingResult, partIds.length]);
 
   // Hàm xử lý cảnh báo khi user muốn rời khỏi trang
   const handleBeforeUnload = useCallback((e: BeforeUnloadEvent) => {
@@ -98,7 +101,7 @@ export default function TestPage() {
     const originalPush = router.push;
     const originalReplace = router.replace;
     const originalBack = router.back;
-    
+
     router.push = (...args: Parameters<typeof router.push>) => {
       if (isTestActiveRef.current) {
         const confirmLeave = window.confirm(
@@ -144,24 +147,24 @@ export default function TestPage() {
 
       const target = e.target as HTMLElement;
       const link = target.closest('a[href]') || target.closest('[data-href]');
-      
+
       if (link) {
         const href = (link as HTMLAnchorElement).href || link.getAttribute('data-href');
-        
+
         // Chỉ xử lý internal links (không có protocol hoặc same origin)
         if (href && (
-          href.startsWith('/') || 
-          href.startsWith('#') || 
+          href.startsWith('/') ||
+          href.startsWith('#') ||
           href.startsWith('?') ||
           href.startsWith(window.location.origin)
         )) {
           e.preventDefault();
           e.stopPropagation();
-          
+
           const confirmLeave = window.confirm(
             'Bạn có chắc muốn rời khỏi bài test? Tất cả tiến trình làm bài sẽ bị mất và không thể khôi phục.'
           );
-          
+
           if (confirmLeave) {
             isTestActiveRef.current = false;
             // Trigger navigation sau khi tắt cảnh báo
@@ -183,19 +186,19 @@ export default function TestPage() {
 
       const target = e.target as HTMLElement;
       const button = target.closest('button[onclick], button[data-navigate], [role="button"][onclick]');
-      
+
       if (button && button !== e.currentTarget) {
         const onClick = button.getAttribute('onclick');
         const navigate = button.getAttribute('data-navigate');
-        
+
         if (onClick?.includes('router.') || onClick?.includes('navigate') || navigate) {
           e.preventDefault();
           e.stopPropagation();
-          
+
           const confirmLeave = window.confirm(
             'Bạn có chắc muốn rời khỏi bài test? Tất cả tiến trình làm bài sẽ bị mất và không thể khôi phục.'
           );
-          
+
           if (confirmLeave) {
             isTestActiveRef.current = false;
             // Re-trigger the click after disabling warning
@@ -262,6 +265,8 @@ export default function TestPage() {
   // Set initial timer
   useEffect(() => {
     const timeParam = searchParams.get('time');
+    const partsParam = searchParams.get('parts');
+    setIsFullExam(partsParam === 'all');
     if (!timeParam || timeParam === 'unlimited') {
       setInitialTime(0);
       setRemainingTime(0);
@@ -298,39 +303,32 @@ export default function TestPage() {
         let chosenPartNumbers: string[] = [];
 
         if (partsParam === 'all') {
-          chosenPartIds = examParts.map((p: { partId: { toString: () => any; }; }) => p.partId.toString());
-          chosenPartNumbers = examParts.map((p: { partNumber: { toString: () => any; }; }) => p.partNumber.toString());
+          chosenPartIds = examParts.map((p: any) => p.partId.toString());
+          chosenPartNumbers = examParts.map((p: any) => p.partNumber.toString());
         } else {
           const requestedNumbers = partsParam.split(',').filter((n) => n.trim());
           chosenPartIds = examParts
-            .filter((p: { partId: { toString: () => string; }; }) => requestedNumbers.includes(p.partId.toString()))
-            .map((p: { partId: { toString: () => any; }; }) => p.partId.toString());
+            .filter((p: any) => requestedNumbers.includes(p.partId.toString()))
+            .map((p: any) => p.partId.toString());
           chosenPartNumbers = examParts
-            .filter((p: { partId: { toString: () => string; }; }) => requestedNumbers.includes(p.partId.toString()))
-            .map((p: { partNumber: { toString: () => any; }; }) => p.partNumber.toString());
+            .filter((p: any) => requestedNumbers.includes(p.partId.toString()))
+            .map((p: any) => p.partNumber.toString());
         }
 
-        if (!chosenPartIds.length) {
-          setError('Không có phần thi nào được chọn hoặc phần thi không hợp lệ theo đề thi');
-          return;
-        }
- 
         setPartIds(chosenPartIds);
         setPartNumbers(chosenPartNumbers);
 
-        // Init state cho từng partId
+        // Init state cho từng partId (chỉ visited parts)
         chosenPartIds.forEach((id) => {
           if (!allAnswersRef.current[id]) allAnswersRef.current[id] = {};
           if (!allMarkedForReviewRef.current[id]) allMarkedForReviewRef.current[id] = {};
         });
 
-        // Preload dữ liệu cho part đầu tiên
+        // Chỉ load part đầu tiên
         const firstPartId = chosenPartIds[0];
-        const firstPartNumber = chosenPartNumbers[0];
-
         const res = await getQuestionsByPartIds({ partIds: [firstPartId] });
         if (!res?.data?.length) {
-          setError(`Không tìm thấy dữ liệu cho Part ${firstPartNumber}`);
+          setError(`Không tìm thấy dữ liệu cho Part ${firstPartId}`);
           return;
         }
 
@@ -348,7 +346,6 @@ export default function TestPage() {
 
     if (testId) fetchExamInfoAndFirstPart();
   }, [testId, searchParams]);
-
   // Fetch part khi chuyển (bỏ qua part đầu tiên đã được preload)
   useEffect(() => {
     if (!partIds.length || loading) return;
@@ -435,7 +432,7 @@ export default function TestPage() {
     const confirmExit = window.confirm(
       "Bạn có chắc muốn thoát khỏi bài test?\n\nTất cả tiến trình làm bài sẽ bị mất và không thể khôi phục. Bạn sẽ cần bắt đầu lại từ đầu nếu muốn làm bài test này."
     );
-    
+
     if (confirmExit) {
       isTestActiveRef.current = false; // Tắt cảnh báo
       router.push("/practice-tests");
@@ -487,7 +484,7 @@ export default function TestPage() {
   // Loading UI
   if (loading) {
     return (
-      <FullPageLoader/>
+      <FullPageLoader />
     );
   }
 
@@ -527,7 +524,8 @@ export default function TestPage() {
 
   return (
     <div>
-      {partIds.length > 0 && (
+      {/* Chỉ hiển thị thanh navigation khi test chưa kết thúc và không đang hiển thị kết quả */}
+      {!testFinished && !showingResult && partIds.length > 0 && (
         <div className="bg-white border-b shadow-sm">
           <div className="container mx-auto px-4 py-3">
             <div className="flex justify-between items-center">
@@ -597,6 +595,11 @@ export default function TestPage() {
           onMarkedForReviewChange={(marked) =>
             updateMarkedForReview(currentPartId, marked)
           }
+          allPartIds={partIds.map(id => parseInt(id))} // Tất cả partIds từ URL/exam
+          allAnswers={allAnswersRef.current}
+          examStartTime={examStartTime}
+          isFullExam={isFullExam}
+          onShowResult={setShowingResult}
         />
       ) : null}
     </div>
