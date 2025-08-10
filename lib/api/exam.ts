@@ -1,5 +1,5 @@
 import api from "@/lib/axios";
-import { ExamRequest } from "@/types";
+import { ExamRequest, SubmitExamRequest } from "@/types";
 
 export const getAllExams = async (params?: {
     keyword?: string;
@@ -31,3 +31,5 @@ export const createExam = async (data: ExamRequest) => api.post("/exams", data);
 export const updateExam = async (examId: number, data: ExamRequest) => api.put(`/exams/${examId}`, data);
 
 export const deleteExam = async (examId: number) => api.delete(`/exams/${examId}`);
+
+export const submitExam = async (data: SubmitExamRequest) => api.post("/exams/submit", data);

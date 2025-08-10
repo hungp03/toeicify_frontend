@@ -130,7 +130,6 @@ export function FlashcardListDetailContent() {
       setCurrentPage(newPage);
       fetchData(newPage); // Gọi lại API phân trang
     } catch (e) {
-      console.log(e);
       toast.error('Xoá flashcard thất bại. Vui lòng thử lại.');
     }
   };

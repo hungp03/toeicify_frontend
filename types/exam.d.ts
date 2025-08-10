@@ -198,3 +198,36 @@ export interface QuestionGroupFormProps {
   onSave: (group: QuestionGroup) => void;
   onCancel: () => void;
 }
+
+export interface SubmitExamRequest {
+  examId: number;
+  submitType: 'full' | 'partial';
+  partIds?: number[];
+  startTime: string;
+  endTime: string;
+  answers: Array<{
+    questionId: number;
+    selectedOption: string;
+  }>;
+}
+
+export interface ExamSubmissionResponse {
+  attemptId: number;
+  totalScore: number;
+  listeningScore: number;
+  readingScore: number;
+  completionTimeMinutes: number;
+  submittedAt: string;
+  partsDetail: Array<{
+    partNumber: number;
+    partName: string;
+    correctAnswers: number;
+    totalQuestions: number;
+    accuracyPercent: number;
+  }>;
+  examSummary: {
+    examId: number;
+    submitType: string;
+    partsSubmitted: number[];
+  };
+}

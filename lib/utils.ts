@@ -10,3 +10,7 @@ export function cn(...inputs: ClassValue[]) {
 export function formatDate(date: string | Date): string {
   return dayjs(date).isValid() ? dayjs(date).format('DD/MM/YYYY') : ''
 }
+
+export function toUtcNoMsZ(d: Date) {
+  return d.toISOString().replace(/\.\d{3}Z$/, 'Z');
+}
