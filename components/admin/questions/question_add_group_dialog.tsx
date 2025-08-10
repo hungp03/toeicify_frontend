@@ -9,8 +9,28 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 import { createQuestionGroup } from "@/lib/api/question";
-import { QuestionGroupRequest, QuestionType, PartRule, AddQuestionGroupDialogProps } from "@/types/question";
+import { QuestionGroupRequest, QuestionType, PartRule, AddQuestionGroupDialogProps, QuestionRequest } from "@/types/question";
 import { MediaUploader } from "@/components/common/media_uploader";
+
+/** Mốc bắt đầu & số lượng cho TOEIC truyền thống */
+const TOEIC_PART_START: Record<number, number> = {
+  1: 1,   // 1–6
+  2: 7,   // 7–31
+  3: 32,  // 32–70
+  4: 71,  // 71–100
+  5: 101, // 101–130
+  6: 131, // 131–146
+  7: 147, // 147–200
+};
+const TOEIC_PART_LENGTH: Record<number, number> = {
+  1: 6,
+  2: 25,
+  3: 39,
+  4: 30,
+  5: 30,
+  6: 16,
+  7: 54,
+};
 
 const PART_RULES: Record<number, PartRule> = {
   1: {
@@ -104,85 +124,107 @@ export const QuestionAddGroupDialog: React.FC<AddQuestionGroupDialogProps> = ({
   partId,
   partNumber,
   onCreated,
+  existingNumbers = [], // tất cả số đã dùng trong PART này
 }) => {
   const baseRules: PartRule | undefined = useMemo(
     () => (partNumber ? PART_RULES[partNumber] : undefined),
     [partNumber]
   );
 
-  // Part 7: passage mode selector (single/double/triple)
   const [p7Mode, setP7Mode] = useState<QuestionType>("READING_SINGLE_PASSAGE");
 
-  // Group-level fields
-  const [imageUrl, setImageUrl] = useState<string>(""); 
-const [audioUrl, setAudioUrl] = useState<string>("");
+  // group-level fields
+  const [imageUrl, setImageUrl] = useState("");
+  const [audioUrl, setAudioUrl] = useState("");
   const [passageText, setPassageText] = useState("");
 
-  // Questions UI state
+  // numbering
+  const [autoNumber, setAutoNumber] = useState(true);
+
+  const usedSet = useMemo(
+    () => new Set((existingNumbers || []).filter((n) => Number.isFinite(n))),
+    [existingNumbers]
+  );
+
+  // TÍNH MỐC BẮT ĐẦU: nếu part đã có số → max+1; nếu chưa → mốc TOEIC
+  const computedStart = useMemo(() => {
+    if (!partNumber) return 1;
+    if (existingNumbers.length) return Math.max(...existingNumbers) + 1;
+    return TOEIC_PART_START[partNumber] ?? 1;
+  }, [existingNumbers, partNumber]);
+
+  const partRange = useMemo(() => {
+    if (!partNumber) return { start: 1, end: 10_000 };
+    const start = TOEIC_PART_START[partNumber] ?? 1;
+    const len = TOEIC_PART_LENGTH[partNumber] ?? 10_000;
+    return { start, end: start + len - 1 };
+  }, [partNumber]);
+
+  const [baseNumber, setBaseNumber] = useState<number>(computedStart);
+
   type UIQuestion = {
+    questionNumber: string;
     questionText: string;
-    correctAnswerOption: string;
+    correctAnswerOption: "A" | "B" | "C" | "D";
     explanation: string;
-    options: Record<string, string>; // {A: "", B: "", ...}
+    options: Record<"A" | "B" | "C" | "D", string>;
   };
 
-  const makeEmptyQuestion = (letters: string[]): UIQuestion => ({
+  const makeEmptyQuestion = (letters: ("A" | "B" | "C" | "D")[]): UIQuestion => ({
+    questionNumber: "",
     questionText: "",
-    correctAnswerOption: letters[0] || "A",
+    correctAnswerOption: (letters[0] ?? "A"),
     explanation: "",
-    options: letters.reduce<Record<string, string>>((acc, L) => {
-      acc[L] = "";
+    options: (["A","B","C","D"] as const).reduce((acc, L) => {
+      if (letters.includes(L)) acc[L] = "";
       return acc;
-    }, {}),
+    }, {} as Record<"A"|"B"|"C"|"D", string>),
   });
 
   const initialQuestions = (rules?: PartRule, mode?: QuestionType): UIQuestion[] => {
     if (!rules) return [];
-    const letters = rules.optionLetters as string[];
-
-    if (partNumber === 7) {
-      if (mode === "READING_SINGLE_PASSAGE") {
-        return Array.from({ length: DEFAULT_SINGLE_MIN }, () => makeEmptyQuestion(letters));
-      }
-      // double/triple → exactly 5
-      return Array.from({ length: DOUBLE_TRIPLE_COUNT }, () => makeEmptyQuestion(letters));
-    }
-
-    return Array.from({ length: rules.questionsPerGroup }, () => makeEmptyQuestion(letters));
+    const letters = rules.optionLetters as ("A"|"B"|"C"|"D")[];
+    const count =
+      partNumber === 7
+        ? (mode === "READING_SINGLE_PASSAGE" ? DEFAULT_SINGLE_MIN : DOUBLE_TRIPLE_COUNT)
+        : rules.questionsPerGroup;
+    return Array.from({ length: count }, () => makeEmptyQuestion(letters));
   };
 
   const [questions, setQuestions] = useState<UIQuestion[]>(initialQuestions(baseRules, p7Mode));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Reset form when dialog opens or part/mode changes
+  // reset theo open/part/mode
   useEffect(() => {
     if (!open) return;
     setImageUrl("");
     setAudioUrl("");
     setPassageText("");
     setQuestions(initialQuestions(baseRules, p7Mode));
+    setAutoNumber(true);
     setError(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, partNumber, p7Mode]);
 
-  if (!baseRules || !partId || !partNumber) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Thêm câu hỏi</DialogTitle>
-            <DialogDescription>Vui lòng chọn một phần thi trước khi thêm câu hỏi.</DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="secondary" onClick={() => onOpenChange(false)}>Đóng</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+  // cập nhật base khi computedStart đổi
+  useEffect(() => {
+    setBaseNumber(computedStart);
+  }, [computedStart]);
+
+  // auto-fill số khi autoNumber/base/length đổi
+  useEffect(() => {
+    if (!autoNumber) return;
+    setQuestions((prev) =>
+      prev.map((q, i) => ({ ...q, questionNumber: String(baseNumber + i) }))
     );
+  }, [autoNumber, baseNumber, questions.length]);
+
+  if (!baseRules || !partId || !partNumber) {
+    return null;
   }
 
-  const optionLetters = baseRules.optionLetters as string[];
+  const optionLetters = baseRules.optionLetters as ("A"|"B"|"C"|"D")[];
 
   const onChangeQuestionField = (idx: number, field: keyof UIQuestion, value: string) => {
     setQuestions((prev) => prev.map((q, i) => (i === idx ? { ...q, [field]: value } : q)));
@@ -192,9 +234,15 @@ const [audioUrl, setAudioUrl] = useState<string>("");
     setQuestions((prev) => prev.map((q, i) => (i === idx ? { ...q, options: { ...q.options, [letter]: text } } : q)));
   };
 
-  // Part 7 controls
-  const canAddP7Single = partNumber === 7 && p7Mode === "READING_SINGLE_PASSAGE" && questions.length < DEFAULT_SINGLE_MAX;
-  const canRemoveP7Single = partNumber === 7 && p7Mode === "READING_SINGLE_PASSAGE" && questions.length > DEFAULT_SINGLE_MIN;
+  const canAddP7Single =
+    partNumber === 7 &&
+    p7Mode === "READING_SINGLE_PASSAGE" &&
+    questions.length < DEFAULT_SINGLE_MAX;
+
+  const canRemoveP7Single =
+    partNumber === 7 &&
+    p7Mode === "READING_SINGLE_PASSAGE" &&
+    questions.length > DEFAULT_SINGLE_MIN;
 
   const addQuestionP7Single = () => {
     if (!canAddP7Single) return;
@@ -206,54 +254,94 @@ const [audioUrl, setAudioUrl] = useState<string>("");
     setQuestions((prev) => prev.filter((_, i) => (index == null ? i !== prev.length - 1 : i !== index)));
   };
 
+  /** Validate số khi ở manual mode */
+  const numberErrors = useMemo(() => {
+    if (autoNumber) {
+      // kiểm tra tràn phạm vi khi auto
+      const last = baseNumber + (questions.length - 1);
+      if (last > partRange.end) {
+        return `Vượt phạm vi Part ${partNumber}. Phạm vi cho part này: ${partRange.start}–${partRange.end}.`;
+      }
+      // không cần check trùng vì auto luôn liên tiếp từ baseNumber; chỉ cần tránh đè số đã dùng
+      for (let i = 0; i < questions.length; i++) {
+        const n = baseNumber + i;
+        if (usedSet.has(n)) {
+          return `Số ${n} đã tồn tại trong phần thi này. Chỉnh "Base number" để tránh trùng.`;
+        }
+      }
+      return null;
+    }
+
+    const nums = questions.map((q) => Number((q.questionNumber ?? "").trim()));
+    for (let i = 0; i < nums.length; i++) {
+      const n = nums[i];
+      if (!Number.isInteger(n) || n <= 0) return `Câu ${i + 1}: "Question number" phải là số nguyên dương.`;
+      if (n < partRange.start || n > partRange.end) {
+        return `Câu ${i + 1}: số phải nằm trong phạm vi ${partRange.start}–${partRange.end} của Part ${partNumber}.`;
+      }
+    }
+    const dup = new Set<number>();
+    for (const n of nums) {
+      if (dup.has(n)) return `Trùng "Question number": ${n}.`;
+      dup.add(n);
+    }
+    for (const n of nums) {
+      if (usedSet.has(n)) return `Số ${n} đã tồn tại trong phần thi này.`;
+    }
+    const sorted = [...nums].sort((a, b) => a - b);
+    for (let i = 1; i < sorted.length; i++) {
+      if (sorted[i] !== sorted[i - 1] + 1) {
+        return `Các số phải LIÊN TIẾP trong group. Ví dụ: ${sorted[0]}, ${sorted[0] + 1}, ${sorted[0] + 2}...`;
+      }
+    }
+    return null;
+  }, [autoNumber, baseNumber, questions.length, questions, usedSet, partRange, partNumber]);
+
   const handleSubmit = async () => {
     try {
       setSubmitting(true);
       setError(null);
 
-      // ✦ Ràng buộc Part 7: phải có ÍT NHẤT một trong hai — imageUrl hoặc passageText
       if (partNumber === 7) {
         const hasImage = !!imageUrl?.trim();
         const hasPassage = !!passageText?.trim();
         if (!hasImage && !hasPassage) {
-          throw new Error("Part 7: cần có ít nhất một trong hai: Image URL hoặc Passage/Context.");
+          throw new Error("Part 7: cần ít nhất một trong hai: Image URL hoặc Passage/Context.");
         }
       }
 
-      // Determine question type for this group
+      if (numberErrors) throw new Error(numberErrors);
+
+      // text/options
+      for (let i = 0; i < questions.length; i++) {
+        const q = questions[i];
+        if (baseRules.requireQuestionText && !q.questionText.trim()) {
+          throw new Error(`Câu ${i + 1}: thiếu phần "Question".`);
+        }
+        for (const L of optionLetters) {
+          if (!q.options[L]?.trim()) throw new Error(`Câu ${i + 1}: đáp án ${L} chưa có nội dung.`);
+        }
+      }
+
       const qType = questionTypeForPart(partNumber, partNumber === 7 ? p7Mode : undefined);
 
-      // Build payload
       const payload: QuestionGroupRequest = {
         partId,
         passageText: baseRules.showPassage && passageText ? passageText : undefined,
         imageUrl: baseRules.showImage && imageUrl ? imageUrl : undefined,
         audioUrl: baseRules.showAudio && audioUrl ? audioUrl : undefined,
-        questions: questions.map((q) => ({
-          questionText: baseRules.requireQuestionText ? q.questionText || undefined : q.questionText || undefined,
+        questions: questions.map<QuestionRequest>((q, i) => ({
+          questionNumber: Number(q.questionNumber || (baseNumber + i)),
+          questionText: baseRules.requireQuestionText ? (q.questionText || undefined) : (q.questionText || undefined),
           questionType: qType,
           correctAnswerOption: q.correctAnswerOption,
           explanation: q.explanation || undefined,
-          options: optionLetters.map((L) => ({ optionLetter: L, optionText: q.options[L] || "" })),
+          options: optionLetters.map((L) => ({
+            optionLetter: L,
+            optionText: q.options[L] || "",
+          })),
         })),
       };
-
-      // Client checks
-      for (let i = 0; i < payload.questions.length; i++) {
-        const qq = payload.questions[i];
-        if (baseRules.requireQuestionText && !qq.questionText?.trim()) {
-          throw new Error(`Câu ${i + 1}: thiếu phần "Question".`);
-        }
-        const validLetters = new Set(optionLetters);
-        if (!validLetters.has(qq.correctAnswerOption)) {
-          throw new Error(`Câu ${i + 1}: đáp án đúng phải là một trong ${Array.from(validLetters).join(", ")}.`);
-        }
-        for (const opt of qq.options) {
-          if (!opt.optionText?.trim()) {
-            throw new Error(`Câu ${i + 1}: đáp án ${opt.optionLetter} chưa có nội dung.`);
-          }
-        }
-      }
 
       await createQuestionGroup(payload);
       onOpenChange(false);
@@ -266,80 +354,54 @@ const [audioUrl, setAudioUrl] = useState<string>("");
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} >
-      {/* Fixed-height, scrollable content */}
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="!max-w-[60vw] !w-[60vw] p-0">
         <DialogHeader className="px-6 pt-6">
           <DialogTitle>Thêm question group — {baseRules.displayName}</DialogTitle>
-          <DialogDescription>
-            Bám sát cấu trúc TOEIC. Mặc định: {baseRules.questionsPerGroup} câu (tùy part).
-          </DialogDescription>
+          <DialogDescription>Bám sát cấu trúc TOEIC.</DialogDescription>
         </DialogHeader>
 
         <div className="max-h-[70vh] overflow-y-auto px-6 pb-6">
-          {/* Part 7 mode selector */}
-          {partNumber === 7 && (
-            <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
-              <div className="sm:col-span-2">
-                <Label>Loại passage (áp dụng cho toàn group)</Label>
-                <select
-                  className={cn(
-                    "w-full rounded-md border bg-background px-3 py-2 text-sm",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  )}
-                  value={p7Mode}
-                  onChange={(e) => setP7Mode(e.target.value as QuestionType)}
-                >
-                  <option value="READING_SINGLE_PASSAGE">Single passage (2–4 câu)</option>
-                  <option value="READING_DOUBLE_PASSAGE">Double passage (5 câu)</option>
-                  <option value="READING_TRIPLE_PASSAGE">Triple passage (5 câu)</option>
-                </select>
+          {/* (Giữ selector Part 7 nếu có) */}
+
+          {/* Numbering controller */}
+          <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+            <div className="flex items-center gap-2">
+              <input id="autoNumber" type="checkbox" checked={autoNumber} onChange={(e) => setAutoNumber(e.target.checked)} />
+              <Label htmlFor="autoNumber">Tự động đánh số</Label>
+            </div>
+            <div className="sm:col-span-2 flex items-end gap-3">
+              <div className="flex-1">
+                <Label>Base number</Label>
+                <Input
+                  type="number"
+                  min={partRange.start}
+                  max={partRange.end}
+                  value={baseNumber}
+                  disabled={!autoNumber}
+                  onChange={(e) => {
+                    const v = Number(e.target.value || partRange.start);
+                    setBaseNumber(Math.min(partRange.end, Math.max(partRange.start, v)));
+                  }}
+                />
                 <FieldHint>
-                  Single: tối thiểu {DEFAULT_SINGLE_MIN}, tối đa {DEFAULT_SINGLE_MAX}. Double/Triple: cố định {DOUBLE_TRIPLE_COUNT}.
+                  Mặc định: {computedStart}. Phạm vi Part {partNumber}: {partRange.start}–{partRange.end}.
                 </FieldHint>
               </div>
-              {p7Mode === "READING_SINGLE_PASSAGE" && (
-                <div className="flex gap-2">
-                  <Button type="button" variant="secondary" disabled={!canRemoveP7Single} onClick={() => removeQuestionP7Single()}>
-                    Bớt 1 câu
-                  </Button>
-                  <Button type="button" disabled={!canAddP7Single} onClick={addQuestionP7Single}>
-                    Thêm 1 câu
-                  </Button>
-                </div>
+            </div>
+          </div>
+
+          {/* Media group */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {baseRules.showImage && (
+                <MediaUploader label="Image" value={imageUrl} onChange={setImageUrl} accept="image/*" folder="images" placeholder="Dán URL ảnh hoặc tải lên" hint="Hỗ trợ PNG, JPG, GIF, WEBP, BMP" preview="image" />
+              )}
+              {baseRules.showAudio && (
+                <MediaUploader label="Audio" value={audioUrl} onChange={setAudioUrl} accept="audio/*" folder="audios" placeholder="Dán URL audio hoặc tải lên" hint="Hỗ trợ MP3, WAV, OGG, MP4, WEBM" preview="audio" />
               )}
             </div>
-          )}
 
-          {/* Group fields */}
-          <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {baseRules.showImage && (
-              <MediaUploader
-                label="Image"
-                value={imageUrl}
-                onChange={setImageUrl}
-                accept="image/*"
-                folder="images"                              // BE sẽ lưu dưới prefix này
-                placeholder="Dán URL ảnh hoặc tải lên"
-                hint="Hỗ trợ PNG, JPG, GIF, WEBP, BMP"
-                preview="image"
-              />
-            )}
-
-            {baseRules.showAudio && (
-              <MediaUploader
-                label="Audio"
-                value={audioUrl}
-                onChange={setAudioUrl}
-                accept="audio/*"
-                folder="audios"                              // BE sẽ lưu dưới prefix này
-                placeholder="Dán URL audio hoặc tải lên"
-                hint="Hỗ trợ MP3, WAV, OGG, MP4, WEBM"
-                preview="audio"
-              />
-            )}
-          </div>
             {baseRules.showPassage && (
               <div>
                 <Label htmlFor="passageText">Passage / Context</Label>
@@ -350,16 +412,13 @@ const [audioUrl, setAudioUrl] = useState<string>("");
 
           <Separator className="my-4" />
 
-          {/* Question items */}
+          {/* Questions */}
           <div className="space-y-6">
             {questions.map((q, idx) => (
               <div key={idx} className="rounded-2xl border bg-white p-4 shadow-sm">
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary">Question {idx + 1}</Badge>
-                    <span className="text-xs text-muted-foreground">
-                      Type: <span className="font-medium">{questionTypeForPart(partNumber, partNumber === 7 ? p7Mode : undefined)}</span>
-                    </span>
                   </div>
                   {partNumber === 7 && p7Mode === "READING_SINGLE_PASSAGE" && questions.length > DEFAULT_SINGLE_MIN && (
                     <Button type="button" variant="ghost" onClick={() => removeQuestionP7Single(idx)} className="h-8 px-2 text-xs">
@@ -368,39 +427,50 @@ const [audioUrl, setAudioUrl] = useState<string>("");
                   )}
                 </div>
 
-                {/* Question text */}
-                {baseRules.requireQuestionText ? (
-                  <div className="mb-3">
-                    <Label>Question</Label>
-                    <Textarea rows={2} placeholder="Nhập nội dung câu hỏi" value={q.questionText} onChange={(e) => onChangeQuestionField(idx, "questionText", e.target.value)} />
+                <div className="mb-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <Label>Question number</Label>
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      min={partRange.start}
+                      max={partRange.end}
+                      placeholder={`VD: ${computedStart}`}
+                      value={q.questionNumber}
+                      onChange={(e) => {
+                        if (autoNumber) return;
+                        onChangeQuestionField(idx, "questionNumber", e.target.value);
+                      }}
+                      readOnly={autoNumber}
+                      className={cn(autoNumber && "bg-gray-50")}
+                      title={autoNumber ? "Đang ở chế độ tự động" : undefined}
+                    />
+                    <FieldHint>
+                      {autoNumber
+                        ? `Tự động: ${baseNumber + idx}`
+                        : `Trong phạm vi ${partRange.start}–${partRange.end}, liên tiếp, không trùng số đã có.`}
+                    </FieldHint>
                   </div>
-                ) : (
-                  <>
-                  {(baseRules.requireQuestionText && partNumber !== 1 && partNumber !== 2) ? (
-                    <div className="mb-3">
-                      <Label>Question</Label>
-                      <Textarea
-                        rows={2}
-                        placeholder="Nhập nội dung câu hỏi"
-                        value={q.questionText}
-                        onChange={(e) => onChangeQuestionField(idx, "questionText", e.target.value)}
-                      />
-                    </div>
-                  ) : null}
-                  </>
-                )}
 
-                {/* Options */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {optionLetters.map((L) => (
-                    <div key={L} className="space-y-1">
-                      <Label>Option {L}</Label>
-                      <Input placeholder={`Nội dung đáp án ${L}`} value={q.options[L] || ""} onChange={(e) => onChangeOption(idx, L as any, e.target.value)} />
-                    </div>
-                  ))}
+                  <div className="sm:col-span-2">
+                    {baseRules.requireQuestionText && (
+                      <>
+                        <Label>Question</Label>
+                        <Textarea rows={2} placeholder="Nhập nội dung câu hỏi" value={q.questionText} onChange={(e) => onChangeQuestionField(idx, "questionText", e.target.value)} />
+                      </>
+                    )}
+                  </div>
                 </div>
 
-                {/* Correct answer + explanation */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  { (baseRules.optionLetters as ("A"|"B"|"C"|"D")[]).map((L) => (
+                    <div key={L} className="space-y-1">
+                      <Label>Option {L}</Label>
+                      <Input placeholder={`Nội dung đáp án ${L}`} value={q.options[L] || ""} onChange={(e) => onChangeOption(idx, L, e.target.value)} />
+                    </div>
+                  )) }
+                </div>
+
                 <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
                   <div>
                     <Label>Đáp án đúng</Label>
@@ -409,7 +479,7 @@ const [audioUrl, setAudioUrl] = useState<string>("");
                       value={q.correctAnswerOption}
                       onChange={(e) => onChangeQuestionField(idx, "correctAnswerOption", e.target.value)}
                     >
-                      {optionLetters.map((L) => (
+                      {(baseRules.optionLetters as ("A"|"B"|"C"|"D")[]).map((L) => (
                         <option key={L} value={L}>{L}</option>
                       ))}
                     </select>
@@ -423,14 +493,18 @@ const [audioUrl, setAudioUrl] = useState<string>("");
             ))}
           </div>
 
-          {error && (
-            <div className="mt-3 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
+          {(error || numberErrors) && (
+            <div className="mt-3 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+              {error || numberErrors}
+            </div>
           )}
         </div>
 
         <DialogFooter className="px-6 pb-6">
           <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={submitting}>Huỷ</Button>
-          <Button onClick={handleSubmit} disabled={submitting}>{submitting ? "Đang tạo..." : "Tạo question group"}</Button>
+          <Button onClick={handleSubmit} disabled={submitting || !!numberErrors}>
+            {submitting ? "Đang tạo..." : "Tạo question group"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -17,9 +17,11 @@ export interface QuestionOptionRequest {
 
   
 export interface QuestionRequest {
+  questionId?: number;
+  questionNumber?: number;        
   questionText?: string;
   questionType: QuestionType;
-  correctAnswerOption: string; // "A" | "B" | "C" | "D"
+  correctAnswerOption: "A" | "B" | "C" | "D";
   explanation?: string;
   options: QuestionOptionRequest[];
 }
@@ -42,6 +44,7 @@ export interface QuestionResponse {
   questionId: number;
   questionText?: string;
   questionType: QuestionType;
+  questionNumber?: number
   correctAnswerOption: string;
   explanation?: string;
   options: QuestionOptionResponse[];
@@ -80,13 +83,14 @@ type PartRuleUpdate = {
   };
 
 
-export interface AddQuestionGroupDialogProps {
-  open: boolean;
-  onOpenChange: (next: boolean) => void;
-  partId: number | null;
-  partNumber: number | null;
-  onCreated?: () => void; // callback to refresh question groups
-}
+  export interface AddQuestionGroupDialogProps {
+    open: boolean;
+    onOpenChange: (next: boolean) => void;
+    partId: number | null;
+    partNumber: number | null;
+    onCreated?: () => void;
+    existingNumbers?: number[]; // tất cả questionNumber hiện có của part
+  }
 
 
 export type UpdateQuestionOptionRequest = {
