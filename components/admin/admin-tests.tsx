@@ -14,15 +14,18 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import {
-  Search, Plus, Edit, Trash2, FileText, Eye, RefreshCw, Loader, Loader2
+  Search, Edit, Trash2, FileText, Eye, RefreshCw, Loader, Loader2
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from "sonner";
-import { getAllExams, deleteExam} from '@/lib/api/exam';
-import { ExamResponse, PaginationMeta, PaginationResponse, ExamSearchParams} from '@/types';
+import { getAllExams, deleteExam, updateExamStatus, getExamById, getAllExamCategoriesList } from '@/lib/api/exam';
+import { ExamResponse, PaginationMeta, PaginationResponse, ExamSearchParams, Category, ExamPartResponse } from '@/types';
 import { Pagination } from '@/components/common/pagination';
+import { ConfirmDialog, CreateExamDialog } from '@/components/admin/dialogs';
+import { EditExamDialog } from "./dialogs";
+
 
 export function AdminTestsContent() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -37,6 +40,33 @@ export function AdminTestsContent() {
     total: 0
   });
   const [currentPage, setCurrentPage] = useState(0);
+  const [selectedExam, setSelectedExam] = useState<ExamResponse | null>(null);
+  const [targetStatus, setTargetStatus] = useState<string | null>(null);
+  const [examToDelete, setExamToDelete] = useState<ExamResponse | null>(null); 
+  const [showEditExam, setShowEditExam] = useState(false);
+  const [editExamId, setEditExamId] = useState<number | null>(null);
+  const [editInitial, setEditInitial] = useState<null | {
+    examName: string;
+    examDescription: string;
+    totalQuestions: number;
+    listeningAudioUrl: string;
+    status: "PRIVATE" | "PUBLIC" | "PENDING" | "CANCELLED";
+    categoryId: number;
+    createdAt: string | null;
+    createdByName: string;
+    examParts: {
+      partId?: number;
+      partNumber: number;
+      partName: string;
+      description?: string;
+      questionCount: number;
+      expectedQuestionCount?: number;
+    }[];
+  }>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  const isReadOnlyStatus = (s?: string | null) =>
+    ['PUBLIC', 'CANCELLED'].includes((s || '').toUpperCase());
 
   // Create debounced search function
   const debouncedSearch = useMemo(
@@ -66,8 +96,6 @@ export function AdminTestsContent() {
         params.keyword = keyword;
       }
 
-      console.log('Loading exams with params:', params);
-
       const response = await getAllExams(params);
       const data: PaginationResponse = response.data;
       
@@ -81,6 +109,22 @@ export function AdminTestsContent() {
       setLoading(false);
     }
   };
+
+  const getAllowedStatusTransitions = (currentStatus: string) => {
+  const upper = currentStatus.toUpperCase();
+  switch (upper) {
+    case 'PENDING':
+      return ['PRIVATE', 'CANCELLED'];
+    case 'PRIVATE':
+      return ['PUBLIC', 'CANCELLED'];
+    case 'PUBLIC':
+      return ['PRIVATE', 'CANCELLED'];
+    case 'CANCELLED':
+      return ['PRIVATE'];
+    default:
+      return [];
+  }
+};
 
   // Initial load
   useEffect(() => {
@@ -101,18 +145,21 @@ export function AdminTestsContent() {
 
   const filteredExams = exams.filter(exam => {
     const examStatus = exam.status?.toLowerCase() || 'draft';
-    return filterStatus === 'all' || examStatus === filterStatus;
+    return filterStatus === 'all' || examStatus === filterStatus.toLowerCase();
   });
 
-  const handleDelete = async (examId: number) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa đề thi này?')) return;
+  const handleDelete = async () => {
+    if (!examToDelete) return;
+  
     try {
-      await deleteExam(examId);
+      await deleteExam(examToDelete.examId);
       toast.success("Đã xóa đề thi thành công!");
       loadExams(currentPage, actualSearchTerm || undefined);
-    } catch (error) {
-      toast.error("Không thể xóa đề thi");
-      console.error('Error deleting exam:', error);
+    } catch (error : any) {
+      const errMessage = error?.message || "Không thể xóa đề thi";
+      toast.error(errMessage);
+    } finally {
+      setExamToDelete(null); // Đóng dialog sau khi xử lý
     }
   };
 
@@ -124,33 +171,98 @@ export function AdminTestsContent() {
     loadExams(page, actualSearchTerm || undefined);
   };
 
+  const handleChangeStatus = async (examId: number, newStatus: string) => {
+    try {
+      await updateExamStatus(examId, newStatus);
+      toast.success(`Đã chuyển trạng thái đề thi thành ${getStatusBadge(newStatus).label}`);
+      setExams((prev) =>
+        prev.map((exam) =>
+          exam.examId === examId ? { ...exam, status: newStatus } : exam
+        )
+      );
+    } catch (error : any) {
+      const errMessage = error?.message || "Không thể cập nhật trạng thái đề thi";
+      toast.error(errMessage);
+    } finally {
+      setSelectedExam(null);
+      setTargetStatus(null); // Đóng dialog sau khi xử lý
+    }
+  };
+
   const getStatusBadge = (status: string | null) => {
-    const normalizedStatus = status?.toLowerCase() || 'draft';
+    const normalized = status?.toUpperCase() || 'PENDING';
     const config = {
-      active: { variant: 'default' as const, label: 'Hoạt động' },
-      published: { variant: 'default' as const, label: 'Đã xuất bản' },
-      public: { variant: 'default' as const, label: 'Công khai' },
-      draft: { variant: 'secondary' as const, label: 'Bản nháp' },
-      inactive: { variant: 'destructive' as const, label: 'Không hoạt động' },
-      archived: { variant: 'destructive' as const, label: 'Đã lưu trữ' },
-      private: { variant: 'outline' as const, label: 'Riêng tư' },
+      PUBLIC: { variant: 'default' as const, label: 'Công khai' },
+      PRIVATE: { variant: 'outline' as const, label: 'Riêng tư' },
+      PENDING: { variant: 'secondary' as const, label: 'Đang chờ' },
+      CANCELLED: { variant: 'destructive' as const, label: 'Không hoạt động' },
     };
-    return config[normalizedStatus as keyof typeof config] || config.draft;
+    return config[normalized as keyof typeof config] || config.PENDING;
   };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('vi-VN');
   };
 
+  const handleOpenEdit = async (exam: ExamResponse) => {
+    if (isReadOnlyStatus(exam.status)) {
+      toast.warning("Đề đang ở trạng thái không cho phép chỉnh sửa (PUBLIC hoặc CANCELLED).");
+      return;
+    }
+  
+    if (!categories.length) {
+      try {
+        const res = await getAllExamCategoriesList();
+        setCategories(res.data || []);
+      } catch {}
+    }
+    await openEditExam(exam.examId); // giữ nguyên logic fetch chi tiết + setEditInitial
+  };
+
+  // ==== mở dialog: fetch chi tiết đề, build initial ====
+  const openEditExam = async (examId: number) => {
+    try {
+      const { data: ex } = await getExamById(examId);
+      setEditExamId(examId);
+      setEditInitial({
+        examName: ex.examName,
+        examDescription: ex.examDescription,
+        totalQuestions: ex.totalQuestions,
+        listeningAudioUrl: ex.listeningAudioUrl ?? "",
+        status: (ex.status as any) ?? "PENDING",
+        categoryId: ex.categoryId,
+        createdAt: ex.createdAt ?? null,
+        createdByName: ex.createdByName ?? "",
+        examParts: (ex.examParts || []).map((p: ExamPartResponse) => ({
+          partId: p.partId,
+          partNumber: p.partNumber,
+          partName: p.partName,
+          description: p.description || "",
+          questionCount: p.questionCount ?? 0,
+          expectedQuestionCount: p.expectedQuestionCount,
+        })),
+      });
+      setShowEditExam(true);
+    } catch (e: any) {
+      const msg =
+        e?.response?.data?.message ||
+        e?.response?.data?.error ||
+        e?.message ||
+        "Không tải được dữ liệu đề thi để chỉnh sửa.";
+      toast.error(msg);
+    }
+  };
+
+
   // Calculate stats
   const totalExams = pagination.total;
   const publishedCount = exams.filter(e => {
-    const status = e.status?.toLowerCase() || 'draft';
-    return status === 'published' || status === 'active' || status === 'public';
+    const status = e.status?.toLowerCase();
+    return  status === 'public';
   }).length;
   const draftCount = exams.filter(e => {
-    const status = e.status?.toLowerCase() || 'draft';
-    return status === 'draft';
+    const status = e.status?.toLowerCase();
+    return status === 'pending' || status === 'private';
   }).length;
   const totalAttempts = 0; // This might need to come from a separate API
 
@@ -166,12 +278,7 @@ export function AdminTestsContent() {
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Làm mới
           </Button>
-          <Link href="/admin/tests/create">
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Tạo đề thi mới
-            </Button>
-          </Link>
+          <CreateExamDialog onSuccess={handleRefresh} />
         </div>
       </div>
 
@@ -243,11 +350,10 @@ export function AdminTestsContent() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tất cả trạng thái</SelectItem>
-              <SelectItem value="public">Công khai</SelectItem>
-              <SelectItem value="draft">Bản nháp</SelectItem>
-              <SelectItem value="private">Riêng tư</SelectItem>
-              <SelectItem value="cancelled">Không hoạt động</SelectItem>
-              <SelectItem value="pending">Đang chờ thêm</SelectItem>
+              <SelectItem value="PUBLIC">Công khai</SelectItem>
+              <SelectItem value="PRIVATE">Riêng tư</SelectItem>
+              <SelectItem value="PENDING">Đang chờ</SelectItem>
+              <SelectItem value="CANCELLED">Không hoạt động</SelectItem>
             </SelectContent>
           </Select>
         </CardContent>
@@ -286,7 +392,8 @@ export function AdminTestsContent() {
                 </TableHeader>
                 <TableBody>
                   {filteredExams.length > 0 ? (
-                    filteredExams.map((exam) => {
+                    <>
+                    {filteredExams.map((exam) => {
                       const status = getStatusBadge(exam.status);
                       return (
                         <TableRow key={exam.examId}>
@@ -303,7 +410,30 @@ export function AdminTestsContent() {
                             <Badge variant="outline">{exam.totalQuestions} câu</Badge>
                           </TableCell>
                           <TableCell className="text-center">
-                            <Badge variant={status.variant}>{status.label}</Badge>
+                            <div className="flex items-center justify-center space-x-2">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Badge variant={status.variant} className="cursor-pointer">
+                                    {status.label}
+                                  </Badge>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                {getAllowedStatusTransitions(exam.status).map((targetStatus) => (
+                                  <DropdownMenuItem
+                                    key={targetStatus}
+                                    onClick={() => {
+                                      setTimeout(() => {
+                                        setSelectedExam(exam);
+                                        setTargetStatus(targetStatus);
+                                      }, 0);
+                                    }}
+                                  >
+                                    {getStatusBadge(targetStatus).label}
+                                  </DropdownMenuItem>
+                                ))}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
                           </TableCell>
                           <TableCell className="text-center">{formatDate(exam.createdAt)}</TableCell>
                           <TableCell>
@@ -313,16 +443,22 @@ export function AdminTestsContent() {
                                   <Eye className="h-4 w-4" />
                                 </Button>
                               </Link>
-                              <Link href={`/admin/tests/${exam.examId}/edit`}>
-                                <Button variant="outline" size="sm" title="Chỉnh sửa">
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                              </Link>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                title={isReadOnlyStatus(exam.status)
+                                  ? "Không thể chỉnh sửa khi đề ở trạng thái PUBLIC/CANCELLED"
+                                  : "Chỉnh sửa"}
+                                disabled={isReadOnlyStatus(exam.status)}
+                                onClick={() => handleOpenEdit(exam)}  
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
                               <Button 
                                 variant="outline" 
                                 size="sm" 
                                 title="Xóa"
-                                onClick={() => handleDelete(exam.examId)}
+                                onClick={() => setExamToDelete(exam)}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -330,7 +466,55 @@ export function AdminTestsContent() {
                           </TableCell>
                         </TableRow>
                       );
-                    })
+                    })}
+                  {selectedExam && targetStatus && (
+                    <ConfirmDialog
+                      open={!!selectedExam && !!targetStatus}
+                      onOpenChange={(open) => {
+                        if (!open) {
+                          setSelectedExam(null);
+                          setTargetStatus(null);
+                        }
+                      }}
+                      title="Xác nhận chuyển trạng thái"
+                      description={`Bạn có chắc chắn muốn chuyển đề thi "${selectedExam?.examName}" sang trạng thái "${getStatusBadge(targetStatus!).label}"?`}
+                      onConfirm={() => handleChangeStatus(selectedExam.examId, targetStatus)}
+                    />
+                  )}
+                  {examToDelete && (
+                    <ConfirmDialog
+                      open={!!examToDelete}
+                      onOpenChange={(open) => {
+                        if (!open) setExamToDelete(null);
+                      }}
+                      title="Xác nhận xóa đề thi"
+                      description={`Bạn có chắc chắn muốn xóa đề thi "${examToDelete.examName}"? Hành động này không thể hoàn tác.`}
+                      onConfirm={handleDelete}
+                      confirmLabel="Xóa"
+                      cancelLabel="Hủy"
+                  />
+                  )}
+                  {showEditExam && editExamId && editInitial && (
+                    <EditExamDialog
+                      open={showEditExam}
+                      onOpenChange={(open) => {
+                        setShowEditExam(open);
+                        if (!open) {
+                          // dọn state nếu đóng
+                          setEditExamId(null);
+                          setEditInitial(null);
+                        }
+                      }}
+                      examId={editExamId}
+                      initial={editInitial}
+                      categories={categories}
+                      onUpdated={() => {
+                        // sau khi lưu trong dialog, refresh list hiện tại
+                        loadExams(currentPage, actualSearchTerm || undefined);
+                      }}
+                    />
+                  )}
+                  </>
                   ) : (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-8">

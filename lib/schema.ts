@@ -193,6 +193,75 @@ export const updateFlashcardListSchema = createFlashcardListSchema.extend({
     .max(500, 'Danh sách không được vượt quá 500 flashcard'),
 });
 
+export const createExamSchema = z.object({
+  examName: z
+    .string()
+    .min(1, "Tên đề không được để trống")
+    .max(255, "Tên đề không được dài quá 255 ký tự"),
+
+  examDescription: z
+    .string()
+    .min(1, "Mô tả không được để trống")
+    .max(500, "Mô tả không được dài quá 500 ký tự"),
+
+  totalQuestions: z
+    .coerce
+    .number()
+    .int()
+    .min(0, "Số câu hỏi phải là 0"),
+
+  listeningAudioUrl: z
+    .string()
+    .min(1, "URL audio không được trống")
+    .url("Đây không phải là một URL hợp lệ"),
+
+  categoryId: z
+    .number({
+      required_error: "Vui lòng chọn danh mục",
+      invalid_type_error: "Danh mục không hợp lệ",
+    })
+    .int()
+    .positive("Danh mục không hợp lệ"),
+
+  examParts: z
+    .array(
+      z.object({
+        partNumber: z
+          .number()
+          .int()
+          .min(1)
+          .max(7),
+
+        partName: z
+          .string()
+          .min(1, "Tên phần không được trống"),
+
+        description: z
+          .string()
+          .max(255, "Mô tả phần không được vượt quá 255 ký tự")
+          .optional(),
+
+        questionCount: z
+          .number()
+          .int()
+          .max(100, "Mỗi phần không được vượt quá 100 câu"),
+
+        enabled: z
+          .boolean(),
+      })
+    )
+    .length(7, "Đề thi TOEIC cần đúng 7 phần"),
+});
+
+export const ExamInfoEditSchema = z.object({
+  examName: z.string().min(1, "Tên đề không được trống"),
+  examDescription: z.string().min(1, "Mô tả không được trống"),
+  totalQuestions: z.number().int().min(0),               // read-only
+  listeningAudioUrl: z.string().url("URL audio không hợp lệ").min(1),
+  status: z.enum(["PRIVATE", "PUBLIC", "PENDING", "CANCELLED"]),
+  categoryId: z.number().int().positive("Vui lòng chọn danh mục"),
+});
+
 export type ProfileFormData = z.infer<typeof profileSchema>;
 export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 export type LoginFormData = z.infer<typeof loginSchema>;
@@ -201,3 +270,5 @@ export type CategoryFormData = z.infer<typeof categorySchema>;
 export type CreateFlashcardListFormData = z.infer<typeof createFlashcardListSchema>;
 export type CreateFlashcardFormData = z.infer<typeof createFlashcardSchema>;
 export type UpdateFlashcardListFormData = z.infer<typeof updateFlashcardListSchema>;
+export type CreateExamFormData = z.infer<typeof createExamSchema>;
+export type ExamInfoEditFormData = z.infer<typeof ExamInfoEditSchema>;
