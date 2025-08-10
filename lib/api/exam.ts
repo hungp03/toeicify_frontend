@@ -35,10 +35,7 @@ export const getExamByIdFresh = async (examId: number) => api.get(`/exams/${exam
 
 export const createExam = async (data: ExamRequest) => api.post("/exams", data);
 
-// export const updateExam = async (examId: number, data: ExamRequest) => api.put(`/exams/${examId}`, data);
-
 export const deleteExam = async (examId: number) => api.delete(`/exams/${examId}`);
-
 
 export const updateExamStatus = async (examId: number, status: string) =>
     api.patch(`/exams/${examId}/status`, null, {
@@ -51,3 +48,6 @@ export const updateExam = async (id: number, data: ExamRequest) => {
 
 export const submitExam = async (data: SubmitExamRequest) => api.post("/exams/submit", data);
 
+export const getExamResults = async (attemptId: number) => api.get(`/exams/attempts/${attemptId}/result`);
+
+export const getQuestionExplain = async (questionId: number) => api.get(`/question-groups/explain/${questionId}`);

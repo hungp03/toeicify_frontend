@@ -71,7 +71,7 @@ export type PartRule = {
     requireQuestionText: boolean;
 };
 
-type PartRuleUpdate = {
+export type PartRuleUpdate = {
     displayName: string;
     defaultQuestionsPerGroup: number;
     optionLetters: ("A" | "B" | "C" | "D")[];
@@ -89,7 +89,7 @@ type PartRuleUpdate = {
     partId: number | null;
     partNumber: number | null;
     onCreated?: () => void;
-    existingNumbers?: number[]; // tất cả questionNumber hiện có của part
+    existingNumbers?: number[]; 
   }
 
 
@@ -132,6 +132,7 @@ export type ConfirmDeleteGroupDialogProps = {
   group: QuestionGroupResponse | null;
   onDeleted?: () => void;
 };
+
 export type UIOption = { optionId?: number; letter: "A"|"B"|"C"|"D"; text: string };
 
 export type UIQuestion = {
@@ -139,7 +140,7 @@ export type UIQuestion = {
     questionText: string;
     correctAnswerOption: string;
     explanation: string;
-    options: Record<"A"|"B"|"C"|"D", UIOption | undefined>; // undefined nếu part không dùng (vd D của Part 2)
+    options: Record<"A"|"B"|"C"|"D", UIOption | undefined>; 
   };
 
 
