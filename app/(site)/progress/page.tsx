@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic';
 import FullPageLoader from '@/components/common/full-page-loader';
 
-const LoginWithProtection = dynamic(
+const ProgressPage = dynamic(
   () => import('@/components/progress/progress'),
   { 
     loading: () => <FullPageLoader />
@@ -9,5 +9,5 @@ const LoginWithProtection = dynamic(
 );
 
 export default function Page() {
-  return <LoginWithProtection />;
+  return <ProgressPage />;
 }
