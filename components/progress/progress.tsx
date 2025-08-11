@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { TrendingUp, Target, Award, BarChart3, BookOpen, Clock } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import  TestHistory  from '@/components/account/test-history';
 
 const ProgressPage = () => {
   const searchParams = useSearchParams();
@@ -246,6 +247,17 @@ const ProgressPage = () => {
                   </div>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Test History</CardTitle>
+              <CardDescription>Your recent test attempts and results</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TestHistory />
             </CardContent>
           </Card>
         </div>
