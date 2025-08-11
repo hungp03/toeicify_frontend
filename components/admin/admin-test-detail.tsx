@@ -71,41 +71,37 @@ export function AdminTestsDetailContent() {
   const reloadExamAndPart = async (targetPartNumber?: number) => {
     try {
       setLoadingGroups(true);
-      // 1) lấy exam mới nhất
+  
       const examRes = await getExamByIdFresh(Number(id));
       const freshExam = ensurePartFields(examRes.data || {});
       setExam(freshExam);
-
-      // 2) chọn partNumber
+  
       const partNum =
         targetPartNumber ??
         selectedPart ??
         (freshExam.examParts?.length
           ? Math.min(...freshExam.examParts.map((p: any) => p.partNumber))
           : null);
-
-      if (!partNum) {
-        // không có part trong đề -> clear view
-        setSelectedPart(null);
-        setSelected(null);
-        setQuestionGroups([]);
-        return;
-      }
-
+  
+      if (!partNum) { setSelectedPart(null); setSelected(null); setQuestionGroups([]); return; }
+  
       const freshPart = freshExam.examParts.find((p: ExamPart) => p.partNumber === partNum);
-      if (!freshPart) {
-        setSelectedPart(null);
-        setSelected(null);
-        setQuestionGroups([]);
-        return;
-      }
-
+      if (!freshPart) { setSelectedPart(null); setSelected(null); setQuestionGroups([]); return; }
+  
       setSelectedPart(freshPart.partNumber);
       setSelected(freshPart);
-
-      // 3) load groups theo partId mới
-      const qRes = await getQuestionGroupsByPartId(freshPart.partId);
-      setQuestionGroups(qRes.data || []);
+  
+      // >>> catch lỗi khi gọi API groups
+      let groups: QuestionGroupResponse[] = [];
+      try {
+        const qRes = await getQuestionGroupsByPartId(freshPart.partId);
+        groups = qRes.data || [];
+        console.log(groups);
+      } catch (err) {
+        console.error("Load groups failed", err);
+        toast.error("Không tải được danh sách câu hỏi của phần này");
+      }
+      setQuestionGroups(groups);
     } finally {
       setLoadingGroups(false);
     }
@@ -349,22 +345,25 @@ export function AdminTestsDetailContent() {
           <div className="space-y-4">
             <h2 className="text-lg font-semibold">Các phần thi:</h2>
             <div className="flex gap-4 border-b">
-              {[...(exam.examParts || [])]
-                .sort((a: ExamPart, b: ExamPart) => a.partNumber - b.partNumber)
-                .map((part: any) => (
-                  <button
-                    key={part.partNumber}
-                    onClick={() => loadQuestions(part.partNumber)}
-                    className={clsx(
-                      "px-4 py-2 text-sm font-medium transition",
-                      selectedPart === part.partNumber
-                        ? "text-black border-b-2 border-black"
-                        : "text-muted-foreground hover:text-black"
-                    )}
-                  >
-                    {`Part ${part.partNumber}${part.questionCount ? ` (${part.questionCount})` : ""}`}
-                  </button>
-                ))}
+            {[...(exam.examParts || [])]
+            .sort((a: ExamPart, b: ExamPart) => a.partNumber - b.partNumber)
+            .map((part: any) => {
+              const isActive = selectedPart === part.partNumber;
+              return (
+                <button
+                  key={part.partNumber}
+                  onClick={() => loadQuestions(part.partNumber)}
+                  className={clsx(
+                    "px-4 py-2 text-sm font-medium transition",
+                    isActive ? "text-black border-b-2 border-black" : "text-muted-foreground hover:text-black"
+                  )}
+                >
+                  {`Part ${part.partNumber}${
+                    isActive && part.questionCount ? ` (${part.questionCount})` : ""
+                  }`}
+                </button>
+              );
+            })}
             </div>
           </div>
 
@@ -630,8 +629,8 @@ export function AdminTestsDetailContent() {
                 if (!open) setDeletingPart(null);
               }}
             >
-              <DialogContent>
-                <DialogHeader>
+              <DialogContent className="p-0 w-[560px] max-w-[95vw] max-h-[60vh] flex flex-col">
+                <DialogHeader className="px-6 py-4 sticky top-0 z-10 bg-white border-b">
                   <DialogTitle>Xóa phần thi</DialogTitle>
                   <DialogDescription>
                     Bạn có chắc muốn xóa <b>Part {deletingPart.partNumber}</b>

@@ -111,7 +111,7 @@ export function AdminTestsContent() {
   };
 
   const getAllowedStatusTransitions = (currentStatus: string) => {
-  const upper = currentStatus.toUpperCase();
+  const upper = currentStatus?.toUpperCase() || 'PENDING'; // Default to PENDING if status is null/undefined
   switch (upper) {
     case 'PENDING':
       return ['PRIVATE', 'CANCELLED'];
