@@ -35,12 +35,11 @@ export const useAuthStore = create<InternalAuthState>()(
           if (token) {
             set({ accessToken: token });
             await get().fetchUser();
-            return true;
           }
-          return false;
+          return res;
         } catch (err) {
           console.error('Login error:', err);
-          return false;
+          return err;
         }
       },
       fetchUser: async () => {

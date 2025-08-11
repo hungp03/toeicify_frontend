@@ -106,6 +106,14 @@ api.interceptors.response.use(
       data: null,
       error: 'Unknown Exception',
     };
+    if (errorData.code === 9) {
+      if (window.location.pathname !== '/login') {
+        alert('Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.');
+        localStorage.removeItem('toeic-auth-storage');
+        window.location.href = '/login';
+      }
+    }
+    console.error('API Error:', errorData);
     return Promise.reject(errorData);
   }
 );
