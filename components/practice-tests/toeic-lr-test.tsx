@@ -297,7 +297,7 @@ const ToeicTest = React.memo<Props>(({
 
     const handleViewDetails = useCallback(() => {
         if (submissionResult) {
-            router.push(`/exams/attempts/${submissionResult.attemptId}/result`);
+            router.push(`/practice-tests/result/${submissionResult.attemptId}`);
         }
     }, [router, submissionResult]);
 
