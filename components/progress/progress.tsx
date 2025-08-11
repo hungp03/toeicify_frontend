@@ -11,6 +11,7 @@ import { getUserProgress } from '@/lib/api/progress';
 import { useAuthStore } from '@/store/auth';
 import { Summary, SectionHighs, TrendPoint } from '@/types/progress';
 import { toast } from 'sonner';
+import  TestHistory  from '@/components/account/test-history';
 
 const ProgressPage = () => {
   const router = useRouter();
@@ -267,6 +268,17 @@ const ProgressPage = () => {
                   <Progress value={(sectionHighs.readingMax / 495) * 100} className="h-2" />
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Test History</CardTitle>
+              <CardDescription>Your recent test attempts and results</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TestHistory />
             </CardContent>
           </Card>
         </div>

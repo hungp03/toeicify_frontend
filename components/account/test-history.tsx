@@ -1,64 +1,176 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { BookOpen, Calendar } from 'lucide-react';
+// AttemptHistoryPage.tsx
+'use client';
 
-const testHistory = [
-  {
-    id: 1,
-    title: "ETS 2024 Test 1",
-    date: "2025-07-05",
-    score: 720,
-    sections: { listening: 385, reading: 335 },
-    timeSpent: "120 phút",
-    status: "Hoàn thành",
-  },
-  {
-    id: 2,
-    title: "ETS 2024 Test 2",
-    date: "2025-07-06",
-    score: 680,
-    sections: { listening: 350, reading: 330 },
-    timeSpent: "118 phút",
-    status: "Hoàn thành",
-  },
-];
+import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { getMyAttemptHistory } from '@/lib/api/attempts';
+import {
+  AttemptItem,
+  AttemptHistoryRow,
+  ExamHistory,
+  PaginationMeta,
+} from '@/types/attempts';
+import { Pagination } from '@/components/common/pagination';
 
-export default function TestHistory() {
+function fmtDate(iso?: string | null) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleDateString('vi-VN');
+}
+function fmtDuration(sec: number) {
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = Math.floor(sec % 60);
+  return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+function Badge({
+  children,
+  color = 'gray',
+}: {
+  children: React.ReactNode;
+  color?: 'green' | 'orange' | 'gray';
+}) {
+  const map: Record<string, string> = {
+    green: 'bg-green-100 text-green-700',
+    orange: 'bg-amber-100 text-amber-700',
+    gray: 'bg-gray-100 text-gray-700',
+  };
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <BookOpen className="h-5 w-5" />
-          Lịch sử bài làm
-        </CardTitle>
-        <CardDescription>
-          Xem lại các bài luyện bạn đã hoàn thành
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {testHistory.map((t) => (
-            <div key={t.id} className="border rounded-lg p-4 hover:bg-gray-50">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold">{t.title}</h3>
-                <div className="flex gap-2">
-                  <Badge variant="secondary">{t.score}/990</Badge>
-                  <Badge className="bg-green-100 text-green-800">{t.status}</Badge>
-                </div>
+    <span className={`inline-block px-2 py-1 rounded text-xs font-semibold mr-2 ${map[color]}`}>
+      {children}
+    </span>
+  );
+}
+
+function ResultCell({ a }: { a: AttemptItem }) {
+  if (a.fullTest) {
+    return (
+      <span className="whitespace-nowrap">
+        {a.correct}/{a.total}{' '}
+        <span className="text-gray-500">(Điểm: {a.toeicScore ?? '—'})</span>
+      </span>
+    );
+  }
+  return <span className="whitespace-nowrap">{a.correct}/{a.total}</span>;
+}
+
+export default function AttemptHistory() {
+  // BE: 1-based
+  const [page, setPage] = useState(1);
+  const size = 5;
+
+  const [rows, setRows] = useState<AttemptHistoryRow[]>([]);
+  const [meta, setMeta] = useState<PaginationMeta | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await getMyAttemptHistory(page, size); // 1-based cho API
+        if (!mounted) return;
+        setRows(res.result || []);
+        setMeta(res.meta);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [page]);
+
+  // Group theo exam để hiển thị
+  const grouped: ExamHistory[] = useMemo(() => {
+    const map = new Map<number, ExamHistory>();
+    for (const r of rows) {
+      if (!map.has(r.examId)) {
+        map.set(r.examId, { examId: r.examId, examName: r.examName, attempts: [] });
+      }
+      map.get(r.examId)!.attempts.push(r.attempt);
+    }
+    return Array.from(map.values());
+  }, [rows]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16 text-gray-500">
+        Đang tải lịch sử làm bài…
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-10">
+      {/* LIST */}
+      {grouped.length === 0 ? (
+        <div className="text-gray-600">Bạn chưa có lịch sử làm bài.</div>
+      ) : (
+        grouped.map((exam) => (
+          <div key={exam.examId} className="space-y-3">
+            <h2 className="text-lg font-semibold">{exam.examName}</h2>
+
+            <div className="border-t">
+              {/* Header row */}
+              <div className="grid grid-cols-12 py-2 text-sm font-semibold text-gray-700">
+                <div className="col-span-3">Ngày làm</div>
+                <div className="col-span-5">Kết quả</div>
+                <div className="col-span-2">Thời gian làm bài</div>
+                <div className="col-span-2 text-right pr-2"> </div>
               </div>
-              <div className="grid md:grid-cols-4 gap-2 text-sm text-gray-600">
-                <div>
-                  <Calendar className="inline h-4 w-4 mr-1" />
-                  {new Date(t.date).toLocaleDateString()}
-                </div>
-                <div>Nghe: {t.sections.listening}/495</div>
-                <div>Đọc: {t.sections.reading}/495</div>
-                <div>Thời gian: {t.timeSpent}</div>
+
+              {/* Items */}
+              <div className="divide-y">
+                {exam.attempts.map((a) => (
+                  <div key={a.attemptId} className="grid grid-cols-12 items-center py-3">
+                    <div className="col-span-3 text-gray-800">
+                      {fmtDate(a.endTime || a.startTime)}
+                      <br />
+                      {a.fullTest ? (
+                        <Badge color="green">Full test</Badge>
+                      ) : (
+                        <>
+                          <Badge color="orange">Luyện tập</Badge>
+                          {a.parts.map((p) => (
+                            <Badge key={p} color="orange">{`Part ${p}`}</Badge>
+                          ))}
+                        </>
+                      )}
+                    </div>
+
+                    <div className="col-span-5 flex flex-wrap items-center gap-2">
+                      <span className="ml-2 text-gray-900">
+                        <ResultCell a={a} />
+                      </span>
+                    </div>
+
+                    <div className="col-span-2 text-gray-800">{fmtDuration(a.durationSeconds)}</div>
+
+                    <div className="col-span-2 text-right">
+                      <Link href={`/attempts/${a.attemptId}`} className="text-blue-600 hover:underline">
+                        Xem chi tiết
+                      </Link>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
+          </div>
+        ))
+      )}
+
+      {/* PAGINATION (component zero-based) */}
+      {meta && meta.pages > 1 && (
+        <div className="pt-4 flex justify-center">
+          <Pagination
+            totalPages={meta.pages}        // tổng trang
+            currentPage={meta.page - 1}    // 0-based cho component
+            onPageChange={(p0) => setPage(p0 + 1)} // chuyển lại 1-based cho API
+            siblingCount={1}
+          />
         </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 }
