@@ -1,8 +1,6 @@
 export interface StatItem {
   title: string;
   value: string;
-  change: string;
-  color: string;
 }
 
 export interface MonthlyDataItem {

@@ -42,12 +42,17 @@ const AdminDashboard = () => {
     fetchData();
   }, []);
 
-  // Ánh xạ title sang icon
   const iconMap: { [key: string]: any } = {
     'Tổng người dùng': Users,
     'Số đề thi': FileText,
     'Số câu hỏi': HelpCircle,
     'Tăng trưởng': TrendingUp,
+  };
+  const colorMap: { [key: string]: any } = {
+    'Tổng người dùng': 'text-blue-600',
+    'Số đề thi': 'text-green-600',
+    'Số câu hỏi': 'text-purple-600',
+    'Tăng trưởng': 'text-orange-600',
   };
 
   return (
@@ -60,6 +65,7 @@ const AdminDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {data.stats.map((stat) => {
           const Icon = iconMap[stat.title] || Users; // Mặc định là Users nếu không tìm thấy
+          const Color = colorMap[stat.title] || 'text-gray-600';
           return (
             <Card key={stat.title}>
               <CardContent className="p-6">
@@ -67,13 +73,8 @@ const AdminDashboard = () => {
                   <div>
                     <p className="text-sm font-medium text-gray-600">{stat.title}</p>
                     <p className="text-2xl font-bold text-gray-900 mt-2">{stat.value}</p>
-                    {stat.change && (
-                      <p className={`text-sm mt-1 ${stat.color}`}>
-                        {stat.change} so với tháng trước
-                      </p>
-                    )}
                   </div>
-                  <Icon className={`h-8 w-8 ${stat.color}`} />
+                  <Icon className={`h-8 w-8 ${Color}`} />
                 </div>
               </CardContent>
             </Card>
