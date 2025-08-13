@@ -137,6 +137,7 @@ export type UIOption = { optionId?: number; letter: "A"|"B"|"C"|"D"; text: strin
 
 export type UIQuestion = {
     questionId?: number;
+    questionNumber?: number; // Số thứ tự câu hỏi trong nhóm
     questionText: string;
     correctAnswerOption: string;
     explanation: string;
