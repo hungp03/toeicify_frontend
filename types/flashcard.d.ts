@@ -24,13 +24,15 @@ export type FlashcardList = {
 };
 
   
-export interface TestDialogProps {
-    open: boolean;
-    max: number;
-    defaultCount: number;
-    onConfirm: (count: number) => void;
-    onClose: () => void;
-}
+export type TestDialogProps = {
+  open: boolean;
+  max: number;
+  defaultCount: number;
+  // tuỳ chọn: đặt mặc định loại câu hỏi (nếu không truyền → mặc định tất cả)
+  defaultTypes?: QuestionTypeTest[];
+  onConfirm: (count: number, types: QuestionTypeTest[]) => void;
+  onClose: () => void;
+};
 
 
 export type QuestionType = 'multiple' | 'fill';
