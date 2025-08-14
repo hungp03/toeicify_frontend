@@ -1,127 +1,140 @@
 'use client';
 
-import { useSearchParams, useParams } from 'next/navigation';
+import { useSearchParams, useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { getFlashcardListDetail } from '@/lib/api/flashcard';
 import { useAuthStore } from '@/store/auth';
 import { ListDetailResponse, TestQuestion, QuestionTypeTest, FlashcardDetail } from '@/types/flashcard';
 import { Button } from '@/components/ui/button';
-import { useRouter } from 'next/navigation';
 import FullPageLoader from '@/components/common/full-page-loader';
 import { ArrowLeft } from 'lucide-react';
+
+const ALL_TYPES: QuestionTypeTest[] = ['truefalse','multiple','written'];
 
 export function FlashcardTestContent() {
   const { id } = useParams();
   const searchParams = useSearchParams();
+  const router = useRouter();
+
   const count = parseInt(searchParams.get('count') || '0');
+  const typesParam = searchParams.get('types');
+
+  // parse types từ query; nếu không có -> dùng tất cả
+  const selectedTypes: QuestionTypeTest[] = (() => {
+    if (!typesParam) return ALL_TYPES;
+    const parts = typesParam.split(',').map(s => s.trim().toLowerCase());
+    const valid = parts.filter((t): t is QuestionTypeTest => (ALL_TYPES as string[]).includes(t));
+    return valid.length ? (valid as QuestionTypeTest[]) : ALL_TYPES;
+  })();
 
   const [list, setList] = useState<ListDetailResponse | null>(null);
   const [questions, setQuestions] = useState<TestQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitted, setSubmitted] = useState(false);
 
-  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const hasHydrated = useAuthStore((s) => s.hasHydrated);
+
+  useEffect(() => {
+    if (id && count && hasHydrated && user) {
+      fetchData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, count, hasHydrated, user, typesParam]);
 
   const fetchData = async () => {
     try {
       const listRes = await getFlashcardListDetail(id as string);
       setList(listRes);
-  
-      // Lấy ngẫu nhiên flashcards từ listRes, không phải từ state list
-      const flashcards = [...listRes.flashcards].sort(() => Math.random() - 0.5).slice(0, count);
-  
-      const generated: TestQuestion[] = flashcards.map((card): TestQuestion => {
-        const types: QuestionTypeTest[] = ['truefalse', 'multiple', 'written'];
-        const type = types[Math.floor(Math.random() * types.length)];
-  
+
+      // 1) Chọn ngẫu nhiên N flashcards
+      const pool = [...listRes.flashcards].sort(() => Math.random() - 0.5);
+      const N = Math.min(pool.length, count || pool.length);
+      const selected = pool.slice(0, N);
+
+      // 2) Tạo kế hoạch phân phối loại câu hỏi theo selectedTypes
+      //    - chia đều N cho K loại
+      //    - phần dư dồn vào loại CUỐI cùng trong selectedTypes
+      const K = selectedTypes.length;
+      const base = Math.floor(N / K);
+      const remainder = N % K;
+
+      const plan: QuestionTypeTest[] = [];
+      selectedTypes.forEach((t, idx) => {
+        const add = base + (idx === K - 1 ? remainder : 0);
+        for (let i = 0; i < add; i++) plan.push(t);
+      });
+
+      // 3) Map từng flashcard -> question theo plan
+      const generated: TestQuestion[] = selected.map((card, idx): TestQuestion => {
+        const type = plan[idx] ?? 'written';
         let q: TestQuestion = {
           type,
           frontText: card.frontText,
           backText: card.backText,
         };
-  
+
         if (type === 'multiple') {
-          const otherOptions = listRes.flashcards
-            .filter((c: FlashcardDetail) => c.backText !== card.backText)
-            .slice(0, 3)
-            .map((c: FlashcardDetail) => c.backText);
-  
+          const otherOptions = pickRandomDistinct(listRes.flashcards, card.backText, 3);
           q.options = [...otherOptions, card.backText].sort(() => Math.random() - 0.5);
         }
+
         if (type === 'truefalse') {
-          const isTrue = Math.random() < 0.5; // ✅ 50% đúng / sai
+          const isTrue = Math.random() < 0.5;
           q.isTrueStatement = isTrue;
           q.correctBackText = card.backText;
           if (!isTrue) {
-            // Lấy backText của một flashcard khác
-            const other = listRes.flashcards.find(
-              (c: FlashcardDetail) => c.frontText !== card.frontText
-            );
-            if (other) {
-              q.backText = other.backText;
-            }
+            // chọn 1 backText khác; nếu ko có thì để câu đúng
+            const wrong = listRes.flashcards.find((c: FlashcardDetail) => c.frontText !== card.frontText);
+            if (wrong) q.backText = wrong.backText;
           }
         }
-  
+
         return q;
       });
 
       setQuestions(generated);
     } catch (error) {
       console.error('Lỗi khi tải dữ liệu flashcard:', error);
-    } 
+    }
   };
-  
+
   const handleSubmit = () => setSubmitted(true);
 
   const correctCount = questions.reduce((total, q, idx) => {
     const userAnswer = answers[idx]?.trim().toLowerCase();
-  
-    if (q.type === 'written') {
-      return userAnswer === q.frontText.trim().toLowerCase() ? total + 1 : total;
-    }
-  
-    if (q.type === 'multiple') {
-      return userAnswer === q.backText.trim().toLowerCase() ? total + 1 : total;
-    }
-  
-    if (q.type === 'truefalse') {
-      return (userAnswer === 'true') === q.isTrueStatement ? total + 1 : total;
-    }
-  
+    if (q.type === 'written')  return userAnswer === q.frontText.trim().toLowerCase() ? total + 1 : total;
+    if (q.type === 'multiple') return userAnswer === q.backText.trim().toLowerCase() ? total + 1 : total;
+    if (q.type === 'truefalse') return (userAnswer === 'true') === q.isTrueStatement ? total + 1 : total;
     return total;
   }, 0);
 
+  function pickRandomDistinct(
+    pool: FlashcardDetail[],
+    excludeBackText: string,
+    n: number
+  ): string[] {
+    const candidates = Array.from(new Set(pool.filter(c => c.backText !== excludeBackText).map(c => c.backText)));
+    const shuffled = candidates.sort(() => Math.random() - 0.5);
+    const picked = shuffled.slice(0, n);
+    if (picked.length < n) {
+      const more = pool.map(c => c.backText).filter(bt => bt !== excludeBackText && !picked.includes(bt));
+      more.sort(() => Math.random() - 0.5);
+      picked.push(...more.slice(0, n - picked.length));
+    }
+    return picked.slice(0, n);
+  }
+
   const renderQuestion = (q: TestQuestion, idx: number) => {
-    const isCorrectAnswer = ((): boolean => {
-      const userAnswer = answers[idx]?.trim().toLowerCase();
-      const correctAnswer = q.backText.trim().toLowerCase();
-      
-      if (q.type === 'written') {
-        return userAnswer === q.frontText.trim().toLowerCase();
-      }
-  
-      if (q.type === 'multiple') {
-        return userAnswer === correctAnswer;
-      }
-  
-      if (q.type === 'truefalse') {
-        // Kiểm tra backText có thực sự là của frontText hay không
-        const matched = list?.flashcards.find(
-          (f) => f.frontText === q.frontText && f.backText === q.backText
-        );
-        const shouldBeTrue = Boolean(matched);
-        return (userAnswer === 'true') === shouldBeTrue;
-      }
-  
-      return false;
-    })();
-  
+    const userAnswer = answers[idx]?.trim().toLowerCase();
+    const isCorrect =
+      q.type === 'written'  ? userAnswer === q.frontText.trim().toLowerCase()
+    : q.type === 'multiple' ? userAnswer === q.backText.trim().toLowerCase()
+    : q.type === 'truefalse' ? (userAnswer === 'true') === q.isTrueStatement
+    : false;
+
     return (
       <div key={idx} className="mb-6 border rounded-lg p-4 shadow-sm text-left bg-white">
-        {/* Multiple choice */}
         {q.type === 'multiple' && (
           <>
             <p className="text-lg font-semibold mb-2">Từ: {q.frontText}</p>
@@ -139,8 +152,7 @@ export function FlashcardTestContent() {
             </div>
           </>
         )}
-  
-        {/* True/False */}
+
         {q.type === 'truefalse' && (
           <>
             <div className="flex items-center justify-between gap-3 text-base font-medium text-gray-700 mb-3">
@@ -168,8 +180,7 @@ export function FlashcardTestContent() {
             </div>
           </>
         )}
-  
-        {/* Written */}
+
         {q.type === 'written' && (
           <>
             <p className="text-lg font-semibold mb-2">Định nghĩa: {q.backText}</p>
@@ -183,25 +194,19 @@ export function FlashcardTestContent() {
             />
           </>
         )}
-  
+
         {submitted && (
-          <p className={`mt-2 text-sm ${isCorrectAnswer ? 'text-green-600' : 'text-red-500'}`}>
+          <p className={`mt-2 text-sm ${isCorrect ? 'text-green-600' : 'text-red-500'}`}>
             Đáp án đúng: <span className="font-semibold">
-            {q.type === 'truefalse'
-            ? `${q.frontText} : ${q.correctBackText}`
-            : `${q.frontText} : ${q.backText}`}
+              {q.type === 'truefalse'
+                ? `${q.frontText} : ${q.correctBackText}`
+                : `${q.frontText} : ${q.backText}`}
             </span>
           </p>
         )}
       </div>
     );
   };
-
-  useEffect(() => {
-    if (id && count && hasHydrated && user) {
-      fetchData();
-    }
-  }, [id, count, hasHydrated, user]);
 
   if (!hasHydrated) return <FullPageLoader />;
 
@@ -216,11 +221,11 @@ export function FlashcardTestContent() {
       >
         <ArrowLeft className="h-4 w-4" />
       </Button>
-      
+
       <h1 className="text-2xl font-bold text-center mb-6">📝 Bài kiểm tra từ vựng</h1>
-      
+
       {user && questions.map((q, idx) => renderQuestion(q, idx))}
-      
+
       {user && (
         !submitted ? (
           <Button className="mt-6 w-full" onClick={handleSubmit}>
@@ -229,10 +234,7 @@ export function FlashcardTestContent() {
         ) : (
           <div className="mt-6 text-center space-y-4">
             <p className="text-xl font-bold">✅ Đúng: {correctCount} / {questions.length}</p>
-            <Button
-              className="w-full"
-              onClick={() => router.push(`/flashcards/${id}/study`)}
-            >
+            <Button className="w-full" onClick={() => router.push(`/flashcards/${id}/study`)}>
               Hoàn thành
             </Button>
           </div>
