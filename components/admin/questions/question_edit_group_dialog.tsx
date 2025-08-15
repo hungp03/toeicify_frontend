@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-
 import { updateQuestionGroup as apiUpdateQuestionGroup } from "@/lib/api/question"; // PUT /question-groups/{id}
 import type {
   QuestionType,
@@ -21,7 +20,6 @@ import type {
 import { MediaUploader } from "@/components/common/media_uploader";
 
 /** ---------- Part rules (khớp TOEIC + yêu cầu tuỳ biến) ---------- */
-
 const PART_RULES: Record<number, PartRuleUpdate> = {
   1: { displayName: "Part 1 - Photos", defaultQuestionsPerGroup: 1, optionLetters: ["A","B","C","D"], showImage: true,  showAudio: true,  showPassage: true,  defaultQuestionType: "LISTENING_PHOTO",            requireQuestionText: false },
   2: { displayName: "Part 2 - Question-Response", defaultQuestionsPerGroup: 1, optionLetters: ["A","B","C"],     showImage: false, showAudio: true,  showPassage: false, defaultQuestionType: "LISTENING_QUESTION_RESPONSE", requireQuestionText: false },
@@ -31,6 +29,7 @@ const PART_RULES: Record<number, PartRuleUpdate> = {
   6: { displayName: "Part 6 - Text Completion", defaultQuestionsPerGroup: 4, optionLetters: ["A","B","C","D"], showImage: true,  showAudio: false, showPassage: true,  defaultQuestionType: "READING_TEXT_COMPLETION",   requireQuestionText: true },
   7: { displayName: "Part 7 - Reading Comprehension", defaultQuestionsPerGroup: 5, optionLetters: ["A","B","C","D"], showImage: true,  showAudio: false, showPassage: true,  defaultQuestionType: "READING_SINGLE_PASSAGE",     requireQuestionText: true },
 };
+
 const DEFAULT_SINGLE_MIN = 2; // P7 single: 2–4
 const DEFAULT_SINGLE_MAX = 4;
 const DOUBLE_TRIPLE_COUNT = 5; // P7 double/triple: 5 câu
@@ -53,7 +52,6 @@ const questionTypeForPart = (partNumber: number, p7Override?: QuestionType): Que
   if (partNumber === 7 && p7Override) return p7Override;
   return PART_RULES[partNumber]?.defaultQuestionType ?? "READING_SINGLE_PASSAGE";
 };
-
 
 export function QuestionEditGroupDialog({
   open,
@@ -98,7 +96,7 @@ export function QuestionEditGroupDialog({
     const uiQs: UIQuestion[] = group.questions.map((q: QuestionResponse) => {
       // Map existing options to by-letter
       const byLetter: Record<"A"|"B"|"C"|"D", UIOption | undefined> = { A: undefined, B: undefined, C: undefined, D: undefined };
-      // keep only expected letters for the part (e.g. Part 2: A,B,C)
+      // Keep only expected letters for the part (e.g., Part 2: A,B,C)
       (q.options || []).forEach((opt: QuestionOptionResponse) => {
         const letter = opt.optionLetter as "A"|"B"|"C"|"D";
         if (expectLetters.includes(letter)) {
@@ -112,6 +110,7 @@ export function QuestionEditGroupDialog({
 
       return {
         questionId: q.questionId,
+        questionNumber: q.questionNumber, // Added
         questionText: q.questionText || "",
         correctAnswerOption: q.correctAnswerOption || expectLetters[0],
         explanation: q.explanation || "",
@@ -142,6 +141,7 @@ export function QuestionEditGroupDialog({
   }, [open, group, partNumber, rules, p7Mode]);
 
   const makeEmptyQuestion = (letters: ("A"|"B"|"C"|"D")[]): UIQuestion => ({
+    questionNumber: questions.length > 0 ? Math.max(...questions.map(q => q.questionNumber || 0)) + 1 : 1, // Auto-increment
     questionText: "",
     correctAnswerOption: letters[0] || "A",
     explanation: "",
@@ -172,7 +172,7 @@ export function QuestionEditGroupDialog({
 
   const optionLetters = (rules.optionLetters as string[]).sort(sortByLetter) as ("A"|"B"|"C"|"D")[];
 
-  const onChangeQuestionField = (idx: number, field: keyof UIQuestion, value: string) => {
+  const onChangeQuestionField = (idx: number, field: keyof UIQuestion, value: string | number) => {
     setQuestions((prev) => prev.map((q, i) => (i === idx ? { ...q, [field]: value } : q)));
   };
 
@@ -218,7 +218,6 @@ export function QuestionEditGroupDialog({
       const qType = questionTypeForPart(partNumber, partNumber === 7 ? p7Mode : undefined);
 
       // Build payload for PUT
-      // Lưu ý: backend update nhận QuestionGroupRequest có thể có questionId/optionId trong từng phần tử
       const payload: any /* QuestionGroupRequest with IDs for update */ = {
         partId,
         passageText: rules.showPassage && passageText ? passageText : undefined,
@@ -235,7 +234,7 @@ export function QuestionEditGroupDialog({
           });
           return {
             questionId: q.questionId,           // giữ id nếu có 
-            // Trong trường hợp Part 1 & 2, theo cơ sở dữ liệu questionText sẽ giống như passageText
+            questionNumber: q.questionNumber,   // Added
             questionText: (partNumber === 1 || partNumber === 2) ? passageText : (rules.requireQuestionText ? (q.questionText || undefined) : (q.questionText || undefined)),
             questionType: qType,
             correctAnswerOption: q.correctAnswerOption,
@@ -245,11 +244,14 @@ export function QuestionEditGroupDialog({
         }),
       };
 
-      // Client-side validations nhẹ
+      // Client-side validations
       for (let i = 0; i < payload.questions.length; i++) {
         const qq = payload.questions[i];
+        if (!qq.questionNumber) {
+          throw new Error(`Câu ${i + 1}: thiếu số thứ tự câu hỏi.`);
+        }
         if (rules.requireQuestionText && !(partNumber === 1 || partNumber === 2)) {
-          if (!qq.questionText?.trim()) throw new Error(`Câu ${i + 1}: thiếu nội dung question.`);
+          if (!qq.questionText?.trim()) throw new Error(`Câu ${i + 1}: thiếu nội dung câu hỏi.`);
         }
         const valid = new Set(optionLetters);
         if (!valid.has(qq.correctAnswerOption)) {
@@ -371,6 +373,23 @@ export function QuestionEditGroupDialog({
                       Xoá câu này
                     </Button>
                   )}
+                </div>
+
+                {/* Question number */}
+                <div className="mb-3">
+                  <Label>Số thứ tự câu hỏi</Label>
+                  <Input
+                    type="number"
+                    placeholder="Nhập số thứ tự câu hỏi"
+                    value={q.questionNumber || ""}
+                    onChange={(e) =>
+                      onChangeQuestionField(
+                        idx,
+                        "questionNumber",
+                        isNaN(parseInt(e.target.value)) ? "" : parseInt(e.target.value)
+                      )
+                    }
+                  />
                 </div>
 
                 {/* Question text (ẩn hoàn toàn ở Part 1 & 2) */}
