@@ -367,7 +367,7 @@ export const QuestionAddGroupDialog: React.FC<AddQuestionGroupDialogProps> = ({
           {/* Numbering controller */}
           <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
             <div className="flex items-center gap-2">
-              <input id="autoNumber" type="checkbox" checked={autoNumber} onChange={(e) => setAutoNumber(e.target.checked)} />
+              {/* <input id="autoNumber" type="checkbox" checked={autoNumber} onChange={(e) => setAutoNumber(e.target.checked)} /> */}
               {/* <Label htmlFor="autoNumber">Tự động đánh số</Label> */}
             </div>
             <div className="sm:col-span-2 flex items-end gap-3">
