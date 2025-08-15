@@ -83,11 +83,25 @@ export default function TestResultsPage() {
     }
   }, [params.id, router]);
 
+  const calculateCompletionTime = (startTime: string, submittedAt: string, completionTimeMinutes: number) => {
+    // Nếu completionTimeMinutes có giá trị hợp lệ (> 0), sử dụng nó
+    if (completionTimeMinutes > 0) {
+      return completionTimeMinutes;
+    }
+    
+    // Nếu không, tính từ startTime và submittedAt
+    const start = new Date(startTime);
+    const end = new Date(submittedAt);
+    const diffMs = end.getTime() - start.getTime();
+    return diffMs / (1000 * 60); // Convert to minutes
+  };
 
-  const formatTime = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = Math.floor(minutes % 60);
-    const secs = Math.floor((minutes % 1) * 60);
+  const formatTime = (startTime: string, submittedAt: string, completionTimeMinutes: number) => {
+    const totalMinutes = calculateCompletionTime(startTime, submittedAt, completionTimeMinutes);
+    
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = Math.floor(totalMinutes % 60);
+    const secs = Math.floor((totalMinutes % 1) * 60);
 
     if (hours > 0) return `${hours}h ${mins}m ${secs}s`;
     if (mins > 0) return `${mins}m ${secs}s`;
@@ -133,21 +147,15 @@ export default function TestResultsPage() {
           Ngày nộp: {formatDate(result.submittedAt)}
         </span>
         <span className="text-muted-foreground text-sm ml-2">
-          Thời gian hoàn thành: {formatTime(result.completionTimeMinutes)}
+          Thời gian hoàn thành: {formatTime(result.startTime, result.submittedAt, result.completionTimeMinutes)}
         </span>
       </div>
 
       {/* Overall Score */}
       {result.isFullTest &&
         <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Tổng Quan Kết Quả
-            </CardTitle>
-          </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center">
                 <div className="text-3xl font-bold text-primary mb-2">{result.totalScore}</div>
                 <div className="text-sm text-muted-foreground">Tổng Điểm</div>
@@ -168,7 +176,7 @@ export default function TestResultsPage() {
       {/* Parts Detail */}
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle>Chi Tiết Theo Phần</CardTitle>
+          <CardTitle>Tổng quan từng phần</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -201,38 +209,45 @@ export default function TestResultsPage() {
           <CardTitle>Chi tiết bài làm</CardTitle>
         </CardHeader>
         <CardContent>
+          {/* Group every two answers into one row */}
           <div className="space-y-4">
-            {result.answersDetail.map((answer) => (
-              <div key={answer.questionId} className="p-4 border rounded-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium">Câu {answer.questionNumber}</h4>
-                  <div className="flex items-center gap-2">
-                    {getAnswerIcon(answer.isCorrect)}
-                    {getAnswerBadge(answer.isCorrect)}
-                  </div>
-                </div>
+            {Array.from({ length: Math.ceil(result.answersDetail.length / 2) }).map((_, rowIndex) => (
+              <div key={rowIndex} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {result.answersDetail
+                  .slice(rowIndex * 2, rowIndex * 2 + 2)
+                  .map((answer) => (
+                    <div key={answer.questionId} className="p-4 border rounded-lg">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-medium">Câu {answer.questionNumber}</h4>
+                        <div className="flex items-center gap-2">
+                          {getAnswerIcon(answer.isCorrect)}
+                          {getAnswerBadge(answer.isCorrect)}
+                        </div>
+                      </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                  <div>
-                    <span className="text-sm text-muted-foreground">Câu trả lời của bạn:</span>
-                    <div className="font-medium">
-                      {answer.userAnswer || (
-                        <span className="text-muted-foreground italic">Chưa trả lời</span>
-                      )}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                        <div>
+                          <span className="text-sm text-muted-foreground">Câu trả lời của bạn:</span>
+                          <div className="font-medium">
+                            {answer.userAnswer || (
+                              <span className="text-muted-foreground italic">Chưa trả lời</span>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-sm text-muted-foreground">Đáp án đúng:</span>
+                          <div className="font-medium text-green-600">{answer.correctAnswer}</div>
+                        </div>
+                      </div>
+                      <span
+                        className={`text-sm hover:underline cursor-pointer text-blue-600 ${loadingExplainId === answer.questionId ? 'pointer-events-none opacity-60' : ''
+                          }`}
+                        onClick={() => handleShowExplanation(answer.questionId, answer.userAnswer)}
+                      >
+                        {loadingExplainId === answer.questionId ? 'Đang tải...' : 'Xem giải thích'}
+                      </span>
                     </div>
-                  </div>
-                  <div>
-                    <span className="text-sm text-muted-foreground">Đáp án đúng:</span>
-                    <div className="font-medium text-green-600">{answer.correctAnswer}</div>
-                  </div>
-                </div>
-                <span
-                  className={`text-sm hover:underline cursor-pointer text-blue-600 ${loadingExplainId === answer.questionId ? 'pointer-events-none opacity-60' : ''
-                    }`}
-                  onClick={() => handleShowExplanation(answer.questionId, answer.userAnswer)}
-                >
-                  {loadingExplainId === answer.questionId ? 'Đang tải...' : 'Xem giải thích'}
-                </span>
+                  ))}
               </div>
             ))}
           </div>

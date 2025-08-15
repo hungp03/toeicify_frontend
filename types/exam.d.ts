@@ -332,6 +332,7 @@ interface TestResult {
   listeningScore: number;
   readingScore: number;
   completionTimeMinutes: number;
+  startTime: string;
   submittedAt: string;
   partsDetail: PartDetail[];
   answersDetail: AnswerDetail[];
