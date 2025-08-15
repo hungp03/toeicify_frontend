@@ -5,19 +5,15 @@ import { withRole } from '@/hoc/with_role';
 import FullPageLoader from '@/components/common/full-page-loader';
 
 const AdminDashboardContent = dynamic(
-  () =>
-    import('@/components/admin/admin-dashboard').then((mod) => ({
-      default: mod.AdminDashboard,
-    })),
+  () => import('@/components/admin/admin-dashboard'),
   {
     loading: () => <FullPageLoader />,
     ssr: false,
   }
 );
 
-
-const AdminUsersGuarded = withRole(['ADMIN'])(AdminDashboardContent);
+const AdminDashboardGuarded = withRole(['ADMIN'])(AdminDashboardContent);
 
 export default function Page() {
-  return <AdminUsersGuarded />;
+  return <AdminDashboardGuarded />;
 }
