@@ -238,14 +238,14 @@ const PracticeTestsList = () => {
                 <CardContent>
                   <div className="space-y-3 text-sm text-gray-700">
                     <div className="flex justify-between">
-                      <span className="flex items-center gap-1">
+                      {/* <span className="flex items-center gap-1">
                         <Clock className="h-4 w-4" />
                         120 phút
                       </span>
                       <span className="flex items-center gap-1">
                         <Users className="h-4 w-4" />
                         lượt làm
-                      </span>
+                      </span> */}
                     </div>
                     <div className="flex justify-between">
                       <span>{test.totalQuestions} câu hỏi</span>
