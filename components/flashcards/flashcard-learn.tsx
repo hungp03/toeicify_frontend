@@ -257,9 +257,6 @@ export function FlashcardLearnContent() {
       </div>
       <Progress value={(correctCount / queue.length) * 100} className="mb-6 h-3" />
 
-      {clusterCount > 1 && (
-        <p className="text-sm text-gray-500 mb-4">Cụm {currentCluster} / {clusterCount}</p>
-      )}
 
       {currentType === 'multiple' ? (
         <>
@@ -336,9 +333,6 @@ export function FlashcardLearnContent() {
         <Button onClick={handleContinue} className="mt-4">Continue</Button>
       )}
 
-      <p className="mt-6 text-sm text-gray-500">
-        {currentIndex + 1} / {queue.length}
-      </p>
     </div>
   );
 }
