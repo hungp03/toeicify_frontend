@@ -10,6 +10,7 @@ import { ExamData } from '@/types/exam';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 import FullPageLoader from '@/components/common/full-page-loader';
+import { toast } from 'sonner';
 
 export default function TestPage() {
   const { id: testId } = useParams();
@@ -40,6 +41,34 @@ export default function TestPage() {
 
   // Ref để kiểm tra xem test đang trong quá trình làm bài hay không
   const isTestActiveRef = useRef(false);
+  // Ref để tránh hiển thị toast nhiều lần
+  const hasShownInvalidToastRef = useRef(false);
+
+  // Helper function để validate part data có câu hỏi hay không
+  const validatePartData = (partData: PartData): boolean => {
+    if (!partData || !partData.groups || partData.groups.length === 0) {
+      return false;
+    }
+    
+    // Kiểm tra xem có ít nhất 1 group có câu hỏi
+    const hasQuestions = partData.groups.some(group => 
+      group.questions && group.questions.length > 0
+    );
+    
+    return hasQuestions;
+  };
+
+  const handleInvalidExam = (message: string) => {
+    if (hasShownInvalidToastRef.current) {
+      return;
+    }    
+    hasShownInvalidToastRef.current = true;
+    toast.error(message);
+    isTestActiveRef.current = false;
+    setTimeout(() => {
+      router.push('/practice-tests');
+    }, 2000);
+  };
 
   // Cập nhật trạng thái test active
   useEffect(() => {
@@ -290,13 +319,19 @@ export default function TestPage() {
 
         const partsParam = searchParams.get('parts');
         if (!partsParam) {
-          setError('Không tìm thấy thông tin phần thi được chọn');
+          handleInvalidExam('Không tìm thấy thông tin phần thi được chọn');
           return;
         }
 
         // Lấy dữ liệu bài thi
         const examResponse = await getExamById(parseInt(testId as string));
         const examParts = examResponse?.data?.examParts || [];
+        
+        if (!examParts.length) {
+          handleInvalidExam('Bài thi không có dữ liệu phần thi');
+          return;
+        }
+
         setExamData(examResponse?.data || null);
 
         let chosenPartIds: string[] = [];
@@ -315,6 +350,11 @@ export default function TestPage() {
             .map((p: any) => p.partNumber.toString());
         }
 
+        if (!chosenPartIds.length) {
+          handleInvalidExam('Không tìm thấy phần thi được yêu cầu');
+          return;
+        }
+
         setPartIds(chosenPartIds);
         setPartNumbers(chosenPartNumbers);
 
@@ -324,21 +364,29 @@ export default function TestPage() {
           if (!allMarkedForReviewRef.current[id]) allMarkedForReviewRef.current[id] = {};
         });
 
-        // Chỉ load part đầu tiên
+        // Chỉ load part đầu tiên và validate
         const firstPartId = chosenPartIds[0];
         const res = await getQuestionsByPartIds({ partIds: [firstPartId] });
+        
         if (!res?.data?.length) {
-          setError(`Không tìm thấy dữ liệu cho Part ${firstPartId}`);
+          handleInvalidExam(`Không tìm thấy dữ liệu cho Part ${chosenPartNumbers[0]}`);
           return;
         }
 
         const partData = res.data[0];
+        
+        // Validate part data có câu hỏi hay không
+        if (!validatePartData(partData)) {
+          handleInvalidExam(`Part ${chosenPartNumbers[0]} không có câu hỏi nào. Vui lòng kiểm tra lại đề thi.`);
+          return;
+        }
+
         partDataCacheRef.current[firstPartId] = partData;
         setCurrentPartData(partData);
 
       } catch (err) {
         console.error('Error fetching exam data:', err);
-        setError('Lỗi khi tải dữ liệu bài thi');
+        handleInvalidExam('Lỗi khi tải dữ liệu bài thi. Vui lòng thử lại sau.');
       } finally {
         setLoading(false);
       }
@@ -346,6 +394,7 @@ export default function TestPage() {
 
     if (testId) fetchExamInfoAndFirstPart();
   }, [testId, searchParams]);
+
   // Fetch part khi chuyển (bỏ qua part đầu tiên đã được preload)
   useEffect(() => {
     if (!partIds.length || loading) return;
@@ -365,16 +414,25 @@ export default function TestPage() {
         setIsPaused(true);
         const res = await getQuestionsByPartIds({ partIds: [partId] });
         if (cancelled) return;
+        
         if (!res?.data?.length) {
-          setError(`Không tìm thấy dữ liệu cho Part ${partId}`);
+          handleInvalidExam(`Không tìm thấy dữ liệu cho Part ${partNumbers[currentPartIndex]}`);
           return;
         }
+
         const partData = res.data[0];
+        
+        // Validate part data có câu hỏi hay không
+        if (!validatePartData(partData)) {
+          handleInvalidExam(`Part ${partNumbers[currentPartIndex]} không có câu hỏi nào. Vui lòng kiểm tra lại đề thi.`);
+          return;
+        }
+
         partDataCacheRef.current[partId] = partData;
         setCurrentPartData(partData);
       } catch (err) {
         console.error(err);
-        setError(`Lỗi khi tải Part ${partId}`);
+        handleInvalidExam(`Lỗi khi tải Part ${partNumbers[currentPartIndex]}. Vui lòng thử lại sau.`);
       } finally {
         if (!cancelled) {
           setLoadingPart(false);
@@ -595,7 +653,7 @@ export default function TestPage() {
           onMarkedForReviewChange={(marked) =>
             updateMarkedForReview(currentPartId, marked)
           }
-          allPartIds={partIds.map(id => parseInt(id))} // Tất cả partIds từ URL/exam
+          allPartIds={partIds.map(id => parseInt(id))}
           allAnswers={allAnswersRef.current}
           examStartTime={examStartTime}
           isFullExam={isFullExam}
