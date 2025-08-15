@@ -315,7 +315,7 @@ export function AdminTestsContent() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        {/* <Card>
           <CardContent className="p-6 flex items-center">
             <div className="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center">
               <span className="text-purple-600 font-bold">#</span>
@@ -325,7 +325,7 @@ export function AdminTestsContent() {
               <p className="text-sm text-gray-600">Lượt thi</p>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       {/* Filters */}

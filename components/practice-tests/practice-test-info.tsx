@@ -39,11 +39,24 @@ const TestSetup = () => {
       try {
         setLoading(true);
         setInvalidId(false);
+
         const response = await getExamById(parseInt(id));
-        setExamData(response?.data || null);
+        console.log("Fetched exam data:", response?.data);
+
+        if (response?.data) {
+          const sortedExam = {
+            ...response.data,
+            examParts: [...response.data.examParts].sort(
+              (a, b) => a.partNumber - b.partNumber
+            ),
+          };
+          setExamData(sortedExam);
+        } else {
+          setExamData(null);
+        }
       } catch (err) {
-        setError('Error fetching exam data');
-        console.error('Error fetching exam:', err);
+        setError("Error fetching exam data");
+        console.error("Error fetching exam:", err);
       } finally {
         setLoading(false);
       }

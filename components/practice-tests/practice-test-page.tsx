@@ -49,19 +49,19 @@ export default function TestPage() {
     if (!partData || !partData.groups || partData.groups.length === 0) {
       return false;
     }
-    
+
     // Kiểm tra xem có ít nhất 1 group có câu hỏi
-    const hasQuestions = partData.groups.some(group => 
+    const hasQuestions = partData.groups.some(group =>
       group.questions && group.questions.length > 0
     );
-    
+
     return hasQuestions;
   };
 
   const handleInvalidExam = (message: string) => {
     if (hasShownInvalidToastRef.current) {
       return;
-    }    
+    }
     hasShownInvalidToastRef.current = true;
     toast.error(message);
     isTestActiveRef.current = false;
@@ -317,76 +317,81 @@ export default function TestPage() {
       try {
         setLoading(true);
 
-        const partsParam = searchParams.get('parts');
+        const partsParam = searchParams.get("parts");
         if (!partsParam) {
-          handleInvalidExam('Không tìm thấy thông tin phần thi được chọn');
+          handleInvalidExam("Không tìm thấy thông tin phần thi được chọn");
           return;
         }
 
         // Lấy dữ liệu bài thi
         const examResponse = await getExamById(parseInt(testId as string));
-        const examParts = examResponse?.data?.examParts || [];
-        
+        let examParts = examResponse?.data?.examParts || [];
+
         if (!examParts.length) {
-          handleInvalidExam('Bài thi không có dữ liệu phần thi');
+          handleInvalidExam("Bài thi không có dữ liệu phần thi");
           return;
         }
 
-        setExamData(examResponse?.data || null);
+        // Sắp xếp theo partNumber tăng dần
+        examParts = [...examParts].sort((a, b) => a.partNumber - b.partNumber);
+
+        // Lưu exam data đã sort
+        setExamData({ ...examResponse.data, examParts });
 
         let chosenPartIds: string[] = [];
         let chosenPartNumbers: string[] = [];
 
-        if (partsParam === 'all') {
-          chosenPartIds = examParts.map((p: any) => p.partId.toString());
-          chosenPartNumbers = examParts.map((p: any) => p.partNumber.toString());
+        if (partsParam === "all") {
+          chosenPartIds = examParts.map((p: { partId: { toString: () => any; }; }) => p.partId.toString());
+          chosenPartNumbers = examParts.map((p: { partNumber: { toString: () => any; }; }) => p.partNumber.toString());
         } else {
-          const requestedNumbers = partsParam.split(',').filter((n) => n.trim());
-          chosenPartIds = examParts
-            .filter((p: any) => requestedNumbers.includes(p.partId.toString()))
-            .map((p: any) => p.partId.toString());
-          chosenPartNumbers = examParts
-            .filter((p: any) => requestedNumbers.includes(p.partId.toString()))
-            .map((p: any) => p.partNumber.toString());
+          const requestedNumbers = partsParam.split(",").filter((n) => n.trim());
+
+          // Filter & giữ thứ tự theo examParts đã sort
+          const filteredParts = examParts.filter((p: { partId: { toString: () => string; }; }) =>
+            requestedNumbers.includes(p.partId.toString())
+          );
+
+          chosenPartIds = filteredParts.map((p: { partId: { toString: () => any; }; }) => p.partId.toString());
+          chosenPartNumbers = filteredParts.map((p: { partNumber: { toString: () => any; }; }) => p.partNumber.toString());
         }
 
         if (!chosenPartIds.length) {
-          handleInvalidExam('Không tìm thấy phần thi được yêu cầu');
+          handleInvalidExam("Không tìm thấy phần thi được yêu cầu");
           return;
         }
 
         setPartIds(chosenPartIds);
         setPartNumbers(chosenPartNumbers);
 
-        // Init state cho từng partId (chỉ visited parts)
+        // Init state cho từng partId
         chosenPartIds.forEach((id) => {
           if (!allAnswersRef.current[id]) allAnswersRef.current[id] = {};
           if (!allMarkedForReviewRef.current[id]) allMarkedForReviewRef.current[id] = {};
         });
 
-        // Chỉ load part đầu tiên và validate
+        // Load part đầu tiên
         const firstPartId = chosenPartIds[0];
         const res = await getQuestionsByPartIds({ partIds: [firstPartId] });
-        
+
         if (!res?.data?.length) {
           handleInvalidExam(`Không tìm thấy dữ liệu cho Part ${chosenPartNumbers[0]}`);
           return;
         }
 
         const partData = res.data[0];
-        
-        // Validate part data có câu hỏi hay không
         if (!validatePartData(partData)) {
-          handleInvalidExam(`Part ${chosenPartNumbers[0]} không có câu hỏi nào. Vui lòng kiểm tra lại đề thi.`);
+          handleInvalidExam(
+            `Part ${chosenPartNumbers[0]} không có câu hỏi nào. Vui lòng kiểm tra lại đề thi.`
+          );
           return;
         }
 
         partDataCacheRef.current[firstPartId] = partData;
         setCurrentPartData(partData);
-
       } catch (err) {
-        console.error('Error fetching exam data:', err);
-        handleInvalidExam('Lỗi khi tải dữ liệu bài thi. Vui lòng thử lại sau.');
+        console.error("Error fetching exam data:", err);
+        handleInvalidExam("Lỗi khi tải dữ liệu bài thi. Vui lòng thử lại sau.");
       } finally {
         setLoading(false);
       }
@@ -394,6 +399,7 @@ export default function TestPage() {
 
     if (testId) fetchExamInfoAndFirstPart();
   }, [testId, searchParams]);
+
 
   // Fetch part khi chuyển (bỏ qua part đầu tiên đã được preload)
   useEffect(() => {
@@ -414,14 +420,14 @@ export default function TestPage() {
         setIsPaused(true);
         const res = await getQuestionsByPartIds({ partIds: [partId] });
         if (cancelled) return;
-        
+
         if (!res?.data?.length) {
           handleInvalidExam(`Không tìm thấy dữ liệu cho Part ${partNumbers[currentPartIndex]}`);
           return;
         }
 
         const partData = res.data[0];
-        
+
         // Validate part data có câu hỏi hay không
         if (!validatePartData(partData)) {
           handleInvalidExam(`Part ${partNumbers[currentPartIndex]} không có câu hỏi nào. Vui lòng kiểm tra lại đề thi.`);
