@@ -22,7 +22,6 @@ import {
 import FullPageLoader from '@/components/common/full-page-loader';
 import { BookOpen, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
-// Main component logic - KHÔNG có HOC
 export function LoginContent() {
     const router = useRouter();
     const login = useAuthStore((s) => s.login);
@@ -41,18 +40,20 @@ export function LoginContent() {
     const onSubmit = async (data: LoginFormData) => {
         setLoading(true);
         try {
-            const success = await login(data.identifier, data.password);
-            if (success) {
+            const res = await login(data.identifier, data.password);
+            if (res.success) {
                 toast.success('Đăng nhập thành công!', {
                     description: 'Đang chuyển về trang chủ...',
                 });
                 router.push('/');
             } else {
-                toast.error('Đăng nhập thất bại. Vui lòng kiểm tra thông tin.');
+                if (res.code === 9) {
+                    toast.error('Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.');
+                }
+                else {
+                    toast.error('Đăng nhập thất bại. Vui lòng kiểm tra thông tin.');
+                }
             }
-        } catch (error) {
-            console.error('Login error:', error);
-            toast.error('Đã xảy ra lỗi trong quá trình đăng nhập.');
         } finally {
             setLoading(false);
         }

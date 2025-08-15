@@ -23,7 +23,7 @@ export type LoginResponse = {
 export type AuthState = {
   user: User | null;
   accessToken: string | null;
-  login: (identifier: string, password: string) => Promise<boolean>;
+  login: (identifier: string, password: string) => Promise<any>;
   logout: () => void;
   setAccessToken: (token: string) => void;
   fetchUser: () => Promise<void>;

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { useParams, useRouter} from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -104,6 +104,10 @@ const ToeicTest = React.memo<Props>(({
         [partData.partNumber, currentGroup?.imageUrl]
     );
 
+    useEffect(() => {
+        setCurrentGroupIndex(0);
+    }, []);
+
     // Effects with proper cleanup
     useEffect(() => {
         if (remainingTime === 60 && !hasShownOneMinuteToast) {
@@ -115,7 +119,6 @@ const ToeicTest = React.memo<Props>(({
     useEffect(() => {
         setAnswers(initialAnswers);
         setMarkedForReview(initialMarkedForReview);
-        setCurrentGroupIndex(0);
     }, [initialAnswers, initialMarkedForReview]);
 
     // Debounced effects for better performance
@@ -223,11 +226,11 @@ const ToeicTest = React.memo<Props>(({
                     questionId: parseInt(questionId, 10),
                     selectedOption
                 }));
+            }
 
-                if (finalAnswers.length === 0) {
-                    toast.error('Vui lòng trả lời ít nhất một câu hỏi');
-                    return null;
-                }
+            if (finalAnswers.length === 0) {
+                toast.error('Vui lòng trả lời ít nhất một câu hỏi');
+                return null;
             }
 
             const request: SubmitExamRequest = {
@@ -266,12 +269,26 @@ const ToeicTest = React.memo<Props>(({
     }, [answers, allAnswers, allPartIds, totalParts, isLastPart, isFullExam, params.id, partData.partId, examStartTimeState]);
 
     const handleSubmitClick = useCallback(() => {
-        if (answeredCount === 0) {
+        if (answeredCountGlobal === 0) {
             toast.warning('Vui lòng trả lời ít nhất một câu hỏi trước khi nộp bài');
             return;
         }
         setShowSubmitDialog(true);
     }, [answeredCount]);
+
+    const answeredCountGlobal = useMemo(() => {
+        const all = { ...allAnswers };
+        Object.entries(answers).forEach(([qid, val]) => {
+            const partId = partData.partId.toString();
+            if (!all[partId]) all[partId] = {};
+            all[partId][Number(qid)] = val;
+        });
+
+        return Object.values(all)
+            .flatMap(part => Object.values(part))
+            .filter((v) => !!v).length;
+    }, [allAnswers, answers, partData.partId]);
+
 
     const handleConfirmSubmit = useCallback(async () => {
         try {
@@ -329,7 +346,6 @@ const ToeicTest = React.memo<Props>(({
 
     return (
         <div className="container mx-auto px-4 py-8">
-            {/* Header - Chỉ hiển thị khi không trong trạng thái showResult */}
             {!showResult && (
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold">

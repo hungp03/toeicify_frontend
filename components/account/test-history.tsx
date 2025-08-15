@@ -113,42 +113,68 @@ export default function AttemptHistory() {
 
             <div className="border-t">
               {/* Header row */}
-              <div className="grid grid-cols-12 py-2 text-sm font-semibold text-gray-700">
-                <div className="col-span-3">Ngày làm</div>
-                <div className="col-span-5">Kết quả</div>
-                <div className="col-span-2">Thời gian làm bài</div>
-                <div className="col-span-2 text-right pr-2"> </div>
+              <div className="
+                grid gap-x-4 py-2 text-sm font-semibold text-gray-700
+                grid-cols-2 md:grid-cols-[minmax(140px,1fr)_minmax(220px,2fr)_minmax(120px,auto)_minmax(100px,auto)]
+              ">
+                <div>Ngày làm</div>
+                <div className="md:col-start-2">Kết quả</div>
+                <div className="hidden md:block">Thời gian làm bài</div>
+                <div className="hidden md:block text-right pr-2"></div>
               </div>
 
               {/* Items */}
               <div className="divide-y">
                 {exam.attempts.map((a) => (
-                  <div key={a.attemptId} className="grid grid-cols-12 items-center py-3">
-                    <div className="col-span-3 text-gray-800">
-                      {fmtDate(a.endTime || a.startTime)}
-                      <br />
-                      {a.fullTest ? (
-                        <Badge color="green">Full test</Badge>
-                      ) : (
-                        <>
-                          <Badge color="orange">Luyện tập</Badge>
-                          {a.parts.map((p) => (
-                            <Badge key={p} color="orange">{`Part ${p}`}</Badge>
-                          ))}
-                        </>
-                      )}
+                  <div key={a.attemptId} 
+                  className=" grid items-center py-3 gap-x-4
+                  grid-cols-2 md:grid-cols-[minmax(140px,1fr)_minmax(220px,2fr)_minmax(120px,auto)_minmax(100px,auto)]
+                ">
+                    <div className="text-gray-800">
+                      <div>{fmtDate(a.endTime || a.startTime)}</div>
+                      <div className="mt-1 flex flex-wrap items-center gap-1">
+                        {a.fullTest ? (
+                          <Badge color="green">Full test</Badge>
+                        ) : (
+                          <>
+                            <Badge color="orange">Luyện tập</Badge>
+                            {a.parts.map((p) => (
+                              <Badge key={p} color="orange">{`Part ${p}`}</Badge>
+                            ))}
+                          </>
+                        )}
+                      </div>
                     </div>
 
-                    <div className="col-span-5 flex flex-wrap items-center gap-2">
-                      <span className="ml-2 text-gray-900">
+                    {/* Col 2: Kết quả */}
+                    <div className="min-w-0 flex flex-wrap items-center gap-2">
+                      <span className="text-gray-900 truncate">
                         <ResultCell a={a} />
                       </span>
                     </div>
 
-                    <div className="col-span-2 text-gray-800">{fmtDuration(a.durationSeconds)}</div>
+                    {/* Col 3: Thời gian (ẩn ở mobile) */}
+                    <div className="hidden md:block text-gray-800">
+                      {fmtDuration(a.durationSeconds)}
+                    </div>
 
-                    <div className="col-span-2 text-right">
-                      <Link href={`/attempts/${a.attemptId}`} className="text-blue-600 hover:underline">
+                    {/* Col 4: Link (ẩn ở mobile, hoặc đưa xuống dưới) */}
+                    <div className="hidden md:block text-right">
+                      <Link
+                        href={`/attempts/${a.attemptId}`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        Xem chi tiết
+                      </Link>
+                    </div>
+
+                    {/* Ở mobile, hiển thị thêm hàng cho thời gian + link */}
+                    <div className="md:hidden col-span-2 mt-1 flex items-center justify-between text-sm text-gray-700">
+                      <span>{fmtDuration(a.durationSeconds)}</span>
+                      <Link
+                        href={`/attempts/${a.attemptId}`}
+                        className="text-blue-600 hover:underline"
+                      >
                         Xem chi tiết
                       </Link>
                     </div>
@@ -174,3 +200,4 @@ export default function AttemptHistory() {
     </div>
   );
 }
+
