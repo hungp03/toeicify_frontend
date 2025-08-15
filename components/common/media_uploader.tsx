@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { uploadMedia } from "@/lib/api/media";
 import { toast } from "sonner";
@@ -7,22 +7,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
-import * as React from "react";
+import { useRef, useState } from "react";
 import { MediaUploaderProps } from "@/types/media";
 
-
-export const MediaUploader: React.FC<MediaUploaderProps> = ({
-  label, value, onChange, accept, folder, placeholder, disabled, hint, preview
-}) => {
-  const [uploading, setUploading] = React.useState(false);
-  const [locked, setLocked] = React.useState(false); 
-  const fileRef = React.useRef<HTMLInputElement | null>(null);
+export function MediaUploader({
+  label,
+  value,
+  onChange,
+  accept,
+  folder,
+  placeholder,
+  disabled,
+  hint,
+  preview,
+}: MediaUploaderProps) {
+  const [uploading, setUploading] = useState(false);
+  const [locked, setLocked] = useState(false);
+  const fileRef = useRef<HTMLInputElement | null>(null);
 
   const onPick = () => fileRef.current?.click();
 
   const handleFile = async (file?: File | null) => {
     if (!file) return;
-    // Validate basic type theo accept
+
     if (accept.startsWith("image/") && !file.type.startsWith("image/")) {
       toast.error("Vui lòng chọn đúng định dạng ảnh.");
       return;
@@ -36,10 +43,10 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
       setUploading(true);
       const url = await uploadMedia(file, folder);
       onChange(url);
-      setLocked(true);     // khóa input (chỉ cho xoá bằng nút)
+      setLocked(true);
       toast.success("Tải lên thành công!");
     } catch (e: any) {
-        console.error("Upload error:", e);
+      console.error("Upload error:", e);
       const msg = e?.response?.data?.message || e?.message || "Upload thất bại.";
       toast.error(msg);
     } finally {
@@ -48,26 +55,25 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
   };
 
   const clearUrl = () => {
-    onChange("");      // xoá URL
-    setLocked(false);  // mở khóa để cho phép dán/nhập lại nếu cần
+    onChange("");
+    setLocked(false);
   };
 
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
 
-      {/* Nhập URL thủ công hoặc nhận URL tự động sau khi upload */}
       <div className="flex gap-2">
-      <Input
+        <Input
           placeholder={placeholder ?? "https://..."}
-          value={value ?? ""}                               
-          readOnly={locked}                                  
+          value={value ?? ""}
+          readOnly={locked}
           onChange={(e) => {
             if (!locked) onChange(e.target.value ?? "");
           }}
           disabled={disabled}
           className={cn(
-            locked && "bg-gray-50 text-gray-700 cursor-default",
+            locked && "bg-gray-50 text-gray-700 cursor-default"
           )}
           title={locked ? "URL được tạo từ upload — chỉ có thể xoá" : undefined}
         />
@@ -80,13 +86,19 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
           disabled={disabled || uploading}
         />
         <Button type="button" onClick={onPick} disabled={disabled || uploading}>
-          {uploading ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Đang tải...</>) : "Tải lên"}
+          {uploading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Đang tải...
+            </>
+          ) : (
+            "Tải lên"
+          )}
         </Button>
       </div>
 
       {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
 
-      {/* Preview nếu có URL */}
       {value && preview === "image" && (
         <div className="mt-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -99,7 +111,6 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
         </div>
       )}
 
-      {/* Clear URL nhanh */}
       {value && (
         <div className="mt-1 flex gap-2">
           <Button
@@ -107,7 +118,7 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
             type="button"
             className="h-8 px-2 text-xs"
             onClick={clearUrl}
-            disabled={uploading /* có thể giữ disabled prop nếu muốn cũng khóa xoá */}
+            disabled={uploading}
           >
             Xoá URL
           </Button>
@@ -115,4 +126,4 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({
       )}
     </div>
   );
-};
+}
