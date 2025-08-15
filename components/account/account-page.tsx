@@ -2,7 +2,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProfileCard from '@/components/account/profile';
 import TestHistory from '@/components/account/test-history';
-import NotificationSettingsWrapper from '@/components/account/notification-setting-wrapper';
+// import NotificationSettingsWrapper from '@/components/account/notification-setting-wrapper';
 
 export default function AccountPage() {
   return (
@@ -15,10 +15,10 @@ export default function AccountPage() {
           </div>
 
           <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="profile">Hồ sơ</TabsTrigger>
               <TabsTrigger value="history">Lịch sử</TabsTrigger>
-              <TabsTrigger value="preferences">Thông báo</TabsTrigger>
+              {/* <TabsTrigger value="preferences">Thông báo</TabsTrigger> */}
             </TabsList>
 
             <TabsContent value="profile">
@@ -31,9 +31,9 @@ export default function AccountPage() {
               <TestHistory />
             </TabsContent>
 
-            <TabsContent value="preferences">
+            {/* <TabsContent value="preferences">
               <NotificationSettingsWrapper />
-            </TabsContent>
+            </TabsContent> */}
           </Tabs>
         </div>
       </div>

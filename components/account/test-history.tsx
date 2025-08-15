@@ -1,8 +1,8 @@
-// AttemptHistoryPage.tsx
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import { getMyAttemptHistory } from '@/lib/api/attempts';
 import {
   AttemptItem,
@@ -16,6 +16,7 @@ function fmtDate(iso?: string | null) {
   if (!iso) return '';
   return new Date(iso).toLocaleDateString('vi-VN');
 }
+
 function fmtDuration(sec: number) {
   const h = Math.floor(sec / 3600);
   const m = Math.floor((sec % 3600) / 60);
@@ -23,40 +24,8 @@ function fmtDuration(sec: number) {
   return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-function Badge({
-  children,
-  color = 'gray',
-}: {
-  children: React.ReactNode;
-  color?: 'green' | 'orange' | 'gray';
-}) {
-  const map: Record<string, string> = {
-    green: 'bg-green-100 text-green-700',
-    orange: 'bg-amber-100 text-amber-700',
-    gray: 'bg-gray-100 text-gray-700',
-  };
-  return (
-    <span className={`inline-block px-2 py-1 rounded text-xs font-semibold mr-2 ${map[color]}`}>
-      {children}
-    </span>
-  );
-}
-
-function ResultCell({ a }: { a: AttemptItem }) {
-  if (a.fullTest) {
-    return (
-      <span className="whitespace-nowrap">
-        {a.correct}/{a.total}{' '}
-        <span className="text-gray-500">(Điểm: {a.toeicScore ?? '—'})</span>
-      </span>
-    );
-  }
-  return <span className="whitespace-nowrap">{a.correct}/{a.total}</span>;
-}
-
 export default function AttemptHistory() {
-  // BE: 1-based
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(1); // 1-based
   const size = 5;
 
   const [rows, setRows] = useState<AttemptHistoryRow[]>([]);
@@ -68,7 +37,7 @@ export default function AttemptHistory() {
     (async () => {
       setLoading(true);
       try {
-        const res = await getMyAttemptHistory(page, size); // 1-based cho API
+        const res = await getMyAttemptHistory(page, size);
         if (!mounted) return;
         setRows(res.result || []);
         setMeta(res.meta);
@@ -81,12 +50,16 @@ export default function AttemptHistory() {
     };
   }, [page]);
 
-  // Group theo exam để hiển thị
+  // Group theo examId
   const grouped: ExamHistory[] = useMemo(() => {
     const map = new Map<number, ExamHistory>();
     for (const r of rows) {
       if (!map.has(r.examId)) {
-        map.set(r.examId, { examId: r.examId, examName: r.examName, attempts: [] });
+        map.set(r.examId, {
+          examId: r.examId,
+          examName: r.examName,
+          attempts: [],
+        });
       }
       map.get(r.examId)!.attempts.push(r.attempt);
     }
@@ -102,71 +75,63 @@ export default function AttemptHistory() {
   }
 
   return (
-    <div className="space-y-10">
-      {/* LIST */}
+    <div className="space-y-4">
       {grouped.length === 0 ? (
-        <div className="text-gray-600">Bạn chưa có lịch sử làm bài.</div>
+        <div className="text-muted-foreground text-center py-6">
+          Bạn chưa có lịch sử làm bài.
+        </div>
       ) : (
-        grouped.map((exam) => (
-          <div key={exam.examId} className="space-y-3">
-            <h2 className="text-lg font-semibold">{exam.examName}</h2>
+        grouped.map((exam) =>
+          exam.attempts.map((a) => {
+            const totalScore = a.toeicScore ?? 0;
+            const listening =  0;
+            const reading =  0;
+            const duration = fmtDuration(a.durationSeconds);
+            const date = fmtDate(a.endTime || a.startTime);
 
-            <div className="border-t">
-              {/* Header row */}
-              <div className="grid grid-cols-12 py-2 text-sm font-semibold text-gray-700">
-                <div className="col-span-3">Ngày làm</div>
-                <div className="col-span-5">Kết quả</div>
-                <div className="col-span-2">Thời gian làm bài</div>
-                <div className="col-span-2 text-right pr-2"> </div>
-              </div>
-
-              {/* Items */}
-              <div className="divide-y">
-                {exam.attempts.map((a) => (
-                  <div key={a.attemptId} className="grid grid-cols-12 items-center py-3">
-                    <div className="col-span-3 text-gray-800">
-                      {fmtDate(a.endTime || a.startTime)}
-                      <br />
-                      {a.fullTest ? (
-                        <Badge color="green">Full test</Badge>
-                      ) : (
-                        <>
-                          <Badge color="orange">Luyện tập</Badge>
-                          {a.parts.map((p) => (
-                            <Badge key={p} color="orange">{`Part ${p}`}</Badge>
-                          ))}
-                        </>
-                      )}
+            return (
+              <div
+                key={a.attemptId}
+                className="flex items-center justify-between rounded-lg border p-4 shadow-sm hover:shadow transition"
+              >
+                <div className="flex flex-col gap-1">
+                  <h3 className="text-base font-semibold text-gray-900">
+                    {exam.examName}
+                  </h3>
+                  <div className="text-sm text-muted-foreground flex flex-wrap gap-4">
+                    <div className="flex items-center gap-1">
+                      <CalendarIcon className="w-4 h-4" />
+                      <span>{date}</span>
                     </div>
-
-                    <div className="col-span-5 flex flex-wrap items-center gap-2">
-                      <span className="ml-2 text-gray-900">
-                        <ResultCell a={a} />
-                      </span>
-                    </div>
-
-                    <div className="col-span-2 text-gray-800">{fmtDuration(a.durationSeconds)}</div>
-
-                    <div className="col-span-2 text-right">
-                      <Link href={`/attempts/${a.attemptId}`} className="text-blue-600 hover:underline">
-                        Xem chi tiết
-                      </Link>
-                    </div>
+                    <span>Listening: {listening}/495</span>
+                    <span>Reading: {reading}/495</span>
+                    <span>Time: {duration}</span>
                   </div>
-                ))}
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="rounded-full bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-900">
+                    {totalScore}/990
+                  </div>
+                  <Link
+                    href={`/attempts/${a.attemptId}`}
+                    className="text-blue-600 text-sm hover:underline"
+                  >
+                    Xem chi tiết
+                  </Link>
+                </div>
               </div>
-            </div>
-          </div>
-        ))
+            );
+          })
+        )
       )}
 
-      {/* PAGINATION (component zero-based) */}
       {meta && meta.pages > 1 && (
-        <div className="pt-4 flex justify-center">
+        <div className="pt-6 flex justify-center">
           <Pagination
-            totalPages={meta.pages}        // tổng trang
-            currentPage={meta.page - 1}    // 0-based cho component
-            onPageChange={(p0) => setPage(p0 + 1)} // chuyển lại 1-based cho API
+            totalPages={meta.pages}
+            currentPage={meta.page - 1}
+            onPageChange={(p0) => setPage(p0 + 1)}
             siblingCount={1}
           />
         </div>
