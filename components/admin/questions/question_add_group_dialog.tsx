@@ -49,7 +49,7 @@ const PART_RULES: Record<number, PartRule> = {
     optionLetters: ["A", "B", "C"], // exactly 3 options
     showImage: false,
     showAudio: true,
-    showPassage: false,
+    showPassage: true,
     defaultQuestionType: "LISTENING_QUESTION_RESPONSE",
     requireQuestionText: false,
   },
@@ -67,7 +67,7 @@ const PART_RULES: Record<number, PartRule> = {
     displayName: "Part 4 - Talks",
     questionsPerGroup: 3,
     optionLetters: ["A", "B", "C", "D"],
-    showImage: false,
+    showImage: true,
     showAudio: true,
     showPassage: true,
     defaultQuestionType: "LISTENING_TALK",
