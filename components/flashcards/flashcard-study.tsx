@@ -194,20 +194,22 @@ export function FlashcardStudyContent() {
         </div>
       )}
 
-      <TestDialog
-        open={showTestDialog}
-        max={Math.min(50, list?.flashcards.length || 0)}
-        defaultCount={
-          (list?.flashcards.length || 0) > 20
-            ? 20
-            : Math.floor((list?.flashcards.length || 0) / 2)
-        }
-        onConfirm={(count) => {
-          setShowTestDialog(false);
-          router.push(`/flashcards/${id}/test?count=${count}`);
-        }}
-        onClose={() => setShowTestDialog(false)}
-      />
+    <TestDialog
+      open={showTestDialog}
+      max={Math.min(50, list?.flashcards.length || 0)}
+      defaultCount={
+        (list?.flashcards.length || 0) > 20
+          ? 20
+          : Math.floor((list?.flashcards.length || 0) / 2)
+      }
+      // optional: defaultTypes={['truefalse','multiple','written']}
+      onConfirm={(count, types) => {
+        setShowTestDialog(false);
+        const typesParam = encodeURIComponent(types.join(','));
+        router.push(`/flashcards/${id}/test?count=${count}&types=${typesParam}`);
+      }}
+      onClose={() => setShowTestDialog(false)}
+    />
     </div>
   );
 }
