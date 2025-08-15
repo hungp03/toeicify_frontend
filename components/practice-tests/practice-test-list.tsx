@@ -17,7 +17,7 @@ import { toast } from 'sonner';
 import {
   Clock, Users, Search, Filter, Loader2,
 } from 'lucide-react';
-import { getAllExams } from '@/lib/api/exam';
+import { getAllExamsForClient } from '@/lib/api/exam';
 import { PracticeTests } from '@/types/exam';
 import { Pagination } from '@/components/common/pagination';
 import { useCategoryStore } from '@/store/categories';
@@ -98,7 +98,7 @@ const PracticeTestsList = () => {
 
     setLoading(true);
     try {
-      const res = await getAllExams({
+      const res = await getAllExamsForClient({
         page: currentPage,
         size: 6,
         keyword: actualSearchTerm || undefined,
