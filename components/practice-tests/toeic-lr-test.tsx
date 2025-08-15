@@ -136,6 +136,9 @@ const ToeicTest = React.memo<Props>(({
         return () => clearTimeout(timeoutId);
     }, [markedForReview, onMarkedForReviewChange]);
 
+
+
+
     // Handlers with useCallback for optimization
     const getPartName = useCallback(() => {
         if (partData.description) {
@@ -181,6 +184,22 @@ const ToeicTest = React.memo<Props>(({
     const handlePreviousGroup = useCallback(() => {
         setCurrentGroupIndex(prev => Math.max(prev - 1, 0));
     }, []);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "ArrowRight") {
+                handleNextGroup();
+            }
+            if (e.key === "ArrowLeft") {
+                handlePreviousGroup();
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [handleNextGroup, handlePreviousGroup]);
 
     const handleSubmitExam = useCallback(async (): Promise<ExamSubmissionResponse | null> => {
         setIsSubmitting(true);
