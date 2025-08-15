@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import * as React from "react";
-import { MediaUploaderProps } from "@/types/medei";
+import { MediaUploaderProps } from "@/types/media";
 
 
 export const MediaUploader: React.FC<MediaUploaderProps> = ({
