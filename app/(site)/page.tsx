@@ -111,11 +111,11 @@ const HomePage = () => {
             {categories.map((cat, index) => (
               <Card key={cat.categoryId} className="text-center">
                 <CardHeader>
-                  <Badge
+                  {/* <Badge
                     className={`${getColor(index)} text-white w-fit mx-auto mb-4`}
                   >
                     {cat.examCount} Bài thi
-                  </Badge>
+                  </Badge> */}
                   <CardTitle className="text-2xl">{cat.categoryName}</CardTitle>
                 </CardHeader>
                 <CardContent>

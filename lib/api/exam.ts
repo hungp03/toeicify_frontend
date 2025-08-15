@@ -27,6 +27,14 @@ export const updateExamCategory = async (id: number, data: {
     description: string;
 }) => api.put(`/exam-categories/${id}`, data);
 
+export const getAllExamsForClient = async (params?: {
+    keyword?: string;
+    categoryId?: number;
+    page?: number;
+    size?: number;
+}) => api.get("/exams/public", { params });
+
+
 export const deleteExamCategory = async (id: number) => api.delete(`/exam-categories/${id}`);
 
 export const getExamById = async (examId: number) => api.get(`/exams/${examId}`);
