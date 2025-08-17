@@ -18,6 +18,8 @@ interface QuestionComponentProps {
   markedForReview: Record<number, boolean>;
   onAnswerChange: (questionId: number, value: string) => void;
   onMarkForReview: (questionId: number) => void;
+  isListeningPart?: boolean;
+  showMarkForReview?: boolean;
 }
 
 export default function QuestionComponent({
@@ -28,6 +30,8 @@ export default function QuestionComponent({
   markedForReview,
   onAnswerChange,
   onMarkForReview,
+  isListeningPart = false,
+  showMarkForReview = true,
 }: QuestionComponentProps) {
   const isMarked = markedForReview[question.questionId] ?? false;
 
@@ -79,26 +83,33 @@ export default function QuestionComponent({
             </div>
           ))}
         </RadioGroup>
+        {showMarkForReview && (
+          <div className="flex justify-end mt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onMarkForReview(question.questionId)}
+              className={
+                isMarked
+                  ? "bg-orange-100 text-orange-700 border-orange-300 hover:bg-orange-200"
+                  : "hover:bg-orange-50"
+              }
+            >
+              <Flag
+                className={`h-3 w-3 mr-1 ${
+                  isMarked ? "text-orange-500" : ""
+                }`}
+              />
+              {isMarked ? "Marked" : "Mark"}
+            </Button>
+          </div>
+        )}
 
-        <div className="flex justify-end mt-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onMarkForReview(question.questionId)}
-            className={
-              isMarked
-                ? "bg-orange-100 text-orange-700 border-orange-300 hover:bg-orange-200"
-                : "hover:bg-orange-50"
-            }
-          >
-            <Flag
-              className={`h-3 w-3 mr-1 ${
-                isMarked ? "text-orange-500" : ""
-              }`}
-            />
-            {isMarked ? "Marked" : "Mark"}
-          </Button>
-        </div>
+        {isListeningPart && !showMarkForReview && (
+          <div className="mt-3 text-xs text-blue-600 text-center">
+            <span>Phần thi nghe không được phép đánh dấu câu hỏi</span>
+          </div>
+        )}
       </div>
     </div>
   );

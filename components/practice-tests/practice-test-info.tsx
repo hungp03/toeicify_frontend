@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, AlertCircle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { getExamById } from '@/lib/api/exam';
 import { ExamData } from '@/types/exam';
@@ -25,10 +25,8 @@ const TestSetup = () => {
   const [customTime, setCustomTime] = useState<string>('');
   const [invalidId, setInvalidId] = useState(false);
 
-  // Validate and fetch exam data
   useEffect(() => {
     const validateAndFetchExam = async () => {
-      // Kiểm tra id có phải là số không
       if (!id || isNaN(Number(id)) || !Number.isInteger(Number(id)) || Number(id) <= 0) {
         setInvalidId(true);
         setLoading(false);
@@ -76,7 +74,10 @@ const TestSetup = () => {
 
   const handleFullTestToggle = () => {
     setUseFullTest(!useFullTest);
-    if (!useFullTest) setSelectedParts([]);
+    if (!useFullTest) {
+      setSelectedParts([]);
+      setCustomTime(''); // Clear custom time when switching to full test
+    }
   };
 
   const getTotalQuestions = () => {
@@ -200,14 +201,12 @@ const TestSetup = () => {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {/* Thông tin đề thi */}
             <div className="p-4 rounded-lg">
               <Badge className="mb-2 ml-2 bg-amber-500">{examData.totalQuestions} câu</Badge>
               <Badge className="mb-2 ml-2 bg-emerald-600">#{examData.categoryName}</Badge>
               <Badge className="mb-2 ml-2 bg-blue-600">{examData.examParts.length} phần thi</Badge>
             </div>
 
-            {/* Chọn Full test */}
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -219,9 +218,19 @@ const TestSetup = () => {
                   Làm toàn bộ đề ({examData.totalQuestions} câu)
                 </Label>
               </div>
+              
+              {useFullTest && (
+                <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                  <div className="flex items-center space-x-2">
+                    <Clock className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm text-blue-700 font-medium">
+                      Thời gian làm bài: 120 phút
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Chọn phần */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Hoặc chọn từng phần:</h3>
               <div className="grid gap-3">
@@ -244,31 +253,32 @@ const TestSetup = () => {
               </div>
             </div>
 
-
-            {/* Thời gian làm bài */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Thời gian làm bài (phút)</h3>
-              <div className="flex gap-4 items-center flex-wrap">
-                <Select onValueChange={(value) => setCustomTime(value)}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="Chọn nhanh" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[...Array(24)].map((_, i) => {
-                      const val = (i + 1) * 5;
-                      return (
-                        <SelectItem key={val} value={val.toString()}>
-                          {val} phút
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-                <span className="text-sm text-gray-500 italic">
-                  Để trống nếu không giới hạn thời gian
-                </span>
+            {/* Thời gian làm bài - Only show for partial tests */}
+            {!useFullTest && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Thời gian làm bài (phút)</h3>
+                <div className="flex gap-4 items-center flex-wrap">
+                  <Select onValueChange={(value) => setCustomTime(value)} value={customTime}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="Chọn nhanh" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[...Array(24)].map((_, i) => {
+                        const val = (i + 1) * 5;
+                        return (
+                          <SelectItem key={val} value={val.toString()}>
+                            {val} phút
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-sm text-gray-500 italic">
+                    Để trống nếu không giới hạn thời gian
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Tổng kết */}
             {canStartTest && (
@@ -278,7 +288,9 @@ const TestSetup = () => {
                   <p>Số câu hỏi đã chọn: {getTotalQuestions()}</p>
                   <p>
                     Thời gian:{" "}
-                    {customTime
+                    {useFullTest 
+                      ? "120 phút (cố định)"
+                      : customTime
                       ? `${customTime} phút`
                       : "Không giới hạn"}
                   </p>
