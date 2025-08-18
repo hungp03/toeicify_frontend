@@ -33,3 +33,9 @@ export type ExamHistory = {
   examName: string;
   attempts: AttemptItem[];
 };
+
+export type AttemptsCountResponse = {
+  totalAttempts: number;
+  fullTests: number;
+  practiceAttempts: number;
+};
