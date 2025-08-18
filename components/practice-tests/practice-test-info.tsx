@@ -39,8 +39,8 @@ const TestSetup = () => {
         setInvalidId(false);
 
         const response = await getExamById(parseInt(id));
-
-        if (response?.data) {
+        console.log('Fetched exam data:', response);
+        if (response?.data && response.data.status==="PUBLIC") {
           const sortedExam = {
             ...response.data,
             examParts: [...response.data.examParts].sort(
@@ -51,8 +51,8 @@ const TestSetup = () => {
         } else {
           setExamData(null);
         }
-      } catch (err) {
-        setError("Error fetching exam data");
+      } catch (err: any) {
+        setError("Mã đề thi không hợp lệ hoặc không tồn tại. Vui lòng kiểm tra lại.");
         console.error("Error fetching exam:", err);
       } finally {
         setLoading(false);
@@ -163,11 +163,13 @@ const TestSetup = () => {
             </Button>
           </div>
           <Card>
-            <CardContent className="p-6">
+             <CardContent className="p-6">
               <div className="text-center">
+                <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-red-600 mb-2">Mã đề thi không hợp lệ</h3>
                 <p className="text-red-600 mb-4">{error || 'Không thể tải thông tin đề thi'}</p>
-                <Button onClick={() => window.location.reload()}>
-                  Thử lại
+                <Button onClick={() => router.push('/practice-tests')}>
+                  Quay lại danh sách đề thi
                 </Button>
               </div>
             </CardContent>
