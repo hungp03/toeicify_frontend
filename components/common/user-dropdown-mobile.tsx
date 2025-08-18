@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import Notification from "@/components/common/notification";
 
 const UserDropdownMobile = () => {
     const user = useAuthStore((state) => state.user);
@@ -13,7 +14,8 @@ const UserDropdownMobile = () => {
     if (!user) return null;
 
     return (
-        <div className="flex flex-col gap-2 pt-4 border-t">
+        <div className="flex flex-col gap-2 pt-4">
+            <Notification />
             <p className="text-sm text-gray-600">Xin chào, <strong>{user.fullName}</strong></p>
 
             {user?.roleId === "ADMIN" && (

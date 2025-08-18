@@ -3,8 +3,7 @@ import { ReactNode } from 'react';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from 'sonner';
 import Providers from '@/providers/page';
-import { QueryClient } from "@tanstack/react-query";
-const queryClient = new QueryClient();
+import FcmListener from '@/components/common/fcm-listener';
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -16,6 +15,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <Providers>
           <TooltipProvider>
             <Toaster />
+            <FcmListener />
             {children}
           </TooltipProvider>
         </Providers>

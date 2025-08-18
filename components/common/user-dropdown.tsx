@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuItem
 } from "@/components/ui/dropdown-menu";
+import Notification from "@/components/common/notification";
 import { useAuthStore } from "@/store/auth";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -22,6 +23,8 @@ const UserDropdown = () => {
   if (!user) return null;
 
   return (
+    <>
+    <Notification />
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="flex items-center gap-2">
@@ -62,6 +65,7 @@ const UserDropdown = () => {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    </>
   );
 };
 

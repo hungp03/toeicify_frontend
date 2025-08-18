@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import _ from "lodash";
 import { Button } from "@/components/ui/button";
 import AuthSection from "@/components/common/auth-section";
+import Notification from "@/components/common/notification";
 import AuthSectionMobile from "./auth-section-mobile";
 import SearchComponent from "./search";
 import { Menu, BookOpen } from "lucide-react";
@@ -164,6 +165,7 @@ const Header = () => {
           </div>
 
           <div className="hidden md:flex items-center space-x-3">
+            
             <AuthSection />
           </div>
 

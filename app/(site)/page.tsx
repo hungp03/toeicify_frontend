@@ -121,7 +121,7 @@ const HomePage = () => {
                 <CardContent>
                   <p className="text-gray-600 mb-6">{cat.description}</p>
                   <Link href={`/practice-tests?categoryId=${cat.categoryId}`}>
-                    <Button className="w-full">Luyện ngay</Button>
+                    <Button className="w-full bg-blue-600 hover:bg-blue-500">Luyện ngay</Button>
                   </Link>
                 </CardContent>
               </Card>

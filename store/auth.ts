@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { InternalAuthState, User, UpdateUserRequest } from '@/types';
 import { apiLogin, getUserInfo } from '@/lib/api/auth';
 import { updateUserInfo } from '@/lib/api/user';
+import { registerFcmToken } from '@/lib/fcm';
 
 export const useAuthStore = create<InternalAuthState>()(
   persist(
@@ -18,7 +19,7 @@ export const useAuthStore = create<InternalAuthState>()(
         set({ user: null, accessToken: null });
         localStorage.removeItem('toeic-auth-storage');
         if (token) {
-          await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/logout`, {
+          await fetch('/api/auth/logout', {
             method: 'POST',
             credentials: 'include',
             headers: {
@@ -35,6 +36,10 @@ export const useAuthStore = create<InternalAuthState>()(
           if (token) {
             set({ accessToken: token });
             await get().fetchUser();
+          }
+          const user = get().user;
+          if (user) {
+            await registerFcmToken(user.userId);
           }
           return res;
         } catch (err) {
@@ -65,7 +70,7 @@ export const useAuthStore = create<InternalAuthState>()(
           console.error('Fetch user error:', err);
           get().logout();
         }
-        finally{
+        finally {
           set({ isFetchingUser: false });
         }
       },
@@ -88,6 +93,10 @@ export const useAuthStore = create<InternalAuthState>()(
       oauthLogin: async (token: string) => {
         set({ accessToken: token });
         await get().fetchUser();
+        const user = get().user;
+        if (user) {
+          await registerFcmToken(user.userId);
+        }
       },
     }),
     {
