@@ -39,8 +39,7 @@ const TestSetup = () => {
         setInvalidId(false);
 
         const response = await getExamById(parseInt(id));
-        console.log('Fetched exam data:', response);
-        if (response?.data && response.data.status==="PUBLIC") {
+        if (response?.data && response.data.status === "PUBLIC") {
           const sortedExam = {
             ...response.data,
             examParts: [...response.data.examParts].sort(
@@ -163,7 +162,7 @@ const TestSetup = () => {
             </Button>
           </div>
           <Card>
-             <CardContent className="p-6">
+            <CardContent className="p-6">
               <div className="text-center">
                 <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-red-600 mb-2">Mã đề thi không hợp lệ</h3>
@@ -219,7 +218,7 @@ const TestSetup = () => {
                   Làm toàn bộ đề ({examData.totalQuestions} câu)
                 </Label>
               </div>
-              
+
               {useFullTest && (
                 <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
                   <div className="flex items-center space-x-2">
@@ -289,11 +288,11 @@ const TestSetup = () => {
                   <p>Số câu hỏi đã chọn: {getTotalQuestions()}</p>
                   <p>
                     Thời gian:{" "}
-                    {useFullTest 
+                    {useFullTest
                       ? "120 phút (cố định)"
                       : customTime
-                      ? `${customTime} phút`
-                      : "Không giới hạn"}
+                        ? `${customTime} phút`
+                        : "Không giới hạn"}
                   </p>
                   {!useFullTest && selectedParts.length > 0 && (
                     <p>
