@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Header from "@/components/common/header";
 import Footer from "@/components/common/footer";
-
+import LabanDictFrame from "@/components/common/laban-dict-frame";
 
 export const metadata: Metadata = {
   title: "Toeicify",
@@ -17,6 +17,7 @@ export default function RootLayout({
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
+      <LabanDictFrame />
       <main className="flex-grow">{children}</main>
       <Footer />
     </div>
