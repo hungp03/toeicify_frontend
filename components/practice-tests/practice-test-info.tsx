@@ -39,8 +39,7 @@ const TestSetup = () => {
         setInvalidId(false);
 
         const response = await getExamById(parseInt(id));
-
-        if (response?.data) {
+        if (response?.data && response.data.status === "PUBLIC") {
           const sortedExam = {
             ...response.data,
             examParts: [...response.data.examParts].sort(
@@ -51,8 +50,8 @@ const TestSetup = () => {
         } else {
           setExamData(null);
         }
-      } catch (err) {
-        setError("Error fetching exam data");
+      } catch (err: any) {
+        setError("Mã đề thi không hợp lệ hoặc không tồn tại. Vui lòng kiểm tra lại.");
         console.error("Error fetching exam:", err);
       } finally {
         setLoading(false);
@@ -165,9 +164,11 @@ const TestSetup = () => {
           <Card>
             <CardContent className="p-6">
               <div className="text-center">
+                <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-red-600 mb-2">Mã đề thi không hợp lệ</h3>
                 <p className="text-red-600 mb-4">{error || 'Không thể tải thông tin đề thi'}</p>
-                <Button onClick={() => window.location.reload()}>
-                  Thử lại
+                <Button onClick={() => router.push('/practice-tests')}>
+                  Quay lại danh sách đề thi
                 </Button>
               </div>
             </CardContent>
@@ -217,7 +218,7 @@ const TestSetup = () => {
                   Làm toàn bộ đề ({examData.totalQuestions} câu)
                 </Label>
               </div>
-              
+
               {useFullTest && (
                 <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
                   <div className="flex items-center space-x-2">
@@ -287,11 +288,11 @@ const TestSetup = () => {
                   <p>Số câu hỏi đã chọn: {getTotalQuestions()}</p>
                   <p>
                     Thời gian:{" "}
-                    {useFullTest 
+                    {useFullTest
                       ? "120 phút (cố định)"
                       : customTime
-                      ? `${customTime} phút`
-                      : "Không giới hạn"}
+                        ? `${customTime} phút`
+                        : "Không giới hạn"}
                   </p>
                   {!useFullTest && selectedParts.length > 0 && (
                     <p>
