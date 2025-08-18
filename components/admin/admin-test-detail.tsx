@@ -96,7 +96,6 @@ export function AdminTestsDetailContent() {
       try {
         const qRes = await getQuestionGroupsByPartId(freshPart.partId);
         groups = qRes.data || [];
-        console.log(groups);
       } catch (err) {
         console.error("Load groups failed", err);
         toast.error("Không tải được danh sách câu hỏi của phần này");

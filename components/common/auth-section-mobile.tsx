@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import UserDropdownMobile from "@/components/common/user-dropdown-mobile"
+import Notification from "@/components/common/notification"
 import { useAuthStore } from "@/store/auth"
 import { useEffect, useState } from 'react'
 
@@ -35,7 +36,7 @@ const AuthSectionMobile = () => {
           <Button variant="outline" className="w-full">Đăng nhập</Button>
         </Link>
         <Link href="/register">
-          <Button className="w-full bg-blue-600 hover:bg-blue-500">Đăng ký</Button>
+          <Button className="w-full bg-blue-600 hover:bg-blue-500 mt-3">Đăng ký</Button>
         </Link>
       </div>
     )

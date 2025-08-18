@@ -39,7 +39,6 @@ const TestSetup = () => {
         setInvalidId(false);
 
         const response = await getExamById(parseInt(id));
-        console.log("Fetched exam data:", response?.data);
 
         if (response?.data) {
           const sortedExam = {

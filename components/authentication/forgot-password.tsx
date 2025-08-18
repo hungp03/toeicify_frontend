@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -33,6 +33,30 @@ export function ForgotPasswordContent() {
     newPassword: "",
     confirmPassword: "",
   })
+  const [resendTimer, setResendTimer] = useState(0)
+
+  const handleResendOtp = async () => {
+    if (resendTimer > 0) return
+    try {
+      setLoading(true)
+      await forgotPassword(email)
+      toast.success("Mã OTP mới đã được gửi")
+      setResendTimer(60)
+    } catch (error) {
+      toast.error("Không thể gửi lại OTP, vui lòng thử lại sau")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const interval = setInterval(() => {
+        setResendTimer((prev) => prev - 1)
+      }, 1000)
+      return () => clearInterval(interval)
+    }
+  }, [resendTimer])
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -189,10 +213,14 @@ export function ForgotPasswordContent() {
         <div className="mt-6 text-center space-y-2">
           <button
             type="button"
-            onClick={() => console.log("Gửi lại mã OTP:", email)}
-            className="text-sm font-medium text-blue-600 hover:text-blue-500"
+            onClick={handleResendOtp}
+            disabled={resendTimer > 0}
+            className={`text-sm font-medium ${resendTimer > 0 ? "text-gray-400 cursor-not-allowed" : "text-blue-600 hover:text-blue-500"
+              }`}
           >
-            Chưa nhận được mã? Gửi lại
+            {resendTimer > 0
+              ? `Gửi lại OTP sau ${resendTimer}s`
+              : "Chưa nhận được mã? Gửi lại"}
           </button>
           <div>
             <button
