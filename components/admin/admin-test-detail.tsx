@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { getAllExamCategoriesList, getExamByIdFresh } from "@/lib/api/exam";
+import { getAllExamCategoriesList, getExamById } from "@/lib/api/exam";
 import { getQuestionGroupsByPartId } from "@/lib/api/question";
 import { deleteExamPartById, getMissingParts } from "@/lib/api/exam_part";
 import { Button } from "@/components/ui/button";
@@ -72,7 +72,7 @@ export function AdminTestsDetailContent() {
     try {
       setLoadingGroups(true);
   
-      const examRes = await getExamByIdFresh(Number(id));
+      const examRes = await getExamById(Number(id));
       const freshExam = ensurePartFields(examRes.data || {});
       setExam(freshExam);
   

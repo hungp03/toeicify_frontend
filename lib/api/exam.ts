@@ -39,8 +39,6 @@ export const deleteExamCategory = async (id: number) => api.delete(`/exam-catego
 
 export const getExamById = async (examId: number) => api.get(`/exams/${examId}`);
 
-export const getExamByIdFresh = async (examId: number) => api.get(`/exams/${examId}/fresh`);
-
 export const createExam = async (data: ExamRequest) => api.post("/exams", data);
 
 export const deleteExam = async (examId: number) => api.delete(`/exams/${examId}`);
