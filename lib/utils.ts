@@ -16,8 +16,6 @@ export function toUtcNoMsZ(d: Date) {
   return d.toISOString().replace(/\.\d{3}Z$/, 'Z');
 }
 
-
-
 // Helper function để validate part data có câu hỏi hay không
 export const validatePartData = (partData: PartData): boolean => {
   if (!partData || !partData.groups || partData.groups.length === 0) {
