@@ -25,6 +25,7 @@ import { ExamResponse, PaginationMeta, PaginationResponse, ExamSearchParams, Cat
 import { Pagination } from '@/components/common/pagination';
 import { ConfirmDialog, CreateExamDialog } from '@/components/admin/dialogs';
 import { EditExamDialog } from "./dialogs";
+import { getAttemptsCount } from '@/lib/api/attempts';
 
 
 export function AdminTestsContent() {
@@ -33,6 +34,7 @@ export function AdminTestsContent() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [exams, setExams] = useState<ExamResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalAttempts, setTotalAttempts] = useState(0);
   const [pagination, setPagination] = useState<PaginationMeta>({
     page: 1,
     pageSize: 10,
@@ -129,6 +131,9 @@ export function AdminTestsContent() {
   // Initial load
   useEffect(() => {
     loadExams(0);
+    getAttemptsCount().then(res => {
+      setTotalAttempts(res.totalAttempts); // hoặc hiển thị thêm full/practice nếu muốn
+    });
   }, []);
 
   // Load when actualSearchTerm changes (after debounce)
@@ -264,7 +269,6 @@ export function AdminTestsContent() {
     const status = e.status?.toLowerCase();
     return status === 'pending' || status === 'private';
   }).length;
-  const totalAttempts = 0; // This might need to come from a separate API
 
   return (
     <div className="space-y-6">
@@ -315,7 +319,7 @@ export function AdminTestsContent() {
             </div>
           </CardContent>
         </Card>
-        {/* <Card>
+        <Card>
           <CardContent className="p-6 flex items-center">
             <div className="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center">
               <span className="text-purple-600 font-bold">#</span>
@@ -325,7 +329,7 @@ export function AdminTestsContent() {
               <p className="text-sm text-gray-600">Lượt thi</p>
             </div>
           </CardContent>
-        </Card> */}
+        </Card>
       </div>
 
       {/* Filters */}
