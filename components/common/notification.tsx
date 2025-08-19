@@ -16,9 +16,9 @@ import { NotificationItem } from '@/types'
 
 const formatTimeAgo = (dateString: string) => {
   const now = new Date()
-  const createdAt = new Date(dateString)
-  const diffInMinutes = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60))
+  const createdAt = new Date(dateString + "Z")
 
+  const diffInMinutes = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60))
   if (diffInMinutes < 1) return 'Vừa xong'
   if (diffInMinutes < 60) return `${diffInMinutes} phút trước`
 
@@ -30,6 +30,7 @@ const formatTimeAgo = (dateString: string) => {
 
   return createdAt.toLocaleDateString('vi-VN')
 }
+
 
 const Notification = () => {
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
