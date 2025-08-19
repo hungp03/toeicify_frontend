@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { ArrowLeft, Loader2, AlertCircle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
-import { getExamById } from '@/lib/api/exam';
+import { getPublicExamById } from '@/lib/api/exam';
 import { ExamData } from '@/types/exam';
 
 const TestSetup = () => {
@@ -38,7 +38,7 @@ const TestSetup = () => {
         setLoading(true);
         setInvalidId(false);
 
-        const response = await getExamById(parseInt(id));
+        const response = await getPublicExamById(parseInt(id));
         if (response?.data && response.data.status === "PUBLIC") {
           const sortedExam = {
             ...response.data,

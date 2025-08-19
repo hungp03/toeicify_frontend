@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { getQuestionsByPartIds } from '@/lib/api/question';
-import { getExamById } from '@/lib/api/exam';
+import { getPublicExamById } from '@/lib/api/exam';
 import { PartData } from '@/types/question';
 import { ExamData } from '@/types/exam';
 import { toast } from 'sonner';
@@ -52,7 +52,7 @@ export const useExamData = () => {
         }
 
         // Lấy dữ liệu bài thi
-        const examResponse = await getExamById(parseInt(testId as string));
+        const examResponse = await getPublicExamById(parseInt(testId as string));
         let examParts = examResponse?.data?.examParts || [];
 
         if (!examParts.length) {

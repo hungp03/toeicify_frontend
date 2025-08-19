@@ -125,7 +125,6 @@ export default function CreateExamForm({
           ...p,
           description: p.description ?? "",
         }));
-      console.log("Exam created successfully:", data);
       await createExam({
         ...data,
         examParts: selectedParts,

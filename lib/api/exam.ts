@@ -38,6 +38,7 @@ export const getAllExamsForClient = async (params?: {
 export const deleteExamCategory = async (id: number) => api.delete(`/exam-categories/${id}`);
 
 export const getExamById = async (examId: number) => api.get(`/exams/${examId}`);
+export const getPublicExamById = async (examId: number) => api.get(`/exams/public/${examId}`);
 
 export const createExam = async (data: ExamRequest) => api.post("/exams", data);
 
