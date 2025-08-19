@@ -17,6 +17,7 @@ export default function withAuth<P extends Record<string, any> = {}>(
     const router = useRouter()
     const user = useAuthStore((state) => state.user)
     const hasHydrated = useAuthStore((state) => state.hasHydrated)
+    const isFetchingUser = useAuthStore((state) => state.isFetchingUser);
     const [shouldShowPrompt, setShouldShowPrompt] = useState(false)
     const [isAnimated, setIsAnimated] = useState(false)
 
@@ -27,7 +28,7 @@ export default function withAuth<P extends Record<string, any> = {}>(
       }
     }, [hasHydrated, user])
 
-    if (!hasHydrated) return <FullPageLoader />
+    if (!hasHydrated || isFetchingUser) return <FullPageLoader />
 
     if (!user) {
       return (

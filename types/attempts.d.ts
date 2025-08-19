@@ -17,10 +17,10 @@ export type AttemptHistoryRow = {
 };
 
 export type PaginationMeta = {
-  page: number;      // 1-based (theo BE)
+  page: number;      
   pageSize: number;
-  pages: number;     // tổng số trang
-  total: number;     // tổng bản ghi
+  pages: number;     
+  total: number;     
 };
 
 export type PaginationResponse<T> = {
