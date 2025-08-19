@@ -14,9 +14,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import {
-  Clock, Users, Search, Filter, Loader2,
-} from 'lucide-react';
+import { Search, Filter, Loader2} from 'lucide-react';
 import { getAllExamsForClient } from '@/lib/api/exam';
 import { PracticeTests } from '@/types/exam';
 import { Pagination } from '@/components/common/pagination';
@@ -202,7 +200,7 @@ const PracticeTestsList = () => {
                       key={category.categoryId}
                       value={category.categoryId.toString()}
                     >
-                      {category.categoryName} ({category.examCount})
+                      {category.categoryName}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -103,7 +103,7 @@ const ProgressPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex items-center justify-between gap-3">
-            <Button className="w-full" onClick={() => router.push('/login')}>
+            <Button className="w-full bg-blue-600 hover:bg-blue-500" onClick={() => router.push('/login')}>
               <LogIn className="h-4 w-4 mr-2" />
               Đăng nhập
             </Button>

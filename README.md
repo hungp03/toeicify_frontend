@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
 
-First, run the development server:
+# Toeicify – TOEIC Listening & Reading Practice Platform
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Toeicify is a mini web application designed to help learners master the **TOEIC Listening & Reading** test.
+It provides realistic practice tests, progress tracking, flashcards, and personalized study insights, with an admin dashboard for exam management and system monitoring.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Tech Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+* **Frontend:** [Next.js](https://nextjs.org/), [Tailwind CSS](https://tailwindcss.com/)
+* **Backend:** [Spring Framework](https://spring.io/)
+* **Database:** [PostgreSQL](https://www.postgresql.org/)
+* **Cache:** [Redis](https://redis.io/)
+* **Notifications:** [Firebase Cloud Messaging (FCM)](https://firebase.google.com/docs/cloud-messaging)
+* **Object Storage:** S3-compatible cloud storage
+* **Deployment:** [Docker](https://www.docker.com/), [Docker Compose](https://docs.docker.com/compose/)
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Features
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Authentication & User Management
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+* User registration and login
+* Google OAuth integration
+* Password recovery
+* Account settings and profile management
 
-## Deploy on Vercel
+### TOEIC Practice
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+* Take tests by **part** or **full exam**
+* Automatic scoring with detailed explanations
+* Track progress and review past attempts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Learning Progress
+
+* Personalized study dashboard
+* Performance analytics across sections
+* Goal tracking
+
+### Flashcards
+
+* Vocabulary practice with flashcards
+* Spaced repetition support
+
+### Notifications
+
+* Real-time system notifications via **Firebase Cloud Messaging (FCM)**
+
+### Admin Dashboard
+
+* Manage exam sets and categories
+* User management & role control
+* Comprehensive statistics and analytics
+
+---
+
+## Deployment
+
+The application is containerized with **Docker** and orchestrated via **Docker Compose** for easy deployment.

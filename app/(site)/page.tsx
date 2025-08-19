@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useCategoryStore } from "@/store/categories";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
 import {
   BookOpen,
   Users,
@@ -64,38 +64,46 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen">
-      <section className="bg-gradient-to-br from-blue-400 via-blue-600 to-blue-700 text-white py-20">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              Làm chủ kỳ thi TOEIC với Toeicify
-            </h1>
-            <p className="text-xl md:text-2xl mb-8 text-blue-100">
-              Luyện tập với đề thi sát thực tế, theo dõi tiến trình và đạt mục tiêu điểm số
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+      <section className="relative text-white py-20">
+      <Image
+        src="/bg-hero.jpg" 
+        alt="TOEIC background"
+        fill
+        priority
+        className="object-cover object-center opacity-60"
+      />
+      <div className="absolute inset-0 bg-black/50" />
+      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            Làm chủ kỳ thi TOEIC với Toeicify
+          </h1>
+          <p className="text-xl md:text-2xl mb-8 text-blue-100">
+            Luyện tập với đề thi sát thực tế, theo dõi tiến trình và đạt mục tiêu điểm số
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              onClick={handleClick}
+              size="lg"
+              className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg"
+            >
+              Bắt đầu luyện miễn phí
+              <ChevronRight className="ml-2 h-5 w-5" />
+            </Button>
+            <Link href="/practice-tests">
               <Button
-                onClick={handleClick}
+                variant="outline"
                 size="lg"
-                className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg"
+                className="border-white text-blue-600 hover:bg-white px-8 py-3 text-lg"
               >
-                Bắt đầu luyện miễn phí
-                <ChevronRight className="ml-2 h-5 w-5" />
+                <Play className="mr-2 h-5 w-5" />
+                Xem bài luyện tập
               </Button>
-              <Link href="/practice-tests">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="border-white text-blue-600 hover:bg-white px-8 py-3 text-lg"
-                >
-                  <Play className="mr-2 h-5 w-5" />
-                  Xem bài luyện tập
-                </Button>
-              </Link>
-            </div>
+            </Link>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
       <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
