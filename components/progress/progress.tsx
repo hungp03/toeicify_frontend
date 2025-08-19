@@ -11,7 +11,7 @@ import { getUserProgress } from '@/lib/api/progress';
 import { useAuthStore } from '@/store/auth';
 import { Summary, SectionHighs, TrendPoint } from '@/types/progress';
 import { toast } from 'sonner';
-import  TestHistory  from '@/components/account/test-history';
+import TestHistory from '@/components/account/test-history';
 
 const ProgressPage = () => {
   const router = useRouter();
@@ -125,7 +125,7 @@ const ProgressPage = () => {
           {/* Điểm hiện tại */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Điểm số hiện tại</CardTitle>
+              <CardTitle className="text-sm font-medium">Điểm số cao nhất</CardTitle>
               <Target className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -143,7 +143,11 @@ const ProgressPage = () => {
               {hasTarget ? (
                 <>
                   <div className="text-2xl font-bold">{user!.targetScore}</div>
-                  <div className="text-xs text-muted-foreground">{(user?.targetScore ?? 0) - currentScore} điểm còn lại</div>
+                  <div className="text-xs text-muted-foreground">
+                    {(user?.targetScore ?? 0) - currentScore <= 0
+                      ? "Đã đạt mục tiêu"
+                      : `${(user?.targetScore ?? 0) - currentScore} điểm còn lại`}
+                  </div>
                 </>
               ) : (
                 <>
@@ -220,15 +224,26 @@ const ProgressPage = () => {
               <div className="space-y-4">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-blue-600">{currentScore}</div>
-                  <div className="text-sm text-gray-600">Điểm số hiện tại</div>
+                  <div className="text-sm text-gray-600">Điểm số cao nhất</div>
                 </div>
 
                 <div className="text-center">
                   {hasTarget ? (
                     <>
-                      <div className="text-xl font-semibold text-gray-800">{(user?.targetScore ?? 0) - currentScore}</div>
-                      <div className="text-sm text-gray-600">Điểm còn lại để đạt mục tiêu</div>
+                      {(user?.targetScore ?? 0) - currentScore <= 0 ? (
+                        <>
+                          <div className="text-xl font-semibold text-green-600">Đã đạt mục tiêu!</div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-xl font-semibold text-gray-800">
+                            {(user?.targetScore ?? 0) - currentScore}
+                          </div>
+                          <div className="text-sm text-gray-600">Điểm còn lại để đạt mục tiêu</div>
+                        </>
+                      )}
                     </>
+
                   ) : (
                     <>
                       <div className="text-xl font-semibold text-gray-500">---</div>
