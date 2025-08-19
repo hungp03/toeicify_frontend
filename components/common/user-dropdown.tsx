@@ -1,6 +1,6 @@
 "use client";
 
-import { User, LayoutDashboard, LogOut } from "lucide-react";
+import { User, LayoutDashboard, LogOut, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -50,7 +50,10 @@ const UserDropdown = () => {
           <User className="w-4 h-4 mr-2" />
           Tài khoản
         </DropdownMenuItem>
-
+        <DropdownMenuItem onClick={() => router.push("/feedback")}>
+          <MessageCircle className="w-4 h-4 mr-2" />
+          Góp ý
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
 
         <DropdownMenuItem

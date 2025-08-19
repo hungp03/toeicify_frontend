@@ -1,6 +1,6 @@
 "use client";
 
-import { User, LayoutDashboard, LogOut } from "lucide-react";
+import { User, LayoutDashboard, LogOut, MessageCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth";
 import { toast } from "sonner";
@@ -36,6 +36,14 @@ const UserDropdownMobile = () => {
             >
                 <User className="w-4 h-4 mr-2" />
                 Tài khoản
+            </Button>
+            <Button
+                variant="ghost"
+                className="justify-start w-full"
+                onClick={() => router.push("/feedback")}
+            >
+                <MessageCircle className="w-4 h-4 mr-2" />
+                Góp ý
             </Button>
 
             <Button

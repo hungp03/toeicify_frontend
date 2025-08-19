@@ -1,12 +1,4 @@
-import {
-  BarChart3,
-  Users,
-  FolderTree,
-  Database,
-  FileText,
-  Settings,
-  Home,
-} from 'lucide-react';
+import { BarChart3, Users, FolderTree, FileText, Home, MessageCircle } from 'lucide-react';
 
 export const navItems = [
   { name: "Trang chủ", path: "/" },
@@ -20,7 +12,7 @@ export const adminMenuItems = [
   { name: 'Quản lý người dùng', path: '/admin/users', icon: Users },
   { name: 'Phân loại đề thi', path: '/admin/categories', icon: FolderTree },
   { name: 'Quản lý đề thi', path: '/admin/tests', icon: FileText },
-  { name: 'Quản lý phản hồi', path: '/admin/feedbacks', icon: Settings },
+  { name: 'Quản lý phản hồi', path: '/admin/feedbacks', icon: MessageCircle },
   { name: "Trang chủ", path: "/", icon: Home },
 ];
 
