@@ -108,11 +108,6 @@ export default function ExamPartBar({
                       )}
                     >
                       Part {partNumber}
-                      {isDisabled && isFullExam && (
-                        <span className="ml-1 text-xs">
-                          {isListeningPart ? "🔒" : "⏳"}
-                        </span>
-                      )}
                     </Button>
                   );
                 })}

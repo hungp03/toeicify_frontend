@@ -83,7 +83,7 @@ export const useAudioState = ({
     setAudioEnded(true);
 
     if (isNavigationRestricted) {
-      let countdown = 5;
+      let countdown = 3;
       setAutoAdvanceCountdown(countdown);
 
       countdownIntervalRef.current = setInterval(() => {

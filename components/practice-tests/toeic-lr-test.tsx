@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useCallback, useMemo, useState, memo} from 'react';
+import { useEffect, useCallback, useMemo, useState, memo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,7 +11,7 @@ import { SubmitExamRequest, ExamSubmissionResponse } from '@/types';
 import { submitExam } from '@/lib/api/exam';
 
 // Import custom hooks
-import {useExamState} from '@/hooks/use-exam-state';
+import { useExamState } from '@/hooks/use-exam-state';
 import { useAudioState } from '@/hooks/use-audio-state';
 
 
@@ -20,6 +20,7 @@ import ExamHeader from '@/components/practice-tests/exam-header';
 import QuestionNavigation from '@/components/practice-tests/question-navigation';
 import AudioPlayer from '@/components/practice-tests/audio-player';
 import ExamNavigation from '@/components/practice-tests/exam-navigation';
+import FullTestStartOverlay from '@/components/practice-tests/full-test-start-overlay';
 
 const ExamResult = dynamic(() => import('./exam-result'), {
     loading: () => (
@@ -34,6 +35,8 @@ const QuestionComponent = dynamic(() => import('./question'));
 
 interface Props {
     partData: PartData;
+    hasStarted?: boolean;
+    onStart?: () => void;
     onPartComplete?: () => void;
     isLastPart?: boolean;
     currentPartIndex?: number;
@@ -59,47 +62,46 @@ function toUtcNoMsZ(d: Date): string {
 }
 
 function ToeicTest({
-  partData,
-  onPartComplete,
-  isLastPart = true,
-  totalParts = 1,
-  remainingTime,
-  onSubmitTest,
-  initialAnswers,
-  initialMarkedForReview,
-  onAnswersChange,
-  onMarkedForReviewChange,
-  allPartIds = [],
-  allAnswers = {},
-  examStartTime,
-  isFullExam = false,
-  onShowResult,
-  onAudioStatusChange,
+    partData,
+    hasStarted,
+    onStart,
+    onPartComplete,
+    isLastPart = true,
+    totalParts = 1,
+    remainingTime,
+    onSubmitTest,
+    initialAnswers,
+    initialMarkedForReview,
+    onAnswersChange,
+    onMarkedForReviewChange,
+    allPartIds = [],
+    allAnswers = {},
+    examStartTime,
+    isFullExam = false,
+    onShowResult,
+    onAudioStatusChange,
 }: Props) {
     const params = useParams();
     const router = useRouter();
 
-    // Track exam start time
     const [examStartTimeState] = useState(() => examStartTime || new Date());
-    
-    // Submission state
     const [showSubmitDialog, setShowSubmitDialog] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submissionResult, setSubmissionResult] = useState<ExamSubmissionResponse | null>(null);
     const [showResult, setShowResult] = useState(false);
 
     // Compute part types
-    const isListeningPart = useMemo(() => 
+    const isListeningPart = useMemo(() =>
         partData.partNumber >= 1 && partData.partNumber <= 4,
         [partData.partNumber]
     );
 
-    const isReadingPart = useMemo(() => 
+    const isReadingPart = useMemo(() =>
         partData.partNumber >= 5 && partData.partNumber <= 7,
         [partData.partNumber]
     );
 
-    const isNavigationRestricted = useMemo(() => 
+    const isNavigationRestricted = useMemo(() =>
         isListeningPart && isFullExam,
         [isListeningPart, isFullExam]
     );
@@ -324,6 +326,10 @@ function ToeicTest({
                 <p className="text-sm mt-2">Vui lòng kiểm tra lại dữ liệu hoặc thử làm mới trang.</p>
             </div>
         );
+    }
+
+    if (isFullExam && !hasStarted) {
+        return <FullTestStartOverlay onStart={onStart || (() => {})} />;
     }
 
     return (

@@ -13,11 +13,11 @@ import { useAudioStatus } from '@/hooks/use-audio-status';
 
 import ExamPartBar from '@/components/practice-tests/exam-part-bar';
 import ExamFinished from '@/components/practice-tests/exam-finished';
-import  ExamError from '@/components/practice-tests/exam-error';
+import ExamError from '@/components/practice-tests/exam-error';
 
 export default function TestPage() {
   const router = useRouter();
-
+  const [hasStarted, setHasStarted] = useState<boolean>(false);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [testFinished, setTestFinished] = useState<boolean>(false);
   const [examStartTime] = useState(() => new Date());
@@ -142,6 +142,8 @@ export default function TestPage() {
       ) : currentPartData ? (
         <ToeicTest
           key={currentPartId}
+          hasStarted={hasStarted}
+          onStart={() => setHasStarted(true)}
           partData={currentPartData}
           onPartComplete={handleNextPart}
           isLastPart={currentPartIndex === partIds.length - 1}
