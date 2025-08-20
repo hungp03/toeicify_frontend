@@ -140,42 +140,45 @@ const Notification = () => {
       <DropdownMenuContent align="end" className="w-[500px]">
         <DropdownMenuLabel className="flex justify-between items-center">
           <span>Thông báo ({meta.total})</span>
-          {notifications.length > 0 && (
-            <div className="flex space-x-2">
-              {/* Reload button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => fetchNotifications()}
-                className="text-xs"
-                disabled={loading}
-              >
-                <RefreshCw className={`h-3 w-3 mr-1 ${loading ? 'animate-spin' : ''}`} />
-                Tải lại
-              </Button>
 
-              {unreadCount > 0 && (
+          <div className="flex space-x-2">
+            {/* Reload button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => fetchNotifications()}
+              className="text-xs"
+              disabled={loading}
+            >
+              <RefreshCw className={`h-3 w-3 mr-1 ${loading ? 'animate-spin' : ''}`} />
+              Tải lại
+            </Button>
+            {notifications.length > 0 && (
+              <>
+                {unreadCount > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={markAllAsRead}
+                    className="text-xs"
+                  >
+                    <Check className="h-3 w-3 mr-1" />
+                    Đánh dấu tất cả
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={markAllAsRead}
-                  className="text-xs"
+                  onClick={handleDeleteAllNotifications}
+                  className="text-xs text-red-600 hover:text-red-700"
                 >
-                  <Check className="h-3 w-3 mr-1" />
-                  Đánh dấu tất cả
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Xóa tất cả
                 </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleDeleteAllNotifications}
-                className="text-xs text-red-600 hover:text-red-700"
-              >
-                <Trash2 className="h-3 w-3 mr-1" />
-                Xóa tất cả
-              </Button>
-            </div>
-          )}
+              </>
+            )}
+          </div>
+
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
 
