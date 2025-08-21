@@ -6,3 +6,4 @@ export * from './category';
 export * from './pagination';
 export * from './notification';
 export * from './feedback';
+export * from './chat';

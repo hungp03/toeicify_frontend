@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { BookOpen } from "lucide-react";
-
+import { useUIStore } from "@/store/ui";
 declare global {
     interface Window {
         lbDictPluginFrame?: {
@@ -12,8 +12,9 @@ declare global {
 }
 
 export default function LabanDictFrame() {
-    const [open, setOpen] = useState(false);
-
+    const { openWidget, setOpenWidget } = useUIStore()
+    const isOpen = openWidget === "dict"
+    
     useEffect(() => {
         if (!open) return;
 
@@ -61,26 +62,26 @@ export default function LabanDictFrame() {
             XMLHttpRequest.prototype.open = originalOpen;
             document.body.removeChild(script);
         };
-    }, [open]);
+    }, [isOpen]);
 
     return (
         <>
             <button
-                onClick={() => setOpen(!open)}
-                className="fixed bottom-6 right-6 bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg z-[9999] hover:bg-blue-700 transition"
+                onClick={() => setOpenWidget(isOpen ? null : "dict")}
+                className="fixed bottom-24 right-6 bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg z-[10] hover:bg-blue-700 transition"
             >
                 <BookOpen className="w-6 h-6" />
             </button>
 
-            {open && (
-                <div className="fixed bottom-20 right-6 w-[350px] h-[420px] bg-white border rounded-lg shadow-xl p-2 z-[9999]">
+            {isOpen && (
+                <div className="fixed bottom-40 right-6 w-[350px] h-[420px] bg-white border rounded-lg shadow-xl p-2 z-[10]">
                     <div className="flex justify-between items-center mb-2">
                         <h2 className="font-semibold text-gray-700 flex items-center gap-2">
                             <BookOpen className="w-4 h-4 text-blue-600" />
                             Dictionary
                         </h2>
                         <button
-                            onClick={() => setOpen(false)}
+                            onClick={() => setOpenWidget(null)}
                             className="text-gray-500 hover:text-black"
                         >
                             ✕
