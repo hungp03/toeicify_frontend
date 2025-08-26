@@ -12,6 +12,7 @@ import { useAuthStore } from "@/store/auth"
 import { useRouter } from "next/navigation"
 import { useUIStore } from "@/store/ui"
 import { v4 as uuidv4 } from "uuid"
+import { toast } from "sonner"
 
 type Message = {
   id: string
@@ -83,7 +84,7 @@ export default function MessengerChat() {
       })
       setMessages((prev) => prev.map((m) => (m.id === botMessageId ? { ...m, isStreaming: false } : m)))
     } catch (err) {
-      console.error(err)
+      toast.error("⚠️ Server đang bận, vui lòng thử lại sau.")
       setMessages((prev) =>
         prev.map((m) =>
           m.id === botMessageId
@@ -111,7 +112,19 @@ export default function MessengerChat() {
       </Button>
 
       {isOpen && (
-        <Card className="fixed bottom-22 right-6 w-[400px] h-[520px] py-0.25 shadow-2xl z-[25] flex flex-col animate-in slide-in-from-bottom-2 duration-300 overflow-hidden">
+        <Card
+          className="
+          fixed bottom-20 right-4
+          w-[95%] h-[70vh]  
+          sm:w-[420px] sm:h-[480px]   
+          md:w-[550px] md:h-[500px]  
+          lg:w-[700px] lg:h-[550px]   
+          py-0.25 shadow-2xl z-[25] flex flex-col
+          animate-in slide-in-from-bottom-2 duration-300
+          overflow-hidden rounded-xl
+        "
+        >
+
           {!isAuthenticated ? (
             <div className="flex flex-col items-center justify-center h-full p-6 text-center">
               <Bot className="h-12 w-12 text-blue-600 mb-4" />
@@ -138,11 +151,10 @@ export default function MessengerChat() {
                 {messages.map((m) => (
                   <div key={m.id} className={`flex ${m.isUser ? "justify-end" : "justify-start"}`}>
                     <div
-                      className={`max-w-[80%] rounded-2xl px-4 py-2 ${
-                        m.isUser
-                          ? "bg-blue-600 text-white rounded-br-md"
-                          : "bg-white text-gray-800 rounded-bl-md shadow-sm border"
-                      }`}
+                      className={`max-w-[80%] rounded-2xl px-4 py-2 ${m.isUser
+                        ? "bg-blue-600 text-white rounded-br-md"
+                        : "bg-white text-gray-800 rounded-bl-md shadow-sm border"
+                        }`}
                     >
                       {m.isUser ? (
                         <p className="text-sm">{m.text}</p>
@@ -181,7 +193,7 @@ export default function MessengerChat() {
                   </Button>
                 </div>
               </div>
-              
+
             </>
           )}
         </Card>
