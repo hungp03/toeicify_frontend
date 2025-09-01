@@ -2,6 +2,7 @@
 import { useEffect, useCallback, useMemo, useState, memo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import Image from "next/image";
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { FileText, Loader2 } from 'lucide-react';
@@ -150,10 +151,17 @@ function ToeicTest({
         [partData.groups, currentGroupIndex]
     );
 
-    const hasImage = useMemo(() =>
-        (partData.partNumber === 1 || (partData.partNumber >= 6 && currentGroup?.imageUrl)) && currentGroup?.imageUrl,
-        [partData.partNumber, currentGroup?.imageUrl]
-    );
+    const hasImage = useMemo(() => {
+        const url = currentGroup?.imageUrl;
+        if (!url) return false;
+        return (
+            partData.partNumber === 1 ||
+            partData.partNumber === 3 ||
+            partData.partNumber === 4 ||
+            partData.partNumber >= 6
+        ) && url;
+    }, [partData.partNumber, currentGroup?.imageUrl]);
+
 
     // Get part name
     const getPartName = useCallback(() => {
@@ -329,7 +337,7 @@ function ToeicTest({
     }
 
     if (isFullExam && !hasStarted) {
-        return <FullTestStartOverlay onStart={onStart || (() => {})} />;
+        return <FullTestStartOverlay onStart={onStart || (() => { })} />;
     }
 
     return (
@@ -396,11 +404,13 @@ function ToeicTest({
                                 <div className="flex flex-col md:flex-row md:gap-8">
                                     <div className="mb-6 md:mb-0 w-full md:w-1/2">
                                         <div className="flex justify-center">
-                                            <img
+                                            <Image
                                                 src={currentGroup.imageUrl}
                                                 alt={`Group ${currentGroup.groupId} image`}
-                                                className="max-w-full h-80 md:h-96 lg:h-[500px] object-contain rounded-lg border"
-                                                loading="lazy"
+                                                width={600}             
+                                                height={400}             
+                                                className="max-w-full h-auto rounded-lg border object-contain"
+                                                priority={partData.partNumber === 1}   // Preload part 1 image, lazy load others
                                                 onContextMenu={(e) => e.preventDefault()}
                                                 draggable={false}
                                             />

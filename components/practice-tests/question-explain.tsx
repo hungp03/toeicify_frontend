@@ -1,11 +1,12 @@
 'use client';
 
+import Image from 'next/image';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { QuestionExplainResponse } from '@/types';
 
 type Props = {
   open: boolean;
-  onClose: () => void; 
+  onClose: () => void;
   data: QuestionExplainResponse | null;
   userAnswer?: string | null;
 };
@@ -30,10 +31,12 @@ export default function AnswerExplanationModal({ open, onClose, data, userAnswer
           {/* Hình ảnh */}
           {data.imageUrl && (
             <div className="flex justify-center">
-              <img
+              <Image
                 src={data.imageUrl}
                 alt="Question"
-                className="rounded max-h-[320px] object-contain"
+                width={800}
+                height={320}
+                className="rounded max-h-[320px] object-contain w-auto h-auto"
               />
             </div>
           )}
@@ -52,9 +55,9 @@ export default function AnswerExplanationModal({ open, onClose, data, userAnswer
             {data.options.map((opt) => {
               let className = '';
               if (opt.optionLetter === data.correctAnswerOption) {
-                className = 'text-green-600 font-semibold'; 
+                className = 'text-green-600 font-semibold';
               } else if (opt.optionLetter === userAnswer) {
-                className = 'text-red-600'; 
+                className = 'text-red-600';
               }
               return (
                 <li key={opt.optionLetter} className={className}>

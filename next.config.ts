@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8888";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8888";
 
 const nextConfig: NextConfig = {
   reactStrictMode: false,
@@ -13,6 +14,15 @@ const nextConfig: NextConfig = {
     ];
   },
   output: "standalone",
+
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**", 
+      },
+    ],
+  },
 };
 
 export default nextConfig;
