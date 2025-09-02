@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,6 +18,8 @@ import { getFeedbackListByUser, createFeedback, deleteFeedback } from "@/lib/api
 import { FeedbackResponse } from "@/types";
 import { uploadMultipleMedia } from "@/lib/api/media";
 import { Pagination } from "@/components/common/pagination";
+import { feedbackSchema, FeedbackFormData } from "@/lib/schema";
+
 
 export default function Feedback() {
     const router = useRouter();
@@ -23,13 +27,28 @@ export default function Feedback() {
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [loading, setLoading] = useState(false);
-    const [feedbackContent, setFeedbackContent] = useState("");
     const [attachments, setAttachments] = useState<File[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const user = useAuthStore((state) => state.user);
     const hasHydrated = useAuthStore((state) => state.hasHydrated);
     const isFetchingUser = useAuthStore((state) => state.isFetchingUser);
     const isAuthenticated = !!user;
+
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+        reset,
+        watch,
+        setValue
+    } = useForm<FeedbackFormData>({
+        resolver: zodResolver(feedbackSchema),
+        defaultValues: {
+            content: ''
+        }
+    });
+
+    const contentValue = watch('content') || '';
 
     const fetchFeedbacks = async (p = page) => {
         setLoading(true);
@@ -60,14 +79,8 @@ export default function Feedback() {
         setAttachments(prev => prev.filter((_, i) => i !== index));
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (!feedbackContent.trim()) {
-            toast.warning("Vui lòng nhập nội dung góp ý");
-            return;
-        }
-
+    // Cập nhật handleSubmit để sử dụng validated data
+    const onSubmit = async (data: FeedbackFormData) => {
         setIsSubmitting(true);
 
         try {
@@ -76,10 +89,10 @@ export default function Feedback() {
                 uploadedUrls = await uploadMultipleMedia(attachments);
             }
             await createFeedback(
-                feedbackContent, uploadedUrls
+                data.content, uploadedUrls
             );
             toast.success("Góp ý của bạn đã được gửi thành công! Cảm ơn bạn đã giúp chúng tôi cải thiện ứng dụng.");
-            setFeedbackContent("");
+            reset();
             setAttachments([]);
             fetchFeedbacks(0);
             setPage(0);
@@ -170,10 +183,8 @@ export default function Feedback() {
                         <Plus className="w-4 h-4" />
                         Gửi góp ý mới
                     </TabsTrigger>
-
                 </TabsList>
 
-                {/* Tab gửi góp ý */}
                 <TabsContent value="submit">
                     <Card>
                         <CardHeader>
@@ -183,17 +194,32 @@ export default function Feedback() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <form onSubmit={handleSubmit} className="space-y-6">
+                            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                                 <div className="space-y-2">
-                                    <Label htmlFor="content">Nội dung góp ý *</Label>
+                                    <div className="flex items-center justify-between">
+                                        <Label htmlFor="content">Nội dung góp ý *</Label>
+                                        <span className={`text-sm ${
+                                            contentValue.length > 900 
+                                                ? 'text-red-500' 
+                                                : contentValue.length > 800 
+                                                    ? 'text-yellow-600' 
+                                                    : 'text-gray-500'
+                                        }`}>
+                                            {contentValue.length}/1000
+                                        </span>
+                                    </div>
                                     <Textarea
                                         id="content"
+                                        {...register('content')}
                                         placeholder="Chia sẻ ý kiến, đề xuất hoặc báo lỗi của bạn..."
-                                        value={feedbackContent}
-                                        onChange={(e) => setFeedbackContent(e.target.value)}
-                                        className="min-h-[120px]"
-                                        required
+                                        className="min-h-[120px] resize-none"
+                                        maxLength={1000}
                                     />
+                                    {errors.content && (
+                                        <p className="text-sm text-red-500 mt-1">
+                                            {errors.content.message}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-2">
@@ -236,16 +262,32 @@ export default function Feedback() {
                                     )}
                                 </div>
 
-
-                                <Button type="submit" disabled={isSubmitting} className="w-full bg-blue-600 hover:bg-blue-500">
-                                    {isSubmitting ? "Đang gửi..." : "Gửi góp ý"}
-                                </Button>
+                                <div className="flex gap-3">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="flex-1"
+                                        onClick={() => {
+                                            reset();
+                                            setAttachments([]);
+                                        }}
+                                        disabled={isSubmitting}
+                                    >
+                                        Làm mới
+                                    </Button>
+                                    <Button 
+                                        type="submit" 
+                                        disabled={isSubmitting} 
+                                        className="flex-1 bg-blue-600 hover:bg-blue-500"
+                                    >
+                                        {isSubmitting ? "Đang gửi..." : "Gửi góp ý"}
+                                    </Button>
+                                </div>
                             </form>
                         </CardContent>
                     </Card>
                 </TabsContent>
 
-                {/* Tab danh sách góp ý */}
                 {loading ? <Loader2 className="w-6 h-6 animate-spin mx-auto mt-10 text-blue-600" /> :
                     <TabsContent value="list">
                         <div className="space-y-4">
@@ -283,7 +325,6 @@ export default function Feedback() {
                                                             {item.status === "PROCESSED" ? "Đã xử lý" : "Đang xử lý"}
                                                         </Badge>
 
-
                                                         <div className="text-sm text-muted-foreground">
                                                             {formatDate(item.submittedAt)}
                                                         </div>
@@ -300,7 +341,6 @@ export default function Feedback() {
                                                             <X className="w-4 h-4" />
                                                         </Button>
                                                     </div>
-
 
                                                     {item.adminNote && (
                                                         <div className="bg-secondary/50 p-3 rounded-md border-l-4 border-primary">

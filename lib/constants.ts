@@ -5,6 +5,7 @@ export const navItems = [
   { name: "Luyện tập", path: "/practice-tests" },
   { name: "Flashcards", path: "/flashcards" },
   { name: "Tiến độ", path: "/progress" },
+  { name: "Lịch học", path: "/study-schedule" },
 ];
 
 export const adminMenuItems = [
@@ -25,4 +26,3 @@ export enum ErrorCode {
   RESOURCE_ALREADY_EXISTS = 6,
   METHOD_NOT_VALID = 7
 }
-

@@ -39,12 +39,12 @@ export const profileSchema = z.object({
     ])
     .optional(),
 
-   examDate: z
+  examDate: z
     .string()
     .optional()
     .refine(
       (val) => {
-        if (!val) return true; 
+        if (!val) return true;
         const date = new Date(val);
         const today = new Date();
         return date >= new Date(today.toDateString());
@@ -145,14 +145,14 @@ export const createFlashcardListSchema = z.object({
         });
         return;
       }
-  
+
       if (!/^[\p{L}\p{N}\s._-]+$/u.test(val)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "Tiêu đề chỉ được chứa chữ, số, khoảng trắng và ký tự ., _, -",
         });
       }
-  
+
       if (/^(\w)\1+$/.test(val)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -262,6 +262,75 @@ export const ExamInfoEditSchema = z.object({
   categoryId: z.number().int().positive("Vui lòng chọn danh mục"),
 });
 
+
+export const scheduleSchema = z.object({
+  title: z
+    .string()
+    .min(1, "Tên lịch học không được để trống")
+    .max(255, "Tên lịch học không được quá 255 ký tự")
+    .regex(/^[\p{L}\p{N}\s.,!?"'():;\-…“”‘’\n\r\t]+$/u, "Tên lịch học chỉ được chứa chữ cái, số, khoảng trắng và dấu câu"),
+  description: z
+    .string()
+    .max(255, "Mô tả không được quá 255 ký tự")
+    .regex(/^[\p{L}\p{M}\p{N}\s.,!?"'():;\-…“”‘’\n\r\t]+$/u, "Mô tả chỉ được chứa chữ cái, số, khoảng trắng và dấu câu")
+    .optional()
+    .or(z.literal("")),
+  todos: z
+    .array(
+      z.object({
+        taskDescription: z
+          .string()
+          .min(1, "Mô tả công việc không được để trống")
+          .max(200, "Mô tả công việc không được quá 200 ký tự")
+          .regex(/^[\p{L}\p{N}\s.,!?"'():;\-…“”‘’\n\r\t]+$/u, "Mô tả công việc chỉ được chứa chữ cái, số, khoảng trắng và dấu câu"),
+        dueDate: z.string().optional(),
+      })
+    )
+});
+
+export const todoSchema = z.object({
+  title: z
+    .string()
+    .min(1, "Tên nhiệm vụ không được để trống")
+    .max(100, "Tên nhiệm vụ không được quá 100 ký tự")
+    .regex(/^[\p{L}\p{N}\s.,!?"'():;\-…“”‘’\n\r\t]+$/u, "Tên nhiệm vụ chỉ được chứa chữ cái, số, khoảng trắng và dấu câu"),
+  scheduleId: z
+    .string()
+    .min(1, "Schedule ID không được để trống"),
+  dueDate: z
+    .union([
+      z.literal(""), // cho phép bỏ trống
+      z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, "Ngày giờ không hợp lệ"),
+    ])
+    .optional()
+    .refine((val) => {
+      if (!val || val === "") return true;
+      const t = new Date(val);
+      return !Number.isNaN(t.getTime()) && t.getTime() >= Date.now();
+    }, { message: "Ngày giờ không được ở quá khứ" }),
+});
+
+export const feedbackSchema = z.object({
+  content: z
+    .string()
+    .min(1, "Nội dung góp ý không được để trống")
+    .max(300, "Nội dung không được vượt quá 300 ký tự")
+    .regex(
+      /^[\p{L}\p{N}\s.,!?"'():;\-…“”‘’\n\r\t]+$/u,
+      "Chỉ được nhập chữ cái, số, khoảng trắng và dấu câu hợp lệ"
+    ),
+});
+
+export const adminNoteSchema = z
+  .string()
+  .min(1, "Ghi chú không được để trống")
+  .max(500, "Ghi chú không được quá 500 ký tự")
+  .regex(
+    /^[\p{L}\p{N}\s.,!?"'():;\-…“”‘’\n\r\t]+$/u,
+    "Chỉ được nhập chữ cái, số, khoảng trắng và dấu câu hợp lệ"
+  );
+
+
 export type ProfileFormData = z.infer<typeof profileSchema>;
 export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 export type LoginFormData = z.infer<typeof loginSchema>;
@@ -272,3 +341,6 @@ export type CreateFlashcardFormData = z.infer<typeof createFlashcardSchema>;
 export type UpdateFlashcardListFormData = z.infer<typeof updateFlashcardListSchema>;
 export type CreateExamFormData = z.infer<typeof createExamSchema>;
 export type ExamInfoEditFormData = z.infer<typeof ExamInfoEditSchema>;
+export type ScheduleFormData = z.infer<typeof scheduleSchema>;
+export type TodoFormData = z.infer<typeof todoSchema>;
+export type FeedbackFormData = z.infer<typeof feedbackSchema>;

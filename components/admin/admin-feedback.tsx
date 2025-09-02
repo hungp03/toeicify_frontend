@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { MessageSquare, Clock, CheckCircle, Edit, Search, Filter, Trash2, } from "lucide-react";
 import { getAllFeedbacks, updateFeedback, deleteFeedback, } from "@/lib/api/feedback";
 import { Pagination } from "@/components/common/pagination";
+import { adminNoteSchema } from "@/lib/schema";
 
 interface FeedbackItem {
     id: number;
@@ -34,6 +35,7 @@ export default function AdminFeedback() {
         null
     );
     const [adminNote, setAdminNote] = useState("");
+    const [error, setError] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState<FeedbackItem | null>(null);
@@ -304,7 +306,9 @@ export default function AdminFeedback() {
                                     value={adminNote}
                                     onChange={(e) => setAdminNote(e.target.value)}
                                     rows={4}
+                                    className={error ? "border-red-500" : ""}
                                 />
+                                {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
                             </div>
 
                             <div className="flex justify-end gap-2">
@@ -312,17 +316,24 @@ export default function AdminFeedback() {
                                     Hủy
                                 </Button>
                                 <Button
-                                    onClick={() =>
+                                    onClick={() => {
+                                        const result = adminNoteSchema.safeParse(adminNote.trim());
+                                        if (!result.success) {
+                                            setError(result.error.errors[0].message);
+                                            return;
+                                        }
+                                        setError("");
                                         handleProcessFeedback(
                                             selectedFeedback.id,
                                             selectedFeedback.status,
                                             adminNote
-                                        )
-                                    }
+                                        );
+                                    }}
                                     disabled={isProcessing}
                                 >
                                     {isProcessing ? "Đang xử lý..." : "Cập nhật"}
                                 </Button>
+
                             </div>
                         </div>
                     )}

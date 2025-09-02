@@ -289,8 +289,8 @@ const ProgressPage = () => {
         <div className="mb-8">
           <Card>
             <CardHeader>
-              <CardTitle>Test History</CardTitle>
-              <CardDescription>Your recent test attempts and results</CardDescription>
+              <CardTitle>Lịch sử làm bài</CardTitle>
+              <CardDescription>Lịch sử làm bài kiểm tra gần đây của bạn</CardDescription>
             </CardHeader>
             <CardContent>
               <TestHistory />

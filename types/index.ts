@@ -7,3 +7,4 @@ export * from './pagination';
 export * from './notification';
 export * from './feedback';
 export * from './chat';
+export * from './study-schedule';
