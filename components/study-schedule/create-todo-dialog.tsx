@@ -59,7 +59,7 @@ export const CreateTodoDialog = ({
   const {
     register,
     handleSubmit,
-    formState: { errors, isValid },
+    formState: { errors, isValid, isSubmitting },
     reset,
     setValue,
   } = useForm<TodoFormData>({
@@ -117,7 +117,7 @@ export const CreateTodoDialog = ({
     // Tạo mới (create)
     const trimmedFormData: NewTodoForm = {
       title: data.title.trim(),
-      scheduleId: String(scheduleId), 
+      scheduleId: String(scheduleId),
       dueDate: due,
     };
 
@@ -136,7 +136,9 @@ export const CreateTodoDialog = ({
   const isEdit = mode === "edit";
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!isSubmitting) setIsOpen(open);
+    }}>
       {!isEdit && (
         <DialogTrigger asChild>
           <Button
@@ -144,6 +146,7 @@ export const CreateTodoDialog = ({
             size="sm"
             className="w-full mt-2"
             onClick={handleOpenCreate}
+            disabled={isSubmitting}
           >
             <Plus className="h-4 w-4 mr-2" />
             Thêm nhiệm vụ
@@ -174,6 +177,7 @@ export const CreateTodoDialog = ({
                 {...register("title")}
                 placeholder="Ví dụ: Hoàn thành bài tập số một"
                 className={errors.title ? "border-red-500" : ""}
+                disabled={isSubmitting}
               />
               {errors.title && (
                 <p className="text-sm text-red-500 mt-1">
@@ -189,8 +193,11 @@ export const CreateTodoDialog = ({
               <Input
                 id="todo-dueDate"
                 type="datetime-local"
+                min="2025-01-01T00:00"
+                max="2099-12-31T23:59"
                 {...register("dueDate")}
                 className={errors.dueDate ? "border-red-500" : ""}
+                disabled={isSubmitting}
               />
               {errors.dueDate && (
                 <p className="text-sm text-red-500 mt-1">
@@ -207,7 +214,7 @@ export const CreateTodoDialog = ({
             <Button
               type="submit"
               className="bg-blue-600 hover:bg-blue-500"
-              disabled={!isValid}
+              disabled={!isValid || isSubmitting}
             >
               {isEdit ? "Lưu thay đổi" : "Thêm"}
             </Button>

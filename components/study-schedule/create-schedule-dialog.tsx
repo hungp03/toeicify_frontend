@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { scheduleSchema, ScheduleFormData } from "@/lib/schema"; // Zod schema + inferred type
+import { scheduleSchema, ScheduleFormData } from "@/lib/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Loader2 } from "lucide-react";
 import { NewSchedulePayload } from "@/types";
 
 interface CreateScheduleDialogProps {
@@ -30,7 +30,7 @@ export const CreateScheduleDialog = ({ onCreateSchedule }: CreateScheduleDialogP
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     control,
     reset,
     watch,
@@ -82,7 +82,9 @@ export const CreateScheduleDialog = ({ onCreateSchedule }: CreateScheduleDialogP
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!isSubmitting) setIsOpen(open);
+    }}>
       <DialogTrigger asChild>
         <Button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500">
           <Plus className="h-4 w-4" />
@@ -107,6 +109,7 @@ export const CreateScheduleDialog = ({ onCreateSchedule }: CreateScheduleDialogP
               placeholder="Ví dụ: Ôn thi Tiếng Anh"
               {...register("title")}
               className={errors.title ? "border-red-500" : ""}
+              disabled={isSubmitting}
             />
             {errors.title && <p className="text-sm text-red-500 mt-1">{errors.title.message}</p>}
           </div>
@@ -119,6 +122,7 @@ export const CreateScheduleDialog = ({ onCreateSchedule }: CreateScheduleDialogP
               placeholder="Kế hoạch ôn thi Tiếng Anh trong ba tháng"
               {...register("description")}
               className={errors.description ? "border-red-500" : ""}
+              disabled={isSubmitting}
             />
             {errors.description && (
               <p className="text-sm text-red-500 mt-1">{errors.description.message}</p>
@@ -134,6 +138,7 @@ export const CreateScheduleDialog = ({ onCreateSchedule }: CreateScheduleDialogP
                 variant="outline"
                 onClick={() => append({ taskDescription: "", dueDate: "" })}
                 className="h-8 px-3"
+                disabled={isSubmitting}
               >
                 <Plus className="h-4 w-4 mr-1" />
                 Thêm việc
@@ -151,6 +156,7 @@ export const CreateScheduleDialog = ({ onCreateSchedule }: CreateScheduleDialogP
                       className={
                         errors.todos?.[index]?.taskDescription ? "border-red-500" : ""
                       }
+                      disabled={isSubmitting}
                     />
                     {errors.todos?.[index]?.taskDescription && (
                       <p className="text-sm text-red-500 mt-1">
@@ -163,8 +169,11 @@ export const CreateScheduleDialog = ({ onCreateSchedule }: CreateScheduleDialogP
                   <div className="md:col-span-4">
                     <Input
                       type="datetime-local"
+                      min="2025-01-01T00:00"
+                      max="2099-12-31T23:59"
                       {...register(`todos.${index}.dueDate`)}
                       className={errors.todos?.[index]?.dueDate ? "border-red-500" : ""}
+                      disabled={isSubmitting}
                     />
                     {errors.todos?.[index]?.dueDate && (
                       <p className="text-sm text-red-500 mt-1">
@@ -180,7 +189,7 @@ export const CreateScheduleDialog = ({ onCreateSchedule }: CreateScheduleDialogP
                       variant="ghost"
                       onClick={() => remove(index)}
                       className="px-2"
-                      disabled={fields.length === 1}
+                      disabled={fields.length === 1 || isSubmitting}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -197,9 +206,16 @@ export const CreateScheduleDialog = ({ onCreateSchedule }: CreateScheduleDialogP
             <Button
               type="submit"
               className="bg-blue-600 hover:bg-blue-500"
-              disabled={!isValid}
+              disabled={!isValid || isSubmitting}
             >
-              Tạo
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Đang tạo…
+                </>
+              ) : (
+                "Tạo"
+              )}
             </Button>
           </DialogFooter>
         </form>
