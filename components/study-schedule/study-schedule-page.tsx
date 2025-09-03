@@ -5,6 +5,7 @@ import { useStudySchedule } from '@/hooks/use-study-schedule';
 import { StudyScheduleHeader } from './study-schedule-header';
 import { CreateScheduleDialog } from './create-schedule-dialog';
 import { CreateTodoDialog } from './create-todo-dialog';
+import { DeleteConfirmDialog } from './delete-confirm-dialog';
 import { EmptyState } from './empty-state';
 import { ScheduleCard } from './schedule-card';
 import { useAuthStore } from '@/store/auth';
@@ -41,6 +42,12 @@ export default function StudySchedulePage() {
         scheduleTitle: string;
         todo: TodoItem;
     } | null>(null);
+
+    const [scheduleToDelete, setScheduleToDelete] = useState<{
+        id: number;
+        title: string;
+    } | null>(null);
+
 
     const openEdit = (scheduleId: number, todo: TodoItem) => {
         const s = schedules.find(x => x.scheduleId === scheduleId);
@@ -120,9 +127,16 @@ export default function StudySchedulePage() {
                                 onToggleTodo={(scheduleId, todoId) =>
                                     toggleTodo(Number(scheduleId), Number(todoId))
                                 }
-                                onDeleteSchedule={(scheduleId) =>
-                                    deleteSchedule(Number(scheduleId))
-                                }
+                                onDeleteSchedule={(scheduleId) => {
+                                    const schedule = schedules.find(s => s.scheduleId === scheduleId);
+                                    if (schedule) {
+                                        setScheduleToDelete({
+                                            id: schedule.scheduleId,
+                                            title: schedule.title,
+                                        });
+                                    }
+                                }}
+
                                 onEditTodo={(scheduleId, todo) => openEdit(Number(scheduleId), todo)}
                                 onDeleteTodo={(scheduleId, todoId) =>
                                     deleteTodo(Number(scheduleId), Number(todoId))
@@ -143,30 +157,41 @@ export default function StudySchedulePage() {
             )}
             {editing && (
                 <CreateTodoDialog
-                    key={editing.todo.todoId}           
+                    key={editing.todo.todoId}
                     mode="edit"
                     scheduleId={editing.scheduleId}
                     scheduleTitle={editing.scheduleTitle}
                     initialValues={{
                         todoId: editing.todo.todoId,
                         title: editing.todo.taskDescription,
-                        dueDate: editing.todo.dueDate ?? null, 
+                        dueDate: editing.todo.dueDate ?? null,
                         isCompleted: editing.todo.isCompleted,
                     }}
-                    onCreateTodo={createTodo}            
+                    onCreateTodo={createTodo}
                     onEditTodoSubmit={async (p) => {
                         const ok = await editTodo(p.scheduleId, {
                             todoId: p.todoId,
                             taskDescription: p.title.trim(),
                             isCompleted: p.isCompleted ?? editing.todo.isCompleted,
-                            dueDate: p.dueDate,        
+                            dueDate: p.dueDate,
                         } as TodoItem);
                         if (ok) closeEdit();
                         return ok;
                     }}
                 />
             )}
-
+            {scheduleToDelete && (
+                <DeleteConfirmDialog
+                    open={!!scheduleToDelete}
+                    onCancel={() => setScheduleToDelete(null)}
+                    onConfirm={() => {
+                        deleteSchedule(scheduleToDelete.id);
+                        setScheduleToDelete(null);
+                    }}
+                    title={`Xác nhận xóa lịch "${scheduleToDelete.title}"`}
+                    message="Bạn có chắc muốn xóa? Các nhiệm vụ đi kèm cũng sẽ bị xóa vĩnh viễn."
+                />
+            )}
         </div>
     );
 }
