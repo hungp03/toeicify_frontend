@@ -134,19 +134,31 @@ export function FlashcardTestContent() {
     : false;
 
     return (
-      <div key={idx} className="mb-6 border rounded-lg p-4 shadow-sm text-left bg-white">
+      <div key={idx} className="mb-4 sm:mb-6 border rounded-xl p-3 sm:p-4 shadow-sm text-left bg-white">
+        {/* Question number indicator */}
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs sm:text-sm font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+            Câu {idx + 1}/{questions.length}
+          </span>
+        </div>
+
         {q.type === 'multiple' && (
           <>
-            <p className="text-lg font-semibold mb-2">Từ: {q.frontText}</p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="mb-4">
+              <p className="text-sm sm:text-base font-medium text-gray-600 mb-1">Từ:</p>
+              <p className="text-base sm:text-lg font-semibold text-gray-900 break-words">{q.frontText}</p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-gray-600 mb-3">Chọn định nghĩa đúng:</p>
               {q.options?.map((opt, i) => (
                 <Button
                   key={i}
                   variant={answers[idx] === opt ? 'default' : 'outline'}
                   onClick={() => setAnswers({ ...answers, [idx]: opt })}
                   disabled={submitted}
+                  className="w-full text-left justify-start h-auto py-3 px-4 text-sm sm:text-base whitespace-normal break-words"
                 >
-                  {opt}
+                  <span className="block w-full text-left leading-relaxed">{opt}</span>
                 </Button>
               ))}
             </div>
@@ -155,54 +167,79 @@ export function FlashcardTestContent() {
 
         {q.type === 'truefalse' && (
           <>
-            <div className="flex items-center justify-between gap-3 text-base font-medium text-gray-700 mb-3">
-              <span>Từ: {q.frontText}</span>
-              <span className="text-gray-400">|</span>
-              <span>Định nghĩa: {q.backText}</span>
+            <div className="space-y-3 mb-4">
+              <div>
+                <p className="text-sm sm:text-base font-medium text-gray-600 mb-1">Từ:</p>
+                <p className="text-base sm:text-lg font-semibold text-gray-900 break-words">{q.frontText}</p>
+              </div>
+              <div>
+                <p className="text-sm sm:text-base font-medium text-gray-600 mb-1">Định nghĩa:</p>
+                <p className="text-base sm:text-lg text-gray-900 break-words leading-relaxed">{q.backText}</p>
+              </div>
             </div>
-            <div className="flex justify-center gap-6 mt-4">
-              <Button
-                className="w-2xs"
-                variant={answers[idx] === 'true' ? 'default' : 'outline'}
-                onClick={() => setAnswers({ ...answers, [idx]: 'true' })}
-                disabled={submitted}
-              >
-                True
-              </Button>
-              <Button
-                className="w-2xs"
-                variant={answers[idx] === 'false' ? 'default' : 'outline'}
-                onClick={() => setAnswers({ ...answers, [idx]: 'false' })}
-                disabled={submitted}
-              >
-                False
-              </Button>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-gray-600 mb-3">Định nghĩa này có đúng không?</p>
+              <div className="flex gap-3">
+                <Button
+                  className="flex-1 py-3 text-base font-medium"
+                  variant={answers[idx] === 'true' ? 'default' : 'outline'}
+                  onClick={() => setAnswers({ ...answers, [idx]: 'true' })}
+                  disabled={submitted}
+                >
+                  ✓ Đúng
+                </Button>
+                <Button
+                  className="flex-1 py-3 text-base font-medium"
+                  variant={answers[idx] === 'false' ? 'default' : 'outline'}
+                  onClick={() => setAnswers({ ...answers, [idx]: 'false' })}
+                  disabled={submitted}
+                >
+                  ✗ Sai
+                </Button>
+              </div>
             </div>
           </>
         )}
 
         {q.type === 'written' && (
           <>
-            <p className="text-lg font-semibold mb-2">Định nghĩa: {q.backText}</p>
-            <input
-              type="text"
-              className="border rounded px-3 py-2 w-full mt-2"
-              placeholder="Nhập từ tiếng Anh..."
-              value={answers[idx] || ''}
-              onChange={(e) => setAnswers({ ...answers, [idx]: e.target.value })}
-              disabled={submitted}
-            />
+            <div className="mb-4">
+              <p className="text-sm sm:text-base font-medium text-gray-600 mb-1">Định nghĩa:</p>
+              <p className="text-base sm:text-lg font-semibold text-gray-900 break-words leading-relaxed">{q.backText}</p>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-600">Nhập từ tiếng Anh tương ứng:</label>
+              <input
+                type="text"
+                className="border border-gray-300 rounded-lg px-4 py-3 w-full text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Nhập câu trả lời..."
+                value={answers[idx] || ''}
+                onChange={(e) => setAnswers({ ...answers, [idx]: e.target.value })}
+                disabled={submitted}
+              />
+            </div>
           </>
         )}
 
         {submitted && (
-          <p className={`mt-2 text-sm ${isCorrect ? 'text-green-600' : 'text-red-500'}`}>
-            Đáp án đúng: <span className="font-semibold">
-              {q.type === 'truefalse'
-                ? `${q.frontText} : ${q.correctBackText}`
-                : `${q.frontText} : ${q.backText}`}
-            </span>
-          </p>
+          <div className={`mt-4 p-3 rounded-lg ${isCorrect ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+            <div className="flex items-start gap-2">
+              <span className={`text-lg ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                {isCorrect ? '✓' : '✗'}
+              </span>
+              <div className="flex-1">
+                <p className={`text-sm font-medium ${isCorrect ? 'text-green-700' : 'text-red-700'} mb-1`}>
+                  {isCorrect ? 'Chính xác!' : 'Không chính xác'}
+                </p>
+                <p className={`text-sm ${isCorrect ? 'text-green-600' : 'text-red-600'} break-words leading-relaxed`}>
+                  <span className="font-semibold">Đáp án đúng: </span>
+                  {q.type === 'truefalse'
+                    ? `${q.frontText} : ${q.correctBackText}`
+                    : `${q.frontText} : ${q.backText}`}
+                </p>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     );
@@ -211,35 +248,72 @@ export function FlashcardTestContent() {
   if (!hasHydrated) return <FullPageLoader />;
 
   return (
-    <div className="relative max-w-3xl mx-auto px-4 py-8">
-      <Button
-        onClick={() => router.push(`/flashcards/${id}/study`)}
-        variant="outline"
-        size="icon"
-        className="absolute pl-4 pr-4 w-12 rounded-2xl cursor-pointer left-4 top-4 border-black hover:bg-black hover:text-white transition"
-        title="Quay về trang học"
-      >
-        <ArrowLeft className="h-4 w-4" />
-      </Button>
-
-      <h1 className="text-2xl font-bold text-center mb-6">📝 Bài kiểm tra từ vựng</h1>
-
-      {user && questions.map((q, idx) => renderQuestion(q, idx))}
-
-      {user && (
-        !submitted ? (
-          <Button className="mt-6 w-full" onClick={handleSubmit}>
-            Nộp bài
+    <div className="min-h-screen bg-gray-50">
+      {/* Header with back button */}
+      <div className="sticky top-0 bg-white border-b border-gray-200 z-10">
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-4">
+          <Button
+            onClick={() => router.push(`/flashcards/${id}/study`)}
+            variant="outline"
+            size="icon"
+            className="rounded-full hover:bg-gray-100 transition-colors shrink-0"
+            title="Quay về trang học"
+          >
+            <ArrowLeft className="h-4 w-4" />
           </Button>
-        ) : (
-          <div className="mt-6 text-center space-y-4">
-            <p className="text-xl font-bold">✅ Đúng: {correctCount} / {questions.length}</p>
-            <Button className="w-full" onClick={() => router.push(`/flashcards/${id}/study`)}>
-              Hoàn thành
-            </Button>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">
+              📝 Bài kiểm tra từ vựng
+            </h1>
+            {questions.length > 0 && (
+              <p className="text-xs sm:text-sm text-gray-500">
+                {questions.length} câu hỏi
+              </p>
+            )}
           </div>
-        )
-      )}
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="max-w-4xl mx-auto px-4 py-4 sm:py-6">
+        {user && questions.map((q, idx) => renderQuestion(q, idx))}
+
+        {user && (
+          <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 -mx-4 mt-6">
+            {!submitted ? (
+              <Button 
+                className="w-full py-3 text-base font-medium" 
+                onClick={handleSubmit}
+                disabled={Object.keys(answers).length !== questions.length}
+              >
+                Nộp bài ({Object.keys(answers).length}/{questions.length})
+              </Button>
+            ) : (
+              <div className="space-y-4">
+                <div className="text-center">
+                  <div className="inline-flex items-center gap-2 bg-blue-50 px-4 py-3 rounded-lg">
+                    <span className="text-2xl">🎉</span>
+                    <div>
+                      <p className="text-lg font-bold text-blue-900">
+                        Kết quả: {correctCount}/{questions.length}
+                      </p>
+                      <p className="text-sm text-blue-700">
+                        Chính xác {Math.round((correctCount / questions.length) * 100)}%
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <Button 
+                  className="w-full py-3 text-base font-medium" 
+                  onClick={() => router.push(`/flashcards/${id}/study`)}
+                >
+                  Hoàn thành
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

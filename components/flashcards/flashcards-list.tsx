@@ -1,10 +1,9 @@
-// components/flashcards/flashcards-list.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Book, BookPlus, FlipHorizontal, Search  } from 'lucide-react';
+import { Book, BookPlus, FlipHorizontal, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -120,51 +119,56 @@ export function FlashcardsListContent() {
   if (!hasHydrated) return <FullPageLoader />;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Flashcards</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+        <div className="text-center mb-6 sm:mb-12">
+          <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2 sm:mb-4">Flashcards</h1>
+          <p className="text-base sm:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed px-4">
             Tạo và học bộ thẻ ghi nhớ để cải thiện vốn từ vựng của bạn.
           </p>
         </div>
 
         {user ? (
           <>
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 sm:gap-6 mb-6">
+              {/* Tab buttons */}
+              <div className="flex gap-2 sm:gap-3 overflow-x-auto">
                 <Button  
                   variant={tab === 'mine' ? 'default' : 'outline'}
                   onClick={() => setTab('mine')}
+                  className="whitespace-nowrap text-sm sm:text-base"
                 >
                   Danh sách của tôi
                 </Button>
                 <Button 
                   variant={tab === 'learning' ? 'default' : 'outline'}
                   onClick={() => setTab('learning')}
+                  className="whitespace-nowrap text-sm sm:text-base"
                 >
                   Đang học
                 </Button>
                 <Button 
                   variant={tab === 'explore' ? 'default' : 'outline'}
                   onClick={() => setTab('explore')}
+                  className="whitespace-nowrap text-sm sm:text-base"
                 >
                   Khám phá
                 </Button>
               </div>
 
+              {/* Create button for mine tab */}
               {tab === 'mine' && (
                 <Dialog
                   open={isCreateDialogOpen}
                   onOpenChange={setIsCreateDialogOpen}
                 >
                   <DialogTrigger asChild>
-                    <Button className="bg-blue-600 hover:bg-blue-500">
+                    <Button className="bg-blue-600 hover:bg-blue-500 w-full sm:w-auto">
                       <BookPlus className="h-4 w-4 mr-2" />
-                      Tạo bộ thẻ mới
+                      <span className="sm:inline">Tạo bộ thẻ mới</span>
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="mx-4 max-w-md sm:max-w-lg">
                     <DialogHeader>
                       <DialogTitle>Tạo bộ thẻ mới</DialogTitle>
                       <DialogDescription>
@@ -192,15 +196,16 @@ export function FlashcardsListContent() {
                         />
                         {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
                       </div>
-                      <div className="flex justify-end gap-2">
+                      <div className="flex flex-col sm:flex-row justify-end gap-2">
                         <Button
                           variant="outline"
                           onClick={() => setIsCreateDialogOpen(false)}
+                          className="order-2 sm:order-1"
                         >
                           Hủy
                         </Button>
                         <Button
-                          className="bg-blue-600 hover:bg-blue-500"
+                          className="bg-blue-600 hover:bg-blue-500 order-1 sm:order-2"
                           onClick={handleCreateSet}
                           disabled={!newSetTitle.trim()}
                         >
@@ -211,27 +216,30 @@ export function FlashcardsListContent() {
                   </DialogContent>
                 </Dialog>
               )}
-
-              {tab === 'explore' && (
-                <div className="flex items-center mb-6 gap-2">
-                  <Input
-                    placeholder="Tìm kiếm flashcard theo tên..."
-                    value={searchKeyword}
-                    onChange={(e) => setSearchKeyword(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button 
-                    onClick={handleSearch} 
-                    className="bg-blue-600 hover:bg-blue-500 flex items-center"
-                  >
-                    <Search className="h-4 w-4 mr-2" />
-                    Tìm kiếm
-                  </Button>
-                </div>
-              )}
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Search for explore tab */}
+            {tab === 'explore' && (
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center mb-6 gap-2">
+                <Input
+                  placeholder="Tìm kiếm flashcard theo tên..."
+                  value={searchKeyword}
+                  onChange={(e) => setSearchKeyword(e.target.value)}
+                  className="flex-1"
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                />
+                <Button 
+                  onClick={handleSearch} 
+                  className="bg-blue-600 hover:bg-blue-500 flex items-center justify-center w-full sm:w-auto"
+                >
+                  <Search className="h-4 w-4 mr-2" />
+                  Tìm kiếm
+                </Button>
+              </div>
+            )}
+
+            {/* Flashcard grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {flashcardSets.map((set) => (
                 <Card key={set.listId} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
@@ -239,7 +247,7 @@ export function FlashcardsListContent() {
                       <Book className="h-5 w-5" />
                       {set.listName}
                     </CardTitle>
-                    <CardDescription className="h-5">
+                    <CardDescription className="h-5 line-clamp-2">
                       {set.description}
                     </CardDescription>
                   </CardHeader>
@@ -249,7 +257,7 @@ export function FlashcardsListContent() {
                         <p>{set.cardCount} thẻ</p>
                         <p>Tạo vào {new Date(set.createdAt).toLocaleDateString('vi-VN')}</p>
                       </div>
-                      <div className="flex space-x-2">
+                      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                         <Link href={`/flashcards/${set.listId}`} className="flex-1">
                           <Button variant="outline" className="w-full">
                             <Book className="h-4 w-4 mr-2" />
@@ -270,9 +278,10 @@ export function FlashcardsListContent() {
               ))}
             </div>
 
+            {/* Empty state */}
             {flashcardSets.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-gray-500 text-lg mb-4">Không có bộ thẻ nào trong mục này.</p>
+              <div className="text-center py-8 sm:py-12">
+                <p className="text-gray-500 text-base sm:text-lg mb-4">Không có bộ thẻ nào trong mục này.</p>
                 {tab === 'mine' && (
                   <Button onClick={() => setIsCreateDialogOpen(true)}>
                     <BookPlus className="h-4 w-4 mr-2" />
@@ -283,7 +292,7 @@ export function FlashcardsListContent() {
             )}
           </>
         ) : (
-          <div className="text-center text-gray-500 text-lg mt-12">
+          <div className="text-center text-gray-500 text-base sm:text-lg mt-8 sm:mt-12 px-4">
             Vui lòng{' '}
             <Link href="/login" className="text-blue-600 underline">
               đăng nhập
